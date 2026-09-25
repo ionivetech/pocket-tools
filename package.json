@@ -9,6 +9,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "check": "nuxt typecheck",
+    "generate:registry": "bun run scripts/generate-tool-registry.ts",
+    "scaffold:tool": "bun run scripts/scaffold-tool.ts",
     "lint": "oxlint . --vue-plugin",
     "lint:fix": "oxlint . --vue-plugin --fix",
     "fmt": "oxfmt .",
