@@ -5,22 +5,34 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
 describe("direct TypeScript check", () => {
-	test("passes without relying on vue-tsc", async () => {
-		const child = Bun.spawn(["bunx", "tsc", "--noEmit"], {
-			cwd: repositoryRoot,
-			stdout: "pipe",
-			stderr: "pipe",
-		});
-		const [exitCode, stdout, stderr] = await Promise.all([
-			child.exited,
-			new Response(child.stdout).text(),
-			new Response(child.stderr).text(),
-		]);
+	test(
+		"passes without relying on vue-tsc",
+		async () => {
+			const child = Bun.spawn(["bunx", "tsc", "--noEmit"], {
+				cwd: repositoryRoot,
+				stdout: "pipe",
+				stderr: "pipe",
+			});
 
-		if (exitCode !== 0) {
-			throw new Error(`bunx tsc --noEmit failed with exit ${exitCode}:\n${stdout}${stderr}`);
-		}
+			try {
+				const [exitCode, stdout, stderr] = await Promise.all([
+					child.exited,
+					new Response(child.stdout).text(),
+					new Response(child.stderr).text(),
+				]);
 
-		expect(exitCode).toBe(0);
-	});
+				if (exitCode !== 0) {
+					throw new Error(`bunx tsc --noEmit failed with exit ${exitCode}:\n${stdout}${stderr}`);
+				}
+
+				expect(exitCode).toBe(0);
+			} finally {
+				if (child.exitCode === null) {
+					child.kill();
+					await child.exited;
+				}
+			}
+		},
+		{ timeout: 15_000 },
+	);
 });
