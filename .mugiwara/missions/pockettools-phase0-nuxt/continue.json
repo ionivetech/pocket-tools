@@ -1,0 +1,11 @@
+{
+  "blockers_open": 0,
+  "flow": 8,
+  "heal_cycle": 0,
+  "member": null,
+  "mission": "pockettools-phase0-nuxt",
+  "next_action": "Stage and verify the Phase 0 allowlist, create the initial conventional commit, push feature/phase-0-nuxt, then archive the mission after the terminal handoff.",
+  "next_session_prompt": "mugiwara continue pockettools-phase0-nuxt",
+  "tasks": { "done": 7, "total": 7 },
+  "updated_at": "2026-09-25T00:00:00Z"
+}

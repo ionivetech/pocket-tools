@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    format:
+      glob: "*.{ts,vue,json,md,yml,yaml}"
+      run: bun run fmt:check
+    lint:
+      run: bun run lint
+    check:
+      run: bun run check
+
+commit-msg:
+  commands:
+    conventional:
+      run: bunx commitlint --edit {1}

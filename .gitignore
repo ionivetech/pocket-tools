@@ -1,0 +1,31 @@
+node_modules
+
+# Nuxt/Nitro output
+.nuxt
+.output
+.nitro
+.cache
+
+# Cloudflare/Wrangler
+.wrangler
+
+# Build output
+build
+dist
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Playwright
+test-results
+playwright-report
+
+# Coverage
+coverage

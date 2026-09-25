@@ -1,0 +1,23 @@
+{
+  "actor": "farid nugraha",
+  "blockers_open": 0,
+  "branch": "feature/phase-0-nuxt",
+  "budget": 20000,
+  "evidence": [
+    ".mugiwara/missions/pockettools-phase0-nuxt/plan.md",
+    ".mugiwara/missions/pockettools-phase0-nuxt/report.md",
+    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/ci-local.log",
+    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/lighthouse-mobile.json",
+    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/lighthouse-desktop.json"
+  ],
+  "flow": 8,
+  "heal_cycle": 0,
+  "lane": "full",
+  "lane_reason": "greenfield framework pivot, destructive cleanup, UI/PWA/accessibility gates",
+  "member": null,
+  "mission": "pockettools-phase0-nuxt",
+  "mode": "semi",
+  "tasks": { "done": 7, "total": 7 },
+  "tokens_est": 0,
+  "updated_at": "2026-09-25T00:00:00Z"
+}
