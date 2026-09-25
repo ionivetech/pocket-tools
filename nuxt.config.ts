@@ -1,5 +1,6 @@
 import { defineNuxtConfig } from "nuxt/config";
 import tailwindcss from "@tailwindcss/vite";
+import { generatedToolSlugs } from "./app/data/tool-routes.generated";
 import { AuraBlue } from "./app/theme/aura-blue";
 
 const precacheBudgetBytes = 512 * 1024;
@@ -15,14 +16,7 @@ export default defineNuxtConfig({
 	nitro: {
 		compressPublicAssets: true,
 		prerender: {
-			routes: [
-				"/",
-				"/tools",
-				"/tools/json-formatter",
-				"/tools/password-generator",
-				"/tools/color-picker",
-				"/tools/text-cleaner",
-			],
+			routes: ["/", "/tools", ...generatedToolSlugs.map((slug) => `/tools/${slug}`)],
 		},
 	},
 	routeRules: {
