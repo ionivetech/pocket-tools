@@ -45,7 +45,7 @@ PocketTools Phase 0 is complete on the feature branch: a Nuxt 4.5.2, Bun-only, m
 - Flow 6 — gates: complete; full CI, E2E, accessibility, PWA, responsive, and Lighthouse pass.
 - Flow 7 — review/security: complete; audit blockers resolved.
 - Flow 8 — healing: complete; cycle 1 resolved the PWA, UX, accessibility, theme, license, security-header, Bun-only, and performance findings.
-- Flow 9 — closure: final healing commit `dcf2af4` is pushed; archive cleanup and handoff follow.
+- Flow 9 — closure: final healing commit `dcf2af4` and archive commit `4c011fb` are pushed; handoff follows.
 
 ## Limitations
 
@@ -80,5 +80,5 @@ Revert the Phase 0 healing commit(s) or reset `feature/phase-0-nuxt` to `11fc429
 - PR direction: `feature/phase-0-nuxt → main`
 - Initial baseline commit: `11fc429`
 - Final healing commit: `dcf2af4 feat(phase-0): harden nuxt pockettools foundation`
-- Archive commit: pending
+- Archive commit: `4c011fb chore(mission): archive phase-0 mission`
 - The crew does not merge, deploy, or open the PR.
