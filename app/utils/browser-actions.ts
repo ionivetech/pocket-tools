@@ -96,6 +96,66 @@ export async function copyText(
 	}
 }
 
+/** Rejects a runtime that cannot produce a text Blob or a usable adapter. */
+function assertDownloadEnvironment(environment: DownloadEnvironment | undefined): void {
+	if (typeof Blob === "undefined") {
+		throw new BrowserActionError("download_unavailable");
+	}
+
+	if (
+		environment !== undefined &&
+		(typeof environment.createObjectURL !== "function" ||
+			typeof environment.revokeObjectURL !== "function" ||
+			typeof environment.createAnchor !== "function")
+	) {
+		throw new BrowserActionError("download_unavailable");
+	}
+}
+
+/** Hands the text Blob to the adapter; the caller validates the URL it returns. */
+function createTextBlobUrl(environment: DownloadEnvironment, value: string): string {
+	return environment.createObjectURL(new Blob([value], { type: "text/plain;charset=utf-8" }));
+}
+
+/** Rejects an object URL a lying adapter returned, including an empty one. */
+function assertObjectUrl(objectUrl: unknown): void {
+	if (typeof objectUrl === "string" && objectUrl.length > 0) {
+		return;
+	}
+
+	throw new BrowserActionError("download_unavailable");
+}
+
+/** Points a fresh anchor at the object URL and triggers the browser download. */
+function clickDownloadAnchor(
+	environment: DownloadEnvironment,
+	objectUrl: string,
+	safeFilename: string,
+): void {
+	const anchor = environment.createAnchor();
+	anchor.href = objectUrl;
+	anchor.download = safeFilename;
+	anchor.type = "text/plain;charset=utf-8";
+	anchor.click();
+}
+
+/** Releases the object URL in `finally`, reporting a revoke failure instead of hiding it. */
+function revokeObjectUrl(
+	environment: DownloadEnvironment,
+	objectUrl: string | undefined,
+): BrowserActionError | undefined {
+	if (objectUrl === undefined) {
+		return undefined;
+	}
+
+	try {
+		environment.revokeObjectURL(objectUrl);
+		return undefined;
+	} catch {
+		return new BrowserActionError("download_unavailable");
+	}
+}
+
 /**
  * Downloads text as a plain-text file and releases its object URL.
  *
@@ -114,42 +174,22 @@ export function downloadText(
 		throw new BrowserActionError("invalid_filename");
 	}
 
-	if (
-		typeof Blob === "undefined" ||
-		(environment !== undefined &&
-			(typeof environment.createObjectURL !== "function" ||
-				typeof environment.revokeObjectURL !== "function" ||
-				typeof environment.createAnchor !== "function"))
-	) {
-		throw new BrowserActionError("download_unavailable");
-	}
-
+	assertDownloadEnvironment(environment);
 	const downloadEnvironment = environment ?? getDefaultDownloadEnvironment();
 	let objectUrl: string | undefined;
 	let actionError: BrowserActionError | undefined;
 
 	try {
-		const blob = new Blob([value], { type: "text/plain;charset=utf-8" });
-		objectUrl = downloadEnvironment.createObjectURL(blob);
-		if (typeof objectUrl !== "string" || objectUrl.length === 0) {
-			throw new BrowserActionError("download_unavailable");
-		}
-
-		const anchor = downloadEnvironment.createAnchor();
-		anchor.href = objectUrl;
-		anchor.download = safeFilename;
-		anchor.type = "text/plain;charset=utf-8";
-		anchor.click();
+		// Created before it is validated so `finally` still revokes a bad URL.
+		objectUrl = createTextBlobUrl(downloadEnvironment, value);
+		assertObjectUrl(objectUrl);
+		clickDownloadAnchor(downloadEnvironment, objectUrl, safeFilename);
 	} catch {
 		actionError = new BrowserActionError("download_unavailable");
 	} finally {
-		if (objectUrl !== undefined) {
-			try {
-				downloadEnvironment.revokeObjectURL(objectUrl);
-			} catch {
-				actionError ??= new BrowserActionError("download_unavailable");
-			}
-		}
+		// Revoke unconditionally; a download failure must not skip cleanup.
+		const revokeError = revokeObjectUrl(downloadEnvironment, objectUrl);
+		actionError ??= revokeError;
 	}
 
 	if (actionError) {

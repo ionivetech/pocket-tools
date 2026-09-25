@@ -54,8 +54,16 @@ export type Result<T> =
 	| { ok: true; value: T }
 	| { ok: false; error: { code: string; message: string } };
 
+function isMetadataRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function isOneOf<const T extends string>(value: unknown, values: readonly T[]): value is T {
 	return typeof value === "string" && values.some((candidate) => candidate === value);
+}
+
+function isToolSlug(value: unknown): value is string {
+	return typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
 function isNonEmptyString(value: unknown): value is string {
@@ -92,13 +100,13 @@ function invalidMetadata(code: string, message: string): Result<ToolMetadata> {
  * ```
  */
 export function validateToolMetadata(value: unknown): Result<ToolMetadata> {
-	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+	if (!isMetadataRecord(value)) {
 		return invalidMetadata("invalid_tool_metadata", "Tool metadata must be an object");
 	}
 
-	const metadata = value as Record<string, unknown>;
+	const metadata = value;
 
-	if (typeof metadata.slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(metadata.slug)) {
+	if (!isToolSlug(metadata.slug)) {
 		return invalidMetadata("invalid_tool_slug", "Tool slug must be a lowercase kebab-case string");
 	}
 
