@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAppReady } from "./helpers/app";
 
 test("registers the service worker and serves the cached shell offline", async ({
 	page,
@@ -13,7 +14,7 @@ test("registers the service worker and serves the cached shell offline", async (
 	);
 
 	await page.goto("/");
-	await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
+	await waitForAppReady(page);
 	await page.evaluate(async () => {
 		if (!("serviceWorker" in navigator)) throw new Error("Service workers are unavailable");
 		await navigator.serviceWorker.ready;

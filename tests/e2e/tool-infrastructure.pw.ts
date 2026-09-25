@@ -1,18 +1,16 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { expectNoHorizontalOverflow, gotoAppReady, waitForAppReady } from "./helpers/app";
+import { createChunkGate, interceptLazyChunk } from "./helpers/chunk";
 
 const javascriptBudgetBytes = 120 * 1024;
 const cssBudgetBytes = 30 * 1024;
 const lazyToolMarker = "This tool is not available yet.";
-
-async function waitForApp(page: Page) {
-	await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
-}
+const routeTimeout = 20_000;
 
 test.describe("Phase 1 tool infrastructure", () => {
 	test("collection search and category filters work at 375px", async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 812 });
-		await page.goto("/tools");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools");
 
 		const search = page.getByRole("textbox", { name: "Search the tool library" });
 		await search.fill("JSON");
@@ -25,46 +23,33 @@ test.describe("Phase 1 tool infrastructure", () => {
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "Color picker" })).toHaveCount(0);
 
-		const overflow = await page.evaluate(
-			() => document.documentElement.scrollWidth > window.innerWidth,
-		);
-		expect(overflow).toBe(false);
+		await expectNoHorizontalOverflow(page, "375px tool collection");
 	});
 
 	test("detail renders its lazy local placeholder", async ({ context, page }) => {
-		let releaseChunk = () => {};
-		const chunkGate = new Promise<void>((resolve) => {
-			releaseChunk = resolve;
-		});
-		let markChunkRequested = () => {};
-		const chunkRequested = new Promise<void>((resolve) => {
-			markChunkRequested = resolve;
-		});
-		await context.route("**/_nuxt/*.js", async (route) => {
-			const response = await route.fetch();
-			const body = await response.text();
-			if (body.includes(lazyToolMarker)) {
-				markChunkRequested();
-				await chunkGate;
-			}
-			await route.fulfill({ response });
+		const chunkGate = createChunkGate(routeTimeout);
+		interceptLazyChunk(context, lazyToolMarker, async (chunk, route) => {
+			chunkGate.markIntercepted();
+			await chunkGate.opened;
+			await route.fulfill(chunk);
 		});
 
-		await page.goto("/tools");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools");
 		const jsonCard = page
 			.getByRole("article")
 			.filter({ has: page.getByRole("heading", { name: "JSON formatter" }) });
 		const navigation = jsonCard.getByRole("link", { name: "Open tool" }).click();
+		// The click outlives this block while the chunk is held; keep it from rejecting on teardown.
+		navigation.catch(() => {});
 		try {
-			await chunkRequested;
+			await chunkGate.intercepted;
 			await expect(page.getByTestId("tool-state")).toHaveAttribute("data-kind", "loading");
 			await expect(page.getByTestId("tool-placeholder")).toHaveCount(0);
 		} finally {
-			releaseChunk();
+			chunkGate.release();
 		}
 		await navigation;
-		await waitForApp(page);
+		await waitForAppReady(page);
 
 		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
 		await expect(
@@ -73,21 +58,26 @@ test.describe("Phase 1 tool infrastructure", () => {
 	});
 
 	test("an unknown slug returns a useful 404 with recovery", async ({ page }) => {
-		const response = await page.goto("/tools/not-a-real-tool");
-		expect(response?.status()).toBe(404);
-		await expect(page.getByTestId("route-error-state")).toBeVisible();
+		const notFound = page.waitForResponse(
+			(response) => new URL(response.url()).pathname === "/tools/not-a-real-tool",
+			{ timeout: routeTimeout },
+		);
+		// Commit on the response headers: the error page never finishes loading under worker load.
+		await page.goto("/tools/not-a-real-tool", { waitUntil: "commit", timeout: routeTimeout });
+		expect((await notFound).status()).toBe(404);
+		await expect(page).toHaveURL(/\/tools\/not-a-real-tool$/, { timeout: routeTimeout });
+		await expect(page.getByTestId("route-error-state")).toBeVisible({ timeout: routeTimeout });
 		await expect(page.getByRole("heading", { name: "We could not find that page." })).toBeVisible();
 		await expect(page.getByText(/Browse the tool collection or go back/)).toBeVisible();
 
 		await page.getByRole("button", { name: "Browse tools" }).click();
-		await expect(page).toHaveURL(/\/tools$/);
+		await expect(page).toHaveURL(/\/tools$/, { timeout: routeTimeout });
 		await expect(page.getByRole("heading", { name: "All tools" })).toBeVisible();
 	});
 
 	test("collection search and result focus are keyboard reachable", async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 812 });
-		await page.goto("/tools");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools");
 
 		const search = page.getByRole("textbox", { name: "Search the tool library" });
 		await search.focus();
@@ -106,8 +96,7 @@ test.describe("Phase 1 tool infrastructure", () => {
 
 	test("reduced motion suppresses running and scheduled motion", async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: "reduce" });
-		await page.goto("/");
-		await waitForApp(page);
+		await gotoAppReady(page, "/");
 
 		await expect
 			.poll(() =>
@@ -140,23 +129,16 @@ test.describe("Phase 1 tool infrastructure", () => {
 
 	test("a local tool failure preserves the shell and offers retry", async ({ context, page }) => {
 		let failNextRequest = true;
-		await context.route("**/_nuxt/*.js", async (route) => {
-			const response = await route.fetch();
-			const body = await response.text();
-			if (!body.includes(lazyToolMarker)) {
-				await route.fulfill({ response });
+		interceptLazyChunk(context, lazyToolMarker, async (chunk, route) => {
+			if (!failNextRequest) {
+				await route.fulfill(chunk);
 				return;
 			}
-			if (failNextRequest) {
-				failNextRequest = false;
-				await route.abort("failed");
-				return;
-			}
-			await route.fulfill({ response });
+			failNextRequest = false;
+			await route.abort("failed");
 		});
 
-		await page.goto("/tools/json-formatter");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools/json-formatter");
 
 		const errorState = page.getByRole("alert").filter({ hasText: "This tool could not open" });
 		await expect(errorState).toBeVisible();
@@ -167,7 +149,7 @@ test.describe("Phase 1 tool infrastructure", () => {
 
 	test("home stays within the initial JavaScript and CSS budgets", async ({ page }) => {
 		await page.goto("/", { waitUntil: "networkidle" });
-		await waitForApp(page);
+		await waitForAppReady(page);
 
 		const { loadEnd, resources } = await page.evaluate(() => {
 			const loadEnd = performance.getEntriesByType("navigation")[0]?.loadEventEnd ?? 0;
