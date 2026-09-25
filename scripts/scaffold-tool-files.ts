@@ -42,7 +42,7 @@ function schemaFile(args: ScaffoldArgs): string {
 		`export type ${tool}Input = Readonly<{ text: string }>;`,
 		"",
 		"/**",
-		` * Manual parser for the ${args.name} input shape.`,
+		" * Manual parser for this tool's input shape.",
 		" *",
 		" * @example",
 		" * ```ts",
@@ -82,7 +82,7 @@ function logicFile(args: ScaffoldArgs): string {
 		`export type ${tool}Output = Readonly<{ summary: string }>;`,
 		"",
 		"/**",
-		` * Empty-state contract for ${args.name}.`,
+		" * Empty-state contract for this tool.",
 		" *",
 		" * The scaffold ships no tool algorithm on purpose. Implement the real",
 		" * behaviour here and return a genuine `Result` instead of a fake success.",
@@ -107,12 +107,14 @@ function logicFile(args: ScaffoldArgs): string {
 }
 
 function componentFile(args: ScaffoldArgs): string {
+	// The name stays out of the template on purpose: it is cosmetic in a stub no
+	// route renders, and any interpolation of it is an injection surface.
 	return [
 		"<template>",
 		`\t<section class="pt-empty" data-testid="${args.slug}-placeholder" aria-labelledby="${args.slug}-placeholder-title">`,
 		'\t\t<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="sparkles" /></span>',
 		"\t\t<div>",
-		`\t\t\t<h2 id="${args.slug}-placeholder-title">${args.name} is not available yet.</h2>`,
+		`\t\t\t<h2 id="${args.slug}-placeholder-title">This tool is not available yet.</h2>`,
 		"\t\t\t<p>",
 		"\t\t\t\tThe working version is still being built. There is nothing to enter or download here",
 		"\t\t\t\tyet.",

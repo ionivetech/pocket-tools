@@ -20,12 +20,27 @@ const generatedFileNames = [
 	"schema.ts",
 ] as const;
 
+/** M-4 regression inputs: each one breaks a different generated surface. */
+const hostileNames = [
+	"*/ globalThis.__pwned = true; /*",
+	"{{ 1 + 1 }}",
+	"</h2><script>alert(1)</script>",
+	'Say "hi" to `code`\nsecond line',
+] as const;
+
 const temporaryDirectories: string[] = [];
 
 const scriptPath = resolve(
 	dirname(fileURLToPath(import.meta.url)),
 	"../../scripts/scaffold-tool.ts",
 );
+
+const generatorScriptPath = resolve(
+	dirname(fileURLToPath(import.meta.url)),
+	"../../scripts/generate-tool-registry.ts",
+);
+
+const transpiler = new Bun.Transpiler({ loader: "ts" });
 
 const completeArguments = [
 	"--slug",
@@ -74,6 +89,41 @@ function expectParseFailure(result: Result<ScaffoldArgs>, code: ScaffoldErrorCod
 
 async function readToolDirectory(root: string, slug: string): Promise<string[]> {
 	return (await readdir(join(root, "app", "tools", slug))).sort();
+}
+
+async function scaffoldInto(outRoot: string, overrides: Partial<ScaffoldArgs> = {}) {
+	return scaffoldTool({ ...(await parsedScaffoldArgs(outRoot)), ...overrides });
+}
+
+function toolFile(outRoot: string, fileName: string): string {
+	return join(outRoot, "app", "tools", "word-count", fileName);
+}
+
+async function generateRegistryFor(outRoot: string) {
+	const registryOutput = join(outRoot, "app", "data", "tool-registry.generated.ts");
+	const routesOutput = join(outRoot, "app", "data", "tool-routes.generated.ts");
+	await mkdir(dirname(registryOutput), { recursive: true });
+	const result = await generateToolRegistry({
+		toolsRoot: join(outRoot, "app", "tools"),
+		registryOutput,
+		routesOutput,
+	});
+	return { registryOutput, result, routesOutput };
+}
+
+/** Runs the real `generate:registry --check` gate against a temporary root. */
+async function checkRegistryFor(outRoot: string) {
+	const child = Bun.spawn([process.execPath, generatorScriptPath, "--check"], {
+		cwd: outRoot,
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	const [stdout, stderr, exitCode] = await Promise.all([
+		new Response(child.stdout).text(),
+		new Response(child.stderr).text(),
+		child.exited,
+	]);
+	return { exitCode, output: `${stdout}${stderr}` };
 }
 
 afterEach(async () => {
@@ -367,6 +417,115 @@ describe("scaffoldTool", () => {
 			expect(result.error.code).toBe("write_failed");
 		}
 		expect(await readdir(outRoot)).toEqual(["not-a-directory"]);
+	});
+});
+
+describe("hostile --name", () => {
+	for (const name of hostileNames) {
+		test(`keeps generated TypeScript inert for ${JSON.stringify(name)}`, async () => {
+			const outRoot = await createOutRoot();
+			await scaffoldInto(outRoot, { name });
+			const generatedTypeScript = ["metadata.ts", "schema.ts", "logic.ts", "logic.test.ts"];
+
+			for (const fileName of generatedTypeScript) {
+				const code = await Bun.file(toolFile(outRoot, fileName)).text();
+				expect(() => transpiler.transformSync(code)).not.toThrow();
+			}
+			// A `*/` break-out transpiles without complaint and lands as a top-level
+			// statement, so the guard has to be the executed result, not the parse.
+			delete (globalThis as Record<string, unknown>).__pwned;
+			for (const fileName of ["metadata.ts", "schema.ts", "logic.ts"]) {
+				await import(pathToFileURL(toolFile(outRoot, fileName)).href);
+			}
+			expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
+			delete (globalThis as Record<string, unknown>).__pwned;
+			// schema.ts interpolated the name in exactly one place: the JSDoc.
+			expect(await Bun.file(toolFile(outRoot, "schema.ts")).text()).not.toContain(name);
+			expect(await Bun.file(toolFile(outRoot, "logic.ts")).text()).toContain(
+				" * Empty-state contract for this tool.",
+			);
+		});
+
+		test(`keeps ${JSON.stringify(name)} out of the placeholder markup`, async () => {
+			const outRoot = await createOutRoot();
+			await scaffoldInto(outRoot, { name });
+			const component = await Bun.file(toolFile(outRoot, "ToolComponent.vue")).text();
+
+			expect(component).toContain(
+				'<h2 id="word-count-placeholder-title">This tool is not available yet.</h2>',
+			);
+			expect(component).not.toContain(name);
+			// No interpolation at all, so no name can hide inside an expression.
+			expect(component).not.toContain("{{");
+			expect(component).toContain('data-testid="word-count-placeholder"');
+			expect(component).toContain('id="word-count-placeholder-title"');
+		});
+	}
+});
+
+describe("scaffoldTool registry freshness", () => {
+	test("publishes scaffolded metadata through the generated registry", async () => {
+		const outRoot = await createOutRoot();
+		await scaffoldInto(outRoot);
+
+		const { registryOutput, result, routesOutput } = await generateRegistryFor(outRoot);
+
+		expect(result).toEqual({ ok: true, definitionCount: 1, slugs: ["word-count"] });
+		expect(await Bun.file(registryOutput).text()).toContain('from "../tools/word-count/metadata";');
+		expect(await Bun.file(routesOutput).text()).toContain('"word-count"');
+		const imported = (await import(pathToFileURL(toolFile(outRoot, "metadata.ts")).href)) as {
+			readonly toolMetadata?: unknown;
+		};
+		expect(validateToolMetadata(imported.toolMetadata).ok).toBe(true);
+	});
+
+	test("the --check gate fails once a scaffolded tool drifts from its output", async () => {
+		const outRoot = await createOutRoot();
+		await scaffoldInto(outRoot);
+		await generateRegistryFor(outRoot);
+		const metadata = await Bun.file(toolFile(outRoot, "metadata.ts")).text();
+
+		// The generated registry carries slugs and import paths, not names, so a
+		// renamed tool is the drift that can actually 404 a route.
+		await mkdir(join(outRoot, "app", "tools", "renamed-tool"), { recursive: true });
+		for (const fileName of ["metadata.ts", "schema.ts", "logic.ts", "ToolComponent.vue"]) {
+			await Bun.write(
+				join(outRoot, "app", "tools", "renamed-tool", fileName),
+				(await Bun.file(toolFile(outRoot, fileName)).text())
+					.replaceAll("word-count", "renamed-tool")
+					.replaceAll("WordCount", "RenamedTool")
+					.replaceAll("Word count", "Renamed tool"),
+			);
+		}
+		expect(metadata).toContain("word-count");
+		const drifted = await checkRegistryFor(outRoot);
+
+		expect(drifted.exitCode).not.toBe(0);
+		expect(drifted.output).toContain("registry_generation_failed");
+		expect(drifted.output).toContain("stale");
+	});
+
+	test("the --check gate passes on drift-free output", async () => {
+		const outRoot = await createOutRoot();
+		await scaffoldInto(outRoot);
+		await generateRegistryFor(outRoot);
+
+		const clean = await checkRegistryFor(outRoot);
+
+		expect(clean.output).toContain("1 tool definitions, 0 errors");
+		expect(clean.exitCode).toBe(0);
+	});
+
+	test("ci:local runs the freshness gate ahead of the tests", async () => {
+		const manifest = JSON.parse(
+			await Bun.file(resolve(dirname(fileURLToPath(import.meta.url)), "../../package.json")).text(),
+		) as { readonly scripts: Readonly<Record<string, string>> };
+		const steps = manifest.scripts["ci:local"]?.split(" && ") ?? [];
+
+		expect(steps.indexOf("bun run generate:registry -- --check")).toBeGreaterThanOrEqual(0);
+		expect(steps.indexOf("bun run generate:registry -- --check")).toBeLessThan(
+			steps.indexOf("bun run test"),
+		);
 	});
 });
 
