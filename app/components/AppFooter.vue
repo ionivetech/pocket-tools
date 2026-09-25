@@ -5,6 +5,6 @@
 			<span>PocketTools</span>
 		</NuxtLink>
 		<span>Made for the in-between moments.</span>
-		<a href="#top">Back to top <i class="pi pi-arrow-up" aria-hidden="true" /></a>
+		<a href="#top">Back to top <AppIcon name="arrow-up" /></a>
 	</footer>
 </template>

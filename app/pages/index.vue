@@ -6,6 +6,7 @@ type CategoryFilter = (typeof toolCategories)[number];
 const categories = toolCategories;
 const query = ref("");
 const activeCategory = ref<CategoryFilter>("All");
+const resultsSection = ref<HTMLElement | null>(null);
 
 const filteredTools = computed(() => {
 	const normalizedQuery = query.value.trim().toLowerCase();
@@ -28,6 +29,11 @@ function clearFilters() {
 	activeCategory.value = "All";
 }
 
+function showResults() {
+	resultsSection.value?.focus({ preventScroll: true });
+	resultsSection.value?.scrollIntoView({ block: "start" });
+}
+
 function setCategory(category: CategoryFilter) {
 	activeCategory.value = category;
 }
@@ -47,11 +53,11 @@ function setCategory(category: CategoryFilter) {
 						momentum.
 					</p>
 
-					<form class="pt-search" role="search" @submit.prevent>
+					<form class="pt-search" role="search" @submit.prevent="showResults">
 						<label class="pt-sr-only" for="tool-search">Search tools</label>
-						<i class="pi pi-search pt-search__icon" aria-hidden="true" />
+						<AppIcon name="search" class="pt-search__icon" />
 						<InputText id="tool-search" v-model="query" placeholder="What do you want to do?" />
-						<Button type="submit" label="Find a tool" icon="pi pi-arrow-right" icon-pos="right" />
+						<Button type="submit" label="Find a tool" />
 					</form>
 
 					<div class="pt-hero__hint">
@@ -62,55 +68,49 @@ function setCategory(category: CategoryFilter) {
 					</div>
 				</div>
 
-				<div
-					class="pt-hero__visual pt-rise pt-rise--delay"
-					aria-label="PocketTools quick launcher preview"
-				>
+				<div class="pt-hero__visual pt-rise pt-rise--delay">
 					<div class="pt-orbit pt-orbit--one" aria-hidden="true"></div>
 					<div class="pt-orbit pt-orbit--two" aria-hidden="true"></div>
 					<div class="pt-launcher">
 						<div class="pt-launcher__topline">
-							<span class="pt-launcher__label">Quick launcher</span>
-							<span class="pt-live-dot"
-								><i class="pi pi-circle-fill" aria-hidden="true" /> Ready</span
-							>
+							<span class="pt-launcher__label">Tool collection</span>
+							<span class="pt-live-dot"><AppIcon name="circle-fill" :size="8" /> Open now</span>
 						</div>
 						<div class="pt-launcher__search">
-							<i class="pi pi-sparkles" aria-hidden="true" />
-							<span>Pick a starting point</span>
-							<kbd>⌘ K</kbd>
+							<AppIcon name="sparkles" />
+							<span>Open a real tool below</span>
 						</div>
 						<div class="pt-launcher__list">
-							<div class="pt-launcher__row">
-								<span class="pt-tool-icon pt-tool-icon--blue"
-									><i class="pi pi-code" aria-hidden="true"
-								/></span>
-								<span><strong>Format JSON</strong><small>Developer</small></span>
-								<i class="pi pi-arrow-up-right" aria-hidden="true" />
-							</div>
-							<div class="pt-launcher__row">
-								<span class="pt-tool-icon pt-tool-icon--blue-strong"
-									><i class="pi pi-lock" aria-hidden="true"
-								/></span>
-								<span><strong>Make a password</strong><small>Everyday</small></span>
-								<i class="pi pi-arrow-up-right" aria-hidden="true" />
-							</div>
-							<div class="pt-launcher__row">
-								<span class="pt-tool-icon pt-tool-icon--blue-soft"
-									><i class="pi pi-palette" aria-hidden="true"
-								/></span>
-								<span><strong>Pick a color</strong><small>Media</small></span>
-								<i class="pi pi-arrow-up-right" aria-hidden="true" />
-							</div>
+							<NuxtLink
+								v-for="tool in tools.slice(0, 3)"
+								:key="tool.slug"
+								class="pt-launcher__row"
+								:to="`/tools/${tool.slug}`"
+							>
+								<span class="pt-tool-icon" :class="`pt-tool-icon--${tool.accent}`">
+									<AppIcon :name="tool.icon" />
+								</span>
+								<span
+									><strong>{{ tool.name }}</strong
+									><small>{{ tool.category }}</small></span
+								>
+								<AppIcon name="arrow-up-right" />
+							</NuxtLink>
 						</div>
 						<div class="pt-launcher__footer">
-							<i class="pi pi-lock" aria-hidden="true" /> Everything stays in your browser
+							<AppIcon name="lock" /> Everything stays in your browser
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<section id="tools" class="pt-section" aria-labelledby="tools-title">
+			<section
+				id="tools"
+				ref="resultsSection"
+				class="pt-section"
+				tabindex="-1"
+				aria-labelledby="tools-title"
+			>
 				<div class="pt-section__heading">
 					<div>
 						<p class="pt-kicker">Find your shortcut</p>
@@ -119,7 +119,7 @@ function setCategory(category: CategoryFilter) {
 					<p>Search by what you need, not by what a tool is called.</p>
 				</div>
 
-				<div class="pt-category-row" aria-label="Filter tools by category">
+				<div class="pt-category-row" role="group">
 					<button
 						v-for="category in categories"
 						:key="category"
@@ -138,9 +138,7 @@ function setCategory(category: CategoryFilter) {
 				</div>
 
 				<div v-else class="pt-empty" aria-live="polite">
-					<span class="pt-tool-icon pt-tool-icon--blue"
-						><i class="pi pi-search" aria-hidden="true"
-					/></span>
+					<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="search" /></span>
 					<div>
 						<h3>No shortcut found yet.</h3>
 						<p>Try a broader search, or clear the filters to see the full collection.</p>
@@ -150,7 +148,7 @@ function setCategory(category: CategoryFilter) {
 			</section>
 
 			<section id="privacy" class="pt-principle" aria-labelledby="privacy-title">
-				<div class="pt-principle__mark" aria-hidden="true"><i class="pi pi-shield" /></div>
+				<div class="pt-principle__mark" aria-hidden="true"><AppIcon name="shield" /></div>
 				<div>
 					<p class="pt-kicker">A quieter promise</p>
 					<h2 id="privacy-title">Your work stays yours.</h2>

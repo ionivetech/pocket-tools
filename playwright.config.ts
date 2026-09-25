@@ -16,7 +16,7 @@ export default defineConfig({
 		serviceWorkers: "allow",
 	},
 	webServer: {
-		command: `PORT=${port} node .output/server/index.mjs`,
+		command: `PORT=${port} bun .output/server/index.mjs`,
 		url: baseURL,
 		reuseExistingServer: !process.env.CI,
 		stdout: "ignore",

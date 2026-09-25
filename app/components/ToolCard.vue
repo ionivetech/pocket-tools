@@ -20,7 +20,7 @@ const emit = defineEmits<{
 	<article class="pt-tool-card">
 		<div class="pt-tool-card__topline">
 			<span class="pt-tool-icon" :class="`pt-tool-icon--${props.tool.accent}`">
-				<i :class="props.tool.icon" aria-hidden="true" />
+				<AppIcon :name="props.tool.icon" />
 			</span>
 			<span class="pt-tool-card__category">{{ props.tool.category }}</span>
 			<button
@@ -35,7 +35,7 @@ const emit = defineEmits<{
 				:aria-pressed="props.favorite"
 				@click="emit('toggleFavorite', props.tool.slug)"
 			>
-				<i :class="props.favorite ? 'pi pi-star-fill' : 'pi pi-star'" aria-hidden="true" />
+				<AppIcon :name="props.favorite ? 'star-fill' : 'star'" />
 			</button>
 		</div>
 		<h3>{{ props.tool.name }}</h3>
@@ -45,7 +45,7 @@ const emit = defineEmits<{
 			:to="`/tools/${props.tool.slug}`"
 			@click="emit('open', props.tool)"
 		>
-			Open tool <i class="pi pi-arrow-right" aria-hidden="true" />
+			Open tool <AppIcon name="arrow-right" />
 		</NuxtLink>
 	</article>
 </template>

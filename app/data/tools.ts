@@ -2,13 +2,36 @@ export const toolCategories = ["All", "Everyday", "Text", "Developer", "Media"] 
 
 export type ToolCategory = (typeof toolCategories)[number];
 export type ToolAccent = "blue" | "blue-strong" | "blue-soft" | "blue-muted";
+export type AppIconName =
+	| "align-left"
+	| "arrow-left"
+	| "arrow-right"
+	| "arrow-up"
+	| "arrow-up-right"
+	| "bars"
+	| "check-circle"
+	| "circle-fill"
+	| "code"
+	| "exclamation-circle"
+	| "lock"
+	| "moon"
+	| "palette"
+	| "refresh"
+	| "search"
+	| "shield"
+	| "sparkles"
+	| "star"
+	| "star-fill"
+	| "sun"
+	| "times"
+	| "wifi";
 
 export type Tool = {
 	slug: string;
 	name: string;
 	description: string;
 	category: Exclude<ToolCategory, "All">;
-	icon: string;
+	icon: AppIconName;
 	accent: ToolAccent;
 	keywords: string[];
 };
@@ -19,7 +42,7 @@ export const tools: Tool[] = [
 		name: "JSON formatter",
 		description: "Tidy messy JSON and spot errors at a glance.",
 		category: "Developer",
-		icon: "pi pi-code",
+		icon: "code",
 		accent: "blue",
 		keywords: ["json", "format", "validate", "developer"],
 	},
@@ -28,7 +51,7 @@ export const tools: Tool[] = [
 		name: "Password generator",
 		description: "Create a strong password without leaving your browser.",
 		category: "Everyday",
-		icon: "pi pi-lock",
+		icon: "lock",
 		accent: "blue-strong",
 		keywords: ["password", "security", "random", "everyday"],
 	},
@@ -37,7 +60,7 @@ export const tools: Tool[] = [
 		name: "Color picker",
 		description: "Find a useful color and copy its values quickly.",
 		category: "Media",
-		icon: "pi pi-palette",
+		icon: "palette",
 		accent: "blue-soft",
 		keywords: ["color", "hex", "rgb", "media"],
 	},
@@ -46,7 +69,7 @@ export const tools: Tool[] = [
 		name: "Text cleaner",
 		description: "Clean up spacing and count what matters.",
 		category: "Text",
-		icon: "pi pi-align-left",
+		icon: "align-left",
 		accent: "blue-muted",
 		keywords: ["text", "clean", "count", "whitespace"],
 	},

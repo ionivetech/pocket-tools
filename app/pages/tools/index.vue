@@ -7,6 +7,7 @@ type CollectionView = "all" | "favorites" | "recent";
 const query = ref("");
 const activeCategory = ref<CategoryFilter>("All");
 const activeView = ref<CollectionView>("all");
+const resultsSection = ref<HTMLElement | null>(null);
 const { favoriteTools, recentTools, isFavorite, markRecent, toggleFavorite } = useToolLibrary();
 
 const collection = computed(() => {
@@ -58,6 +59,11 @@ function clearFilters() {
 	activeCategory.value = "All";
 }
 
+function showResults() {
+	resultsSection.value?.focus({ preventScroll: true });
+	resultsSection.value?.scrollIntoView({ block: "start" });
+}
+
 function openTool(tool: Tool) {
 	markRecent(tool.slug);
 }
@@ -69,33 +75,35 @@ function openTool(tool: Tool) {
 
 		<main id="main-content" class="pt-tools-page">
 			<section class="pt-tools-hero" aria-labelledby="tools-page-title">
-				<NuxtLink class="pt-back-link" to="/">
-					<i class="pi pi-arrow-left" aria-hidden="true" /> Back home
-				</NuxtLink>
+				<NuxtLink class="pt-back-link" to="/"> <AppIcon name="arrow-left" /> Back home </NuxtLink>
 				<p class="pt-kicker">The tool library</p>
 				<h1 id="tools-page-title">Find a better <span>shortcut.</span></h1>
 				<p>Search by the thing you want to do, then open a focused tool when you need it.</p>
 
-				<form class="pt-search pt-tools-search" role="search" @submit.prevent>
+				<form class="pt-search pt-tools-search" role="search" @submit.prevent="showResults">
 					<label class="pt-sr-only" for="collection-search">Search the tool library</label>
-					<i class="pi pi-search pt-search__icon" aria-hidden="true" />
+					<AppIcon name="search" class="pt-search__icon" />
 					<InputText id="collection-search" v-model="query" placeholder="Search the collection" />
-					<Button type="submit" label="Search" icon="pi pi-arrow-right" icon-pos="right" />
+					<Button type="submit" label="Search" />
 				</form>
 			</section>
 
-			<section class="pt-tools-library" aria-labelledby="collection-title">
+			<section
+				ref="resultsSection"
+				class="pt-tools-library"
+				tabindex="-1"
+				aria-labelledby="collection-title"
+			>
 				<div class="pt-library-heading">
 					<div>
 						<p class="pt-kicker">Choose your view</p>
 						<h2 id="collection-title">{{ pageTitle }}</h2>
 						<p>{{ pageDescription }}</p>
 					</div>
-					<div class="pt-view-tabs" role="tablist" aria-label="Tool collection views">
+					<div class="pt-view-tabs" role="group" aria-label="Tool collection views">
 						<button
 							type="button"
-							role="tab"
-							:aria-selected="activeView === 'all'"
+							:aria-pressed="activeView === 'all'"
 							:class="{ 'pt-view-tab--active': activeView === 'all' }"
 							@click="setView('all')"
 						>
@@ -103,8 +111,7 @@ function openTool(tool: Tool) {
 						</button>
 						<button
 							type="button"
-							role="tab"
-							:aria-selected="activeView === 'favorites'"
+							:aria-pressed="activeView === 'favorites'"
 							:class="{ 'pt-view-tab--active': activeView === 'favorites' }"
 							@click="setView('favorites')"
 						>
@@ -112,8 +119,7 @@ function openTool(tool: Tool) {
 						</button>
 						<button
 							type="button"
-							role="tab"
-							:aria-selected="activeView === 'recent'"
+							:aria-pressed="activeView === 'recent'"
 							:class="{ 'pt-view-tab--active': activeView === 'recent' }"
 							@click="setView('recent')"
 						>
@@ -122,7 +128,7 @@ function openTool(tool: Tool) {
 					</div>
 				</div>
 
-				<div class="pt-category-row" aria-label="Filter tools by category">
+				<div class="pt-category-row" role="group">
 					<button
 						v-for="category in toolCategories"
 						:key="category"
@@ -149,9 +155,7 @@ function openTool(tool: Tool) {
 				</div>
 
 				<div v-else class="pt-empty" aria-live="polite">
-					<span class="pt-tool-icon pt-tool-icon--blue"
-						><i class="pi pi-search" aria-hidden="true"
-					/></span>
+					<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="search" /></span>
 					<div>
 						<h3>
 							{{
