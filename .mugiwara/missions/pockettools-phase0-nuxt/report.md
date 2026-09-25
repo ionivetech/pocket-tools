@@ -13,7 +13,7 @@ PocketTools Phase 0 is complete on the feature branch: a Nuxt 4.5.2, Bun-only, m
 - Local `AppIcon.vue` SVG icon system; PrimeIcons dependency and font removed.
 - PWA manifest, local icons, Workbox runtime caching, static `/offline.html` fallback, prompt updates, and pre-paint theme bootstrap.
 - Six prerendered routes with Nitro Brotli/gzip public-asset compression.
-- Security headers, unit tests, 14 Playwright tests, axe, 44px target checks, Lighthouse, and `.github/workflows/ci.yml` for PR verification.
+- Security headers, unit tests, 15 Playwright tests, axe, 44px target checks, Lighthouse, and `.github/workflows/ci.yml` for PR verification.
 - Fresh `CHANGELOG.md` describing the final stack.
 
 ## Final verification
@@ -45,18 +45,22 @@ PocketTools Phase 0 is complete on the feature branch: a Nuxt 4.5.2, Bun-only, m
 - Flow 6 — gates: complete; full CI, E2E, accessibility, PWA, responsive, and Lighthouse pass.
 - Flow 7 — review/security: complete; audit blockers resolved.
 - Flow 8 — healing: complete; cycle 1 resolved the PWA, UX, accessibility, theme, license, security-header, Bun-only, and performance findings.
-- Flow 9 — closure: final commit/push and archive handoff pending at the time of this report.
+- Flow 9 — closure: final healing commit `dcf2af4` is pushed; archive cleanup and handoff follow.
 
 ## Limitations
 
 - Lighthouse INP is `notApplicable`; TBT and interaction tests are recorded instead.
 - `bun pm scan` is unavailable because no optional scanner is configured; `bun audit` passes.
 - The repository began as a parentless initial import, so historical breaking-change and full changed-code coverage comparisons are not applicable.
-- GitHub's remote default-branch setting requires authenticated `gh` or repository settings; the `main` branch itself exists remotely.
+- The user has already set GitHub's default branch to `main` manually; the crew will not change that setting.
 
 ## Gate exception
 
 The diff-size threshold is waived for this commit only: 22,172 of 22,579 staged deletions are the already-pushed raw evidence files explicitly removed by the user. The remaining deletions are the licensed PrimeIcons/font removal and superseded artifacts. No product behavior is hidden by this exception; it expires with the archive cleanup.
+
+## Archived artifacts
+
+The archive fold includes the execution log, gates, quality, closure, PR material, review, security, blocker ledger, spec, decisions, todos, and session state. The final report and `pr-verdict.md` retain the actionable history; raw evidence was intentionally deleted before the healing commit.
 
 ## Evidence cleanup
 
@@ -75,6 +79,6 @@ Revert the Phase 0 healing commit(s) or reset `feature/phase-0-nuxt` to `11fc429
 - Base branch: `main`
 - PR direction: `feature/phase-0-nuxt → main`
 - Initial baseline commit: `11fc429`
-- Final healing commit: pending
+- Final healing commit: `dcf2af4 feat(phase-0): harden nuxt pockettools foundation`
 - Archive commit: pending
 - The crew does not merge, deploy, or open the PR.
