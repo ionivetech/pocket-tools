@@ -45,6 +45,26 @@ body {
 	background: var(--pt-page);
 }
 
+.pt-icon {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	flex: 0 0 auto;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+	min-height: 2.75rem;
+}
+
+a {
+	display: inline-flex;
+	align-items: center;
+}
+
 button,
 a,
 input,
@@ -161,7 +181,7 @@ textarea {
 	font-weight: 600;
 }
 
-.pt-status i {
+.pt-status .pt-icon {
 	color: var(--pt-blue);
 	font-size: 0.8rem;
 }
@@ -374,7 +394,7 @@ textarea {
 	color: var(--pt-blue-strong);
 }
 
-.pt-live-dot i {
+.pt-live-dot .pt-icon {
 	font-size: 0.42rem;
 }
 
@@ -390,7 +410,7 @@ textarea {
 	font-size: 0.84rem;
 }
 
-.pt-launcher__search i {
+.pt-launcher__search .pt-icon {
 	color: var(--pt-blue);
 }
 
@@ -427,7 +447,7 @@ textarea {
 	transform: translateX(3px);
 }
 
-.pt-launcher__row > i {
+.pt-launcher__row > .pt-icon {
 	color: var(--pt-muted);
 	font-size: 0.75rem;
 }
@@ -482,7 +502,7 @@ textarea {
 	border-top: 1px solid var(--pt-line);
 }
 
-.pt-launcher__footer i {
+.pt-launcher__footer .pt-icon {
 	color: var(--pt-blue);
 }
 
@@ -613,11 +633,11 @@ textarea {
 	font-weight: 800;
 }
 
-.pt-tool-card__link i {
+.pt-tool-card__link .pt-icon {
 	transition: transform 180ms ease;
 }
 
-.pt-tool-card__link:hover i {
+.pt-tool-card__link:hover .pt-icon {
 	transform: translateX(3px);
 }
 
@@ -977,7 +997,7 @@ textarea {
 	color: var(--pt-blue-strong);
 }
 
-.pt-drawer__nav i {
+.pt-drawer__nav .pt-icon {
 	color: var(--pt-muted);
 	font-size: 0.75rem;
 }
@@ -994,7 +1014,7 @@ textarea {
 	line-height: 1.5;
 }
 
-.pt-drawer__footer i {
+.pt-drawer__footer .pt-icon {
 	margin-top: 0.15rem;
 	color: var(--pt-blue);
 }
@@ -1090,7 +1110,7 @@ textarea {
 
 .pt-view-tabs button {
 	display: inline-flex;
-	min-height: 2.6rem;
+	min-height: 2.75rem;
 	align-items: center;
 	gap: 0.45rem;
 	padding: 0.5rem 0.8rem;
@@ -1193,7 +1213,7 @@ textarea {
 	font-weight: 800;
 }
 
-.pt-detail-card__status i {
+.pt-detail-card__status .pt-icon {
 	font-size: 0.95rem;
 }
 
@@ -1267,12 +1287,12 @@ textarea {
 	gap: 0.4rem;
 }
 
-.pt-pwa-status i {
+.pt-pwa-status .pt-icon {
 	color: var(--pt-blue);
 }
 
 .pt-pwa-status button {
-	min-height: 2rem;
+	min-height: 2.75rem;
 	padding: 0.35rem 0.7rem;
 	border: 0;
 	border-radius: 999px;

@@ -5,13 +5,10 @@
   "budget": 20000,
   "evidence": [
     ".mugiwara/missions/pockettools-phase0-nuxt/plan.md",
-    ".mugiwara/missions/pockettools-phase0-nuxt/report.md",
-    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/ci-local.log",
-    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/lighthouse-mobile.json",
-    ".mugiwara/missions/pockettools-phase0-nuxt/evidence/lighthouse-desktop.json"
+    ".mugiwara/missions/pockettools-phase0-nuxt/report.md"
   ],
   "flow": 8,
-  "heal_cycle": 0,
+  "heal_cycle": 1,
   "lane": "full",
   "lane_reason": "greenfield framework pivot, destructive cleanup, UI/PWA/accessibility gates",
   "member": null,

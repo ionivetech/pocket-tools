@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const pwa = usePWA();
+const pwa = usePWA?.();
 const isOnline = ref(true);
 
 const hasServiceWorker = computed(() => Boolean(pwa?.swActivated || pwa?.offlineReady));
@@ -37,14 +37,12 @@ onBeforeUnmount(() => {
 		role="status"
 		aria-live="polite"
 	>
-		<span v-if="!isOnline"><i class="pi pi-wifi" aria-hidden="true" /> Offline mode</span>
-		<span v-else-if="updateReady"
-			><i class="pi pi-sparkles" aria-hidden="true" /> Update ready</span
-		>
+		<span v-if="!isOnline"><AppIcon name="wifi" /> Offline mode</span>
+		<span v-else-if="updateReady"><AppIcon name="sparkles" /> Update ready</span>
 		<span v-else-if="registrationError"
-			><i class="pi pi-exclamation-circle" aria-hidden="true" /> Offline setup needs a retry</span
+			><AppIcon name="exclamation-circle" /> Offline setup needs a retry</span
 		>
-		<span v-else><i class="pi pi-check-circle" aria-hidden="true" /> Ready for offline use</span>
+		<span v-else><AppIcon name="check-circle" /> Ready for offline use</span>
 		<button v-if="updateReady" type="button" @click="activateUpdate">Refresh</button>
 	</div>
 </template>

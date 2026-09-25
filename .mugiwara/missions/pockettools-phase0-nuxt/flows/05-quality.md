@@ -2,17 +2,19 @@
 
 ## Verdict: PASS
 
-- `oxfmt --check`: passed.
+- `oxfmt --check`: passed for 37 files.
 - `oxlint --vue-plugin`: passed.
 - `nuxt typecheck`: passed.
-- Bun unit tests: 2 passed, 5 assertions.
-- Production build: passed.
-- Playwright: 8 passed across shell, axe, PWA, responsive, favorites, theme, and mobile navigation.
-- PrimeVue 4.5.5 and `@primeuix/themes` 2.0.3 are pinned in `package.json` and `bun.lock`.
-- PrimeIcons is shipped as a local WOFF2 subset in `public/fonts/primeicons.woff2`; the unused SVG/font formats are not loaded.
-- PWA production precache is 33 entries / 472.09 KiB.
-- Lighthouse evidence is stored in `evidence/lighthouse-mobile.json` and `evidence/lighthouse-desktop.json`.
+- Bun unit tests: 3 passed, 6 assertions.
+- Playwright: 15 passed across shell, axe, 44px targets, PWA, offline fallback, security headers, detail-route icon rendering, theme, favorites, responsive layouts, and mobile navigation.
+- Nitro prerenders six routes and compresses public HTML/assets; production `/` responds with Brotli.
+- Lighthouse mobile: performance 96, FCP 2.1s, LCP 2.3s, CLS 0, TBT 30ms, accessibility/best practices/SEO 100.
+- Lighthouse desktop: performance 100, FCP 0.5s, LCP 0.5s, CLS 0, TBT 0ms, accessibility/best practices/SEO 100.
+- `bun audit`: no vulnerabilities.
+- No PrimeIcons dependency or unlicensed icon font remains; local SVG icons are used.
 
-## Known follow-up
+## Recorded limitations
 
-Mobile Lighthouse LCP is 4.7 s under Lighthouse's simulated throttling. The page has no layout shift and low TBT; further reduction is a later performance pass, not a blocker for the initial foundation commit.
+- Unit coverage is scoped to the deterministic tool registry because the repository began as a parentless initial import; no artificial whole-app coverage threshold was invented.
+- Lighthouse INP is `notApplicable`; TBT is recorded and interaction flows are covered by Playwright.
+- `bun pm scan` is not configured; `bun audit` is the supported dependency check.

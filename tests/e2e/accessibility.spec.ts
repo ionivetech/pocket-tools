@@ -17,4 +17,24 @@ for (const route of ["/", "/tools"]) {
 
 		expect(seriousViolations).toEqual([]);
 	});
+
+	test(`${route} keeps visible interactive targets at 44px`, async ({ page }) => {
+		await page.goto(route);
+		await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
+		const undersized = await page
+			.locator("button:visible, a:visible, input:visible, select:visible, textarea:visible")
+			.evaluateAll((elements) =>
+				elements
+					.map((element) => ({
+						name:
+							element.getAttribute("aria-label") ??
+							element.textContent?.trim().slice(0, 40) ??
+							element.tagName,
+						height: element.getBoundingClientRect().height,
+					}))
+					.filter((element) => element.height > 0 && element.height < 44),
+			);
+
+		expect(undersized).toEqual([]);
+	});
 }

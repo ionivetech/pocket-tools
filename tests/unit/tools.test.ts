@@ -13,4 +13,8 @@ describe("tool registry", () => {
 		expect(tool?.name).toBe("Password generator");
 		expect(findTool("missing-tool")).toBeUndefined();
 	});
+
+	test("keeps local icon identifiers free of PrimeIcons classes", () => {
+		expect(tools.every((tool) => /^[a-z][a-z-]*$/.test(tool.icon))).toBe(true);
+	});
 });

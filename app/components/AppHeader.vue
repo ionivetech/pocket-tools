@@ -22,17 +22,15 @@ function closeDrawer() {
 			</nav>
 
 			<div class="pt-topbar__actions">
-				<span class="pt-status"
-					><i class="pi pi-shield" aria-hidden="true" /> Private by default</span
-				>
+				<span class="pt-status"> <AppIcon name="shield" /> Private by default</span>
 				<button
 					class="pt-theme-toggle"
 					type="button"
-					:aria-label="isDark ? 'Switch to light theme' : 'Switch to dark theme'"
+					aria-label="Dark theme"
 					:aria-pressed="isDark"
 					@click="toggleTheme"
 				>
-					<i :class="isDark ? 'pi pi-sun' : 'pi pi-moon'" aria-hidden="true" />
+					<AppIcon :name="isDark ? 'sun' : 'moon'" />
 				</button>
 				<button
 					class="pt-mobile-menu"
@@ -41,7 +39,7 @@ function closeDrawer() {
 					:aria-expanded="drawerOpen"
 					@click="drawerOpen = true"
 				>
-					<i class="pi pi-bars" aria-hidden="true" />
+					<AppIcon name="bars" />
 				</button>
 			</div>
 		</div>
@@ -50,17 +48,15 @@ function closeDrawer() {
 	<Drawer v-model:visible="drawerOpen" position="right" header="PocketTools" class="pt-drawer">
 		<nav class="pt-drawer__nav" aria-label="Mobile navigation">
 			<NuxtLink to="/tools" @click="closeDrawer"
-				>Browse tools <i class="pi pi-arrow-right" aria-hidden="true"
+				>Browse tools <AppIcon name="arrow-right"
 			/></NuxtLink>
 			<NuxtLink to="/#privacy" @click="closeDrawer"
-				>Privacy <i class="pi pi-arrow-right" aria-hidden="true"
+				>Privacy <AppIcon name="arrow-right"
 			/></NuxtLink>
-			<NuxtLink to="/#about" @click="closeDrawer"
-				>About <i class="pi pi-arrow-right" aria-hidden="true"
-			/></NuxtLink>
+			<NuxtLink to="/#about" @click="closeDrawer">About <AppIcon name="arrow-right" /></NuxtLink>
 		</nav>
 		<div class="pt-drawer__footer">
-			<i class="pi pi-lock" aria-hidden="true" />
+			<AppIcon name="lock" />
 			<span>Your work stays in your browser.</span>
 		</div>
 	</Drawer>

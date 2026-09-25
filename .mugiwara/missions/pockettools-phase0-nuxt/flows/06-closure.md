@@ -1,47 +1,50 @@
 # Closure — pockettools-phase0-nuxt
 
-## Ship verdict: GO for initial commit
+## Ship verdict: GO for PR from `feature/phase-0-nuxt` to `main`
 
-This is a commit-ready Phase 0 foundation. It is not a production deployment: no deploy, merge, or PR is performed by the crew.
+This is a commit-ready Phase 0 foundation. The crew does not merge, deploy, or open the PR automatically.
 
-## Evidence
+## Final verification
 
-- Full local gate: [ci-local.log](../evidence/ci-local.log), exit 0.
-- Unit tests: 2 passed.
-- Playwright: 8 passed.
-- Axe: home and tools routes have zero serious/critical violations.
-- Responsive: 375px, 768px, and 1440px screenshots/checks pass.
-- PWA: production service worker, manifest, icons, runtime cache, and offline reload pass.
-- Lighthouse: [mobile](../evidence/lighthouse-mobile.json) and [desktop](../evidence/lighthouse-desktop.json).
-- Dependency audit: `bun audit` reports no vulnerabilities.
+- `bun run ci:local`: PASS, exit 0.
+- Unit: 3 passed, 6 assertions; 100% functions/lines for `app/data/tools.ts`.
+- Playwright: 15 passed.
+- Axe: zero serious/critical violations on `/` and `/tools`.
+- 44px interactive-target assertions: pass on `/` and `/tools`.
+- PWA: registration, bounded caches, static `/offline.html` fallback, and fresh unvisited-route offline test pass.
+- Route smoke: `/`, `/tools`, four tool slugs, `/offline` return 200; unknown slug returns 404.
+- Lighthouse mobile: performance 96, FCP 2.1s, LCP 2.3s, CLS 0, TBT 30ms; accessibility/best practices/SEO 100.
+- Lighthouse desktop: performance 100, FCP 0.5s, LCP 0.5s, CLS 0, TBT 0ms; accessibility/best practices/SEO 100.
+- Dev PWA warning: `/dev-sw.js` and `/dev-sw.js?dev-sw` return 204 with zero `VUE_ROUTER_R0004` warnings.
+- `bun audit`: no vulnerabilities.
 - Secret scan: clean.
-- Documentation: `README.md`, `PLAN.md`, `ROADMAP.md`, `AGENTS.md`, and `CHANGELOG.md` updated.
+- Production build: pass; 6 routes prerendered; PWA precache 41 entries / 443.00 KiB with 23 JavaScript entries.
 
-## Scope delivered
+## Delivered
 
-- Nuxt 4 + Bun foundation.
-- PrimeVue 4.5.5 Aura blue theme with explicit tree-shaken components.
-- Tailwind CSS v4 tokens and responsive visual system.
-- Search-first, non-sidebar shell.
-- `/tools` and `/tools/[slug]` routes.
-- Favorites/recent tools, theme persistence, mobile Drawer, empty/404 states.
-- PWA manifest, icons, Workbox runtime cache, offline fallback, and update state.
-- Playwright, axe, Lighthouse, unit, and CI evidence.
+- Nuxt 4.5.2 + Bun-only foundation.
+- PrimeVue 4.5.5 Aura blue, Tailwind CSS v4, local SVG icon system.
+- Search-first, non-sidebar shell, `/tools`, `/tools/[slug]`, favorites, recent tools, theme persistence, mobile Drawer, empty/404/offline states.
+- PWA manifest, local icons, Workbox runtime caching, static offline fallback, prompt updates, and pre-paint theme bootstrap.
+- Security headers and GitHub Actions PR verification workflow.
+- Strict TypeScript, unit/Playwright/axe/Lighthouse evidence.
 
-## Release safety
+## Release safety and rollback
 
-- Feature flags: not applicable; this is an initial foundation with no remote rollout.
-- Staged rollout: not applicable; no production deployment is performed.
-- Backup: repository source and lockfile are restorable from the initial commit; no external data store exists.
-- Rollback: revert the initial Phase 0 commit, or reset the feature branch to its pre-commit state. No database or remote migration requires reversal.
-- Secrets: none committed.
+- No feature flag or staged rollout is required for this initial foundation.
+- No database, external service, or user-data migration exists.
+- Rollback is a revert/reset of the Phase 0 commits; no remote data reversal is required.
+- No secrets are committed.
 
-## Known follow-up
+## Known limitations
 
-Mobile Lighthouse LCP is 4.7 s under simulated throttling. Desktop LCP is 0.9 s, CLS is 0, and TBT is 0 ms. This is tracked for a later performance pass and does not block the initial foundation commit.
+- INP is `notApplicable` in Lighthouse; TBT and interaction tests are recorded instead.
+- `bun pm scan` is not configured; `bun audit` passes.
+- Raw mission evidence is removed after this report is committed, at the user's request.
 
-## Terminal status
+## Terminal handoff
 
-- Branch: `feature/phase-0-nuxt`
-- Commit/push: handled by the terminal handoff after the staged allowlist is verified.
-- No PR, merge, or deployment is performed.
+- Feature branch: `feature/phase-0-nuxt`
+- Base/default branch: `main`
+- PR direction: `feature/phase-0-nuxt → main`
+- No merge, deploy, or PR creation is performed by the crew.

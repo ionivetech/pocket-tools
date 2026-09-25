@@ -14,8 +14,12 @@ test.describe("Phase 0 shell", () => {
 
 		const search = page.getByLabel("Search tools");
 		await search.fill("password");
+		await page.getByRole("button", { name: "Find a tool" }).click();
+		await expect(page.locator("#tools")).toBeFocused();
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toHaveCount(0);
+		await expect(page.getByText("⌘ K")).toHaveCount(0);
+		await expect(page.getByRole("link", { name: /JSON formatter/ }).first()).toBeVisible();
 	});
 
 	test("tools route supports categories and a real empty state", async ({ page }) => {
@@ -31,16 +35,48 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 	});
 
+	test("tool detail renders its accessible local icon without PrimeIcons", async ({ page }) => {
+		await page.goto("/tools/json-formatter");
+		await waitForApp(page);
+
+		const detail = page.getByRole("region", { name: "JSON formatter" });
+		await expect(detail).toBeVisible();
+		await expect(detail.locator(".pt-tool-icon > svg")).toHaveAttribute("aria-hidden", "true");
+		await expect(detail.locator(".pt-tool-icon > svg > path")).toHaveCount(1);
+		await expect(page.locator("[class~='pi']")).toHaveCount(0);
+	});
+
 	test("favorites and theme state persist in the browser", async ({ page }) => {
 		await page.goto("/tools");
 		await waitForApp(page);
 		await page.getByRole("button", { name: "Add Password generator to favorites" }).click();
-		await page.getByRole("tab", { name: /Favorites/ }).click();
+		await page.getByRole("button", { name: /Favorites/ }).click();
+		await expect(page.getByRole("button", { name: /Favorites/ })).toHaveAttribute(
+			"aria-pressed",
+			"true",
+		);
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 
 		await page.goto("/");
 		await waitForApp(page);
-		await page.getByRole("button", { name: "Switch to dark theme" }).click();
+		const themeToggle = page.getByRole("button", { name: "Dark theme" });
+		await expect(themeToggle).toHaveAttribute("aria-pressed", "false");
+		await themeToggle.click();
+		await expect(themeToggle).toHaveAttribute("aria-pressed", "true");
+		await expect(page.locator("html")).toHaveClass(/app-dark/);
+	});
+
+	test("applies a persisted theme before the app mounts", async ({ page }) => {
+		await page.addInitScript(() => {
+			window.localStorage.setItem("pockettools-theme", "dark");
+		});
+		await page.goto("/", { waitUntil: "domcontentloaded" });
+		await expect(page.locator("html")).toHaveClass(/app-dark/);
+	});
+
+	test("applies the system theme before the app mounts", async ({ page }) => {
+		await page.emulateMedia({ colorScheme: "dark" });
+		await page.goto("/", { waitUntil: "domcontentloaded" });
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
@@ -58,15 +94,21 @@ test.describe("Phase 0 shell", () => {
 	});
 
 	test("responsive layouts stay within the viewport", async ({ page }) => {
-		for (const width of [375, 768, 1440]) {
-			await page.setViewportSize({ width, height: 900 });
-			await page.goto("/");
-			await waitForApp(page);
-			const overflow = await page.evaluate(
-				() => document.documentElement.scrollWidth > window.innerWidth,
-			);
-			expect(overflow, `horizontal overflow at ${width}px`).toBe(false);
-			await page.screenshot({ path: `${evidenceDir}/phase0-home-${width}.png`, fullPage: true });
+		for (const theme of ["light", "dark"] as const) {
+			await page.emulateMedia({ colorScheme: theme });
+			for (const width of [375, 768, 1440]) {
+				await page.setViewportSize({ width, height: 900 });
+				await page.goto("/");
+				await waitForApp(page);
+				const overflow = await page.evaluate(
+					() => document.documentElement.scrollWidth > window.innerWidth,
+				);
+				expect(overflow, `horizontal overflow at ${width}px in ${theme} theme`).toBe(false);
+				await page.screenshot({
+					path: `${evidenceDir}/phase0-home-${width}-${theme}.png`,
+					fullPage: true,
+				});
+			}
 		}
 	});
 });

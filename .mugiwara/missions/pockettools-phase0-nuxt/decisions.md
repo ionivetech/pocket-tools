@@ -79,3 +79,82 @@
 - Plan impact: `PLAN.md`, `ROADMAP.md`, `AGENTS.md`, `README.md`, active mission plan/spec, and evidence checklist now target PrimeVue 4.5.5. Future v5-only component ideas are deferred to a later ADR/migration.
 - Evidence: `package.json`, `bun.lock`, `nuxt.config.ts`, `ROADMAP.md` Phase 0 checklist.
 - Status: fresh post-downgrade format/lint/typecheck/build/E2E/Lighthouse/CI gates still required before commit readiness.
+
+## Flow 8 — healing (cycle 1) — 2026-09-25
+
+- Actor: AI: opencode/space-bunny-free
+- Decision: reopen the mission; do not archive or claim ship-ready completion after the final checkpoint/review audit returned NO-GO/FAIL findings.
+- Evidence: committed `11fc429`; final `bun run ci:local` passes executable checks, but checkpoint found incomplete DoD evidence and coverage scope; Robin found first-install offline, unbounded PWA cache, no-op home search, touch-target, tab-semantics, theme-flash, and Bun-only Playwright-server issues; Jinbe found unresolved PrimeIcons/PrimeUI license compliance and missing deployment-header policy.
+- Route: Flow 8 healing to Brook/Zoro, then return to Flow 4 checkpoint and Flow 6 gates before Flow 9 closure.
+- Plan impact: keep Phase 0 open; add blocker ledger entries and corrective acceptance checks. Do not weaken budgets or add dependencies without evidence.
+
+## Flow 8 — user-directed follow-up (2026-09-25)
+
+- Mode: `semi`; branch: `feature/phase-0-nuxt`; configured commit style: `conventional`; configured `auto_commit=on`, overridden for this run by the user's explicit no-commit instruction.
+- Scope: verify the PrimeVue theme serialization change, eliminate development router warnings without enabling a development service worker, rewrite the Phase 0 changelog, add the minimal Bun CI workflow, and run the requested gates.
+- No branch switch, commit, push, merge, deploy, or archive is authorized.
+
+
+- Actor: user: farid nugraha <<farid.nugraha@mekari.com>>
+- Decision: create `main` as the canonical branch containing the current committed Phase 0 baseline, then continue corrective work from `main` as requested.
+- Action: created and pushed `main` at `11fc429`; restored `.mugiwara/config` enforcement after the protected-branch push; switched the working tree to `main`.
+- Plan impact: `main` now tracks `origin/main`; `feature/phase-0-nuxt` remains preserved as the original mission branch. No merge, PR, or deployment was performed.
+
+## Flow 9 — branch topology correction — 2026-09-25
+
+- Actor: user: farid nugraha <<farid.nugraha@mekari.com>>
+- Decision: `main` is the repository default/base branch; all remaining Phase 0 corrections stay on `feature/phase-0-nuxt` and will be handed off for a PR from feature to main.
+- Action: switched the working tree back to `feature/phase-0-nuxt`. Attempted to set the GitHub default branch with `gh repo edit`; GitHub CLI is unauthenticated, so the remote default-branch setting could not be changed from this session.
+- Plan impact: do not archive until the feature branch is healed, gated, committed, pushed, and handed off for PR. The local/remote `main` branch exists at the baseline; the human must authenticate `gh` or set the default branch in repository settings.
+
+## Flow 8 — evidence cleanup request — 2026-09-25
+
+- Actor: user: farid nugraha <<farid.nugraha@mekari.com>>
+- Decision: delete the mission `evidence/` directory only after the final feature-branch gates, review, security, ship verdict, commit, push, and archive handoff are complete.
+- Plan impact: preserve the final gate summary and key Lighthouse metrics in the archived `report.md` before deleting raw evidence files; do not remove evidence early.
+
+## Flow 8 — user-directed mobile performance follow-up — 2026-09-25
+
+- Mode: `semi`; branch: `feature/phase-0-nuxt`; configured commit style: `conventional`; configured `auto_commit=on`, overridden by the user's explicit no-commit instruction.
+- Scope: make the smallest evidence-backed Nitro/Vite performance change, rebuild, rerun mobile Lighthouse, and keep only a deterministic net improvement without weakening thresholds or harming PWA/accessibility.
+- Exclusions: no changelog or workflow edits; no dependency, commit, push, branch switch, merge, deploy, or archive.
+- Action: enabled Nitro's built-in `compressPublicAssets`; no application, PWA, accessibility, or threshold changes.
+- Result: retained after three validation runs scored 89 and the final evidence run scored 90; median FCP/LCP fell from 4.4/4.8 s to 2.9/3.0 s and transfer fell from 607 KiB to about 325 KiB.
+- Evidence: `nuxt.config.ts`, `evidence/lighthouse-mobile.json`, generated Brotli assets under `.output/public/_nuxt/`, `bun run build`, and 7 passing targeted PWA/accessibility tests.
+- Blocker: mobile LCP remains 2.9 s and performance 90 versus the `<2.5 s` / `>=95` Phase 0 targets; the 190,823-byte SSR HTML remains uncompressed and dominates transfer.
+
+## Flow 8 — user-directed SSR prerender experiment (2026-09-25)
+
+- Mode: `semi`; branch: `feature/phase-0-nuxt`; configured commit style: `conventional`; `auto_commit=on` overridden by explicit user instruction; no commit/push/branch switch/merge/deploy/archive.
+- Scope: smallest Nitro config-only experiment to prerender known static routes and tool slugs while retaining the existing `compressPublicAssets`; do not change app behavior or targets.
+- Evidence basis: Nuxt 4 route rules support selective prerendering; Nitro documents `compressPublicAssets` pre-compression for public assets and prerendered routes.
+- Decision pending: retain only if it reaches both mobile Lighthouse targets (`performance >=95`, `LCP <2.5 s`); otherwise revert the experiment.
+
+## Flow 8 — healing completion and final gates — 2026-09-25
+
+- Decision: retain Nitro prerendering for six known routes and `compressPublicAssets`; three validation runs reached mobile performance 96 and LCP 2.3s, meeting the Phase 0 targets without changing application behavior.
+- Result: full `bun run ci:local` passes with 3 unit tests and 14 Playwright tests; route smoke and Brotli response pass; dev `/dev-sw.js` requests return 204 with zero router warnings; desktop Lighthouse performance is 100.
+- Plan impact: Flow 8 blockers are resolved. Flow 9 may commit/push the healed feature branch, then archive the mission and push the archive cleanup. `main` remains the PR base; no merge or deploy.
+
+## Flow 8 — final review blocker follow-up — 2026-09-25
+
+- Mode: `semi`; branch: `feature/phase-0-nuxt`; commit style: `conventional`; configured `auto_commit=on`, overridden by the user's explicit no-commit instruction.
+- Scope: fix only the final review blockers for icon rendering, accessible grouping/toggle naming, hashed PWA client precache, focused e2e coverage, and the decorative launcher wrapper; then run the requested focused gates.
+- Exclusions: no commit, push, branch switch, merge, deploy, evidence deletion, or mission archive.
+
+## Flow 9 — evidence deletion and archive handoff — 2026-09-25
+
+- Decision: delete `.mugiwara/missions/pockettools-phase0-nuxt/evidence/` after the final report summary is written and before the final feature commit, as requested.
+- Archive layout: retain `plan.md`, `report.md`, and root `pr-verdict.md`; fold flow logs, decisions, blockers, review, security, spec, and state into the report before removing loose files.
+- Terminal rule: commit and push the healed feature branch first, then archive and push the archive cleanup. The crew hands off `feature/phase-0-nuxt` for PR to `main` and never merges or deploys.
+
+## Flow 9 — default branch instruction cancelled — 2026-09-25
+
+- Actor: user: farid nugraha <<farid.nugraha@mekari.com>>
+- Decision: cancel the automated default-branch change; the user has already set `main` as the repository default manually.
+- Action: do not run `gh repo edit`, do not change `.mugiwara/config` enforcement, and do not alter remote default-branch settings. The crew only hands off `feature/phase-0-nuxt` for PR to `main`.
+
+## Flow 8 — final review fix verification — 2026-09-25
+
+- Decision: accept the final review fixes and return to closure.
+- Result: the remaining PrimeIcons template binding, category-group ARIA roles, theme-toggle accessible name, hashed JS/CSS precache, and detail-route regression coverage are fixed. Full `bun run ci:local` passes with 3 unit tests and 15 Playwright tests; Lighthouse remains mobile 96 / LCP 2.3s and desktop 100 / LCP 0.5s.
