@@ -1,6 +1,7 @@
+import { mkdir } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 
-const evidenceDir = ".mugiwara/missions/pockettools-phase0-nuxt/evidence";
+const evidenceDir = ".mugiwara/missions/pockettools-phase1-core-infrastructure/evidence";
 
 async function waitForApp(page: Page) {
 	await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
@@ -15,7 +16,7 @@ test.describe("Phase 0 shell", () => {
 		const search = page.getByLabel("Search tools");
 		await search.fill("password");
 		await page.getByRole("button", { name: "Find a tool" }).click();
-		await expect(page.locator("#tools")).toBeFocused();
+		await expect(page.getByRole("region", { name: "Start with something useful." })).toBeFocused();
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toHaveCount(0);
 		await expect(page.getByText("⌘ K")).toHaveCount(0);
@@ -35,15 +36,15 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 	});
 
-	test("tool detail renders its accessible local icon without PrimeIcons", async ({ page }) => {
+	test("tool detail renders registry metadata and the local placeholder", async ({ page }) => {
 		await page.goto("/tools/json-formatter");
 		await waitForApp(page);
 
-		const detail = page.getByRole("region", { name: "JSON formatter" });
-		await expect(detail).toBeVisible();
-		await expect(detail.locator(".pt-tool-icon > svg")).toHaveAttribute("aria-hidden", "true");
-		await expect(detail.locator(".pt-tool-icon > svg > path")).toHaveCount(1);
-		await expect(page.locator("[class~='pi']")).toHaveCount(0);
+		await expect(page.getByRole("heading", { level: 1, name: "JSON formatter" })).toBeVisible();
+		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
+		await expect(
+			page.getByRole("heading", { name: "This tool is not available yet." }),
+		).toBeVisible();
 	});
 
 	test("favorites and theme state persist in the browser", async ({ page }) => {
@@ -94,6 +95,7 @@ test.describe("Phase 0 shell", () => {
 	});
 
 	test("responsive layouts stay within the viewport", async ({ page }) => {
+		await mkdir(evidenceDir, { recursive: true });
 		for (const theme of ["light", "dark"] as const) {
 			await page.emulateMedia({ colorScheme: theme });
 			for (const width of [375, 768, 1440]) {
@@ -105,7 +107,7 @@ test.describe("Phase 0 shell", () => {
 				);
 				expect(overflow, `horizontal overflow at ${width}px in ${theme} theme`).toBe(false);
 				await page.screenshot({
-					path: `${evidenceDir}/phase0-home-${width}-${theme}.png`,
+					path: `${evidenceDir}/phase1-home-${width}-${theme}.png`,
 					fullPage: true,
 				});
 			}
