@@ -28,7 +28,19 @@ const appIconNames = [
 const metadataCategories = ["Everyday", "Text", "Developer", "Media"] as const;
 const metadataAccents = ["blue", "blue-strong", "blue-soft", "blue-muted"] as const;
 
-export type ToolCategory = "All" | (typeof metadataCategories)[number];
+/**
+ * The one canonical list of tool categories. `ToolCategory` is derived from it,
+ * and the UI filter list and the scaffolder both read it, so adding a category
+ * is a single edit. `"All"` is deliberately absent: it filters, it never labels a tool.
+ *
+ * @example
+ * ```ts
+ * toolCategoryValues.includes("Developer"); // true
+ * ```
+ */
+export const toolCategoryValues = metadataCategories;
+
+export type ToolCategory = "All" | (typeof toolCategoryValues)[number];
 export type AppIconName = (typeof appIconNames)[number];
 export type ToolAccent = (typeof metadataAccents)[number];
 export type ToolComponentPath = `~/components/${string}.vue`;

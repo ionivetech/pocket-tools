@@ -1,15 +1,18 @@
 import { createToolRegistry } from "./tool-registry";
 import { generatedToolDefinitions } from "./tool-registry.generated";
-import type { AppIconName, ToolAccent, ToolCategory, ToolDefinition } from "../types/tool";
+import {
+	type AppIconName,
+	type ToolAccent,
+	type ToolCategory,
+	type ToolDefinition,
+	toolCategoryValues,
+} from "../types/tool";
 
 export type { AppIconName, ToolAccent, ToolCategory };
 
 export const toolCategories = [
 	"All",
-	"Everyday",
-	"Text",
-	"Developer",
-	"Media",
+	...toolCategoryValues,
 ] as const satisfies readonly ToolCategory[];
 
 export type Tool = ToolDefinition;

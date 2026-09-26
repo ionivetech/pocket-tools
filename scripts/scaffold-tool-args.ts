@@ -1,4 +1,4 @@
-import { type Result, type ToolCategory } from "../app/types/tool";
+import { type Result, type ToolCategory, toolCategoryValues } from "../app/types/tool";
 
 export type ScaffoldErrorCode =
 	| "invalid_arguments"
@@ -22,8 +22,6 @@ export type ScaffoldArgs = Readonly<{
 type FlagValues = ReadonlyMap<string, string>;
 
 type TextFields = Readonly<{ slug: string; name: string; description: string }>;
-
-const supportedCategories = ["Everyday", "Text", "Developer", "Media"] as const;
 
 const allowedFlags = new Set([
 	"--slug",
@@ -82,10 +80,10 @@ function readTextFields(values: FlagValues): Result<TextFields> {
 
 function readCategory(values: FlagValues): Result<Exclude<ToolCategory, "All">> {
 	const category = readFlag(values, "--category");
-	if (!supportedCategories.some((candidate) => candidate === category)) {
+	if (!toolCategoryValues.some((candidate) => candidate === category)) {
 		return failure(
 			"invalid_category",
-			`Tool category must be one of ${supportedCategories.join(", ")}`,
+			`Tool category must be one of ${toolCategoryValues.join(", ")}`,
 		);
 	}
 
