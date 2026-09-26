@@ -1,21 +1,18 @@
-import { expect, test, type Page } from "@playwright/test";
+import { mkdir } from "node:fs/promises";
+import { expect, test } from "@playwright/test";
+import { expectNoHorizontalOverflow, gotoAppReady } from "./helpers/app";
 
-const evidenceDir = ".mugiwara/missions/pockettools-phase0-nuxt/evidence";
-
-async function waitForApp(page: Page) {
-	await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
-}
+const evidenceDir = ".mugiwara/missions/pockettools-phase1-core-infrastructure/evidence";
 
 test.describe("Phase 0 shell", () => {
 	test("home search filters the launcher collection", async ({ page }) => {
-		await page.goto("/");
-		await waitForApp(page);
+		await gotoAppReady(page, "/");
 		await expect(page.getByRole("heading", { name: /Small tools/ })).toBeVisible();
 
 		const search = page.getByLabel("Search tools");
 		await search.fill("password");
 		await page.getByRole("button", { name: "Find a tool" }).click();
-		await expect(page.locator("#tools")).toBeFocused();
+		await expect(page.getByRole("region", { name: "Start with something useful." })).toBeFocused();
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toHaveCount(0);
 		await expect(page.getByText("⌘ K")).toHaveCount(0);
@@ -23,8 +20,7 @@ test.describe("Phase 0 shell", () => {
 	});
 
 	test("tools route supports categories and a real empty state", async ({ page }) => {
-		await page.goto("/tools");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools");
 		await page.getByRole("button", { name: "Developer", exact: true }).click();
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "Password generator" })).toHaveCount(0);
@@ -35,20 +31,18 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 	});
 
-	test("tool detail renders its accessible local icon without PrimeIcons", async ({ page }) => {
-		await page.goto("/tools/json-formatter");
-		await waitForApp(page);
+	test("tool detail renders registry metadata and the local placeholder", async ({ page }) => {
+		await gotoAppReady(page, "/tools/json-formatter");
 
-		const detail = page.getByRole("region", { name: "JSON formatter" });
-		await expect(detail).toBeVisible();
-		await expect(detail.locator(".pt-tool-icon > svg")).toHaveAttribute("aria-hidden", "true");
-		await expect(detail.locator(".pt-tool-icon > svg > path")).toHaveCount(1);
-		await expect(page.locator("[class~='pi']")).toHaveCount(0);
+		await expect(page.getByRole("heading", { level: 1, name: "JSON formatter" })).toBeVisible();
+		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
+		await expect(
+			page.getByRole("heading", { name: "This tool is not available yet." }),
+		).toBeVisible();
 	});
 
 	test("favorites and theme state persist in the browser", async ({ page }) => {
-		await page.goto("/tools");
-		await waitForApp(page);
+		await gotoAppReady(page, "/tools");
 		await page.getByRole("button", { name: "Add Password generator to favorites" }).click();
 		await page.getByRole("button", { name: /Favorites/ }).click();
 		await expect(page.getByRole("button", { name: /Favorites/ })).toHaveAttribute(
@@ -57,8 +51,7 @@ test.describe("Phase 0 shell", () => {
 		);
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 
-		await page.goto("/");
-		await waitForApp(page);
+		await gotoAppReady(page, "/");
 		const themeToggle = page.getByRole("button", { name: "Dark theme" });
 		await expect(themeToggle).toHaveAttribute("aria-pressed", "false");
 		await themeToggle.click();
@@ -70,13 +63,13 @@ test.describe("Phase 0 shell", () => {
 		await page.addInitScript(() => {
 			window.localStorage.setItem("pockettools-theme", "dark");
 		});
-		await page.goto("/", { waitUntil: "domcontentloaded" });
+		await page.goto("/", { waitUntil: "domcontentloaded", timeout: 20_000 });
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
 	test("applies the system theme before the app mounts", async ({ page }) => {
 		await page.emulateMedia({ colorScheme: "dark" });
-		await page.goto("/", { waitUntil: "domcontentloaded" });
+		await page.goto("/", { waitUntil: "domcontentloaded", timeout: 20_000 });
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
@@ -84,8 +77,7 @@ test.describe("Phase 0 shell", () => {
 		test.use({ viewport: { width: 375, height: 812 } });
 
 		test("opens the drawer and reaches the collection", async ({ page }) => {
-			await page.goto("/");
-			await waitForApp(page);
+			await gotoAppReady(page, "/");
 			await page.getByRole("button", { name: "Open navigation menu" }).click();
 			await expect(page.getByRole("link", { name: /Browse tools/ })).toBeVisible();
 			await page.getByRole("link", { name: /Browse tools/ }).click();
@@ -94,18 +86,18 @@ test.describe("Phase 0 shell", () => {
 	});
 
 	test("responsive layouts stay within the viewport", async ({ page }) => {
+		await mkdir(evidenceDir, { recursive: true });
 		for (const theme of ["light", "dark"] as const) {
 			await page.emulateMedia({ colorScheme: theme });
 			for (const width of [375, 768, 1440]) {
 				await page.setViewportSize({ width, height: 900 });
-				await page.goto("/");
-				await waitForApp(page);
-				const overflow = await page.evaluate(
-					() => document.documentElement.scrollWidth > window.innerWidth,
+				await gotoAppReady(page, "/");
+				await expectNoHorizontalOverflow(
+					page,
+					`horizontal overflow at ${width}px in ${theme} theme`,
 				);
-				expect(overflow, `horizontal overflow at ${width}px in ${theme} theme`).toBe(false);
 				await page.screenshot({
-					path: `${evidenceDir}/phase0-home-${width}-${theme}.png`,
+					path: `${evidenceDir}/phase1-home-${width}-${theme}.png`,
 					fullPage: true,
 				});
 			}

@@ -1,4 +1,4 @@
-mode=semi
+mode=auto
 verbosity=normal
 branch=feature/{type}-{issue}-{slug}
 commit=conventional

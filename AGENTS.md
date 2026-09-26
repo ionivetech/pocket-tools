@@ -6,7 +6,7 @@
 
 - Runtime/package manager: **Bun 1.2+** only. Never npm, yarn, or pnpm.
 - Framework: **Nuxt 4** with the `app/` source directory.
-- UI: **PrimeVue 4.5.5** through `@primevue/nuxt-module` (MIT/open-source).
+- UI: **PrimeVue 4.5.5** through `@primevue/nuxt-module`. The Prime packages `bun.lock` pins are MIT; PrimeUI also publishes packages under its Community License, so read the licence note in `README.md` before adding one.
 - Theme: `@primeuix/themes` Aura preset with a blue semantic primary palette.
 - CSS: **Tailwind CSS v4** through `@tailwindcss/vite` and a CSS-first token file.
 - Language: TypeScript strict. No `any` and no `@ts-ignore` without an ADR.
@@ -66,6 +66,23 @@ bun run ci:local
 ```
 
 The gate must include formatting, linting, type checking, unit tests, and production build. Phase 0 also requires Playwright, axe, responsive screenshots, Lighthouse evidence, and an offline shell check.
+
+## Test standards
+
+Runner separation is non-negotiable. Pure logic runs under `bun test` (`tests/unit/*.test.ts`); browser flows run under Playwright (`tests/e2e/*.pw.ts`). Never name a Playwright file `*.spec.ts` — bare `bun test` would collect it and fail.
+
+### Anti-flaky Playwright rules
+
+1. No `waitForTimeout` and no fixed sleeps. Wait on observable state: locators, `expect(...).toBeVisible()`, `waitForURL`, or a bounded `waitForResponse`.
+2. Every wait is bounded. Navigation and network waits get a short explicit timeout (e.g. 20 s) and assert the expected state.
+3. Assert semantics, not styling. Query by role, accessible name, or test id — never by a utility, generated, or hashed class name. A documented project-owned state hook is allowed (e.g. `app-dark`, Tailwind's `darkModeSelector`), because it proves the state applied rather than only reported.
+4. When intercepting a request, capture `status`, `headers`, and `body` BEFORE `route.fulfill()`. Never fulfill from a `Response` whose body was already read; a disposed `Response` is the classic source of `Response has been disposed` flakes.
+5. When rewriting a response body, drop `content-encoding` and `content-length` and write the body you actually hold.
+6. Chunk-abort tests use a bounded gate that is always released in a `finally`, so a failed assertion can never hang the next test.
+7. Tests stay independent: no shared mutable state, no cross-test ordering, keep `fullyParallel` honest.
+8. Never raise `retries` to hide a failure. A retry that turns a red gate green is a broken gate — fix the root cause.
+9. Shared setup lives in `tests/e2e/helpers/` (`app.ts` for app-ready, axe, and touch-target waits; `chunk.ts` for chunk interception). Reuse it; do not copy-paste helpers into spec files.
+10. Before committing a browser change, prove stability: run the focused file 5x and the full Playwright suite 3x. A single green run is not evidence.
 
 ## Git and dependencies
 

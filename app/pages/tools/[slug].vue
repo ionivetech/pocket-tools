@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { findTool } from "~/data/tools";
+import { resolveToolRoute } from "~/data/tool-route";
+import { tools } from "~/data/tools";
 
 const route = useRoute();
-const tool = findTool(String(route.params.slug));
+const routeResult = resolveToolRoute(route.params.slug, tools);
 
-if (!tool) {
-	throw createError({ statusCode: 404, statusMessage: "Tool not found" });
+if (!routeResult.ok) {
+	throw createError({
+		status: 404,
+		statusText: "Tool not found",
+		data: { code: routeResult.error.code },
+	});
 }
 
+const tool = routeResult.value;
 const { markRecent } = useToolLibrary();
+
+useSeoMeta({
+	title: `${tool.name} | PocketTools`,
+	description: tool.description,
+});
 
 onMounted(() => {
 	markRecent(tool.slug);
@@ -20,22 +31,13 @@ onMounted(() => {
 		<AppHeader />
 
 		<main id="main-content" class="pt-detail-page">
-			<NuxtLink class="pt-back-link" to="/tools">
+			<NuxtLink class="pt-back-link" to="/tools" data-testid="tool-detail-back-link">
 				<AppIcon name="arrow-left" /> Back to tools
 			</NuxtLink>
 
-			<section class="pt-detail-card" aria-labelledby="tool-title">
-				<span class="pt-tool-icon" :class="`pt-tool-icon--${tool.accent}`">
-					<AppIcon :name="tool.icon" />
-				</span>
-				<p class="pt-kicker">{{ tool.category }} tool</p>
-				<h1 id="tool-title">{{ tool.name }}</h1>
-				<p class="pt-detail-card__description">{{ tool.description }}</p>
-				<div class="pt-detail-card__status">
-					<AppIcon name="sparkles" />
-					<span>This focused workspace is next in the collection.</span>
-				</div>
-			</section>
+			<ToolHeader :tool="tool" />
+			<ToolHost :tool="tool" />
+			<ToolFooter :tool="tool" />
 		</main>
 
 		<AppFooter />
