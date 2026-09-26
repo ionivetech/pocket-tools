@@ -1,4 +1,4 @@
-import { type Result, type ToolCategory, toolCategoryValues } from "../app/types/tool";
+import { isToolSlug, type Result, type ToolCategory, toolCategoryValues } from "../app/types/tool";
 
 export type ScaffoldErrorCode =
 	| "invalid_arguments"
@@ -61,7 +61,7 @@ function readFlags(argv: readonly string[]): Result<Map<string, string>> {
 
 function readTextFields(values: FlagValues): Result<TextFields> {
 	const slug = readFlag(values, "--slug");
-	if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+	if (!isToolSlug(slug)) {
 		return failure("invalid_slug", "Tool slug must be a lowercase kebab-case string");
 	}
 

@@ -81,7 +81,19 @@ function isOneOf<const T extends string>(value: unknown, values: readonly T[]): 
 	return typeof value === "string" && values.some((candidate) => candidate === value);
 }
 
-function isToolSlug(value: unknown): value is string {
+/**
+ * The one canonical slug rule: lowercase kebab-case, so a slug is safe as a
+ * route segment and a directory name. `validateToolMetadata` and the tool
+ * scaffolder both read this, so a slug the scaffolder accepts is one the app
+ * can resolve.
+ *
+ * @example
+ * ```ts
+ * isToolSlug("word-count"); // true
+ * isToolSlug("word--count"); // false
+ * ```
+ */
+export function isToolSlug(value: unknown): value is string {
 	return typeof value === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
 }
 
