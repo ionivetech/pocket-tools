@@ -79,6 +79,8 @@ export function interceptLazyChunk(
 			else await route.fulfill(chunk);
 		} catch {
 			// Superseded by a new navigation, or the context closed with the test.
+			// Abort anyway, so a real fetch failure cannot leave the chunk hanging.
+			await route.abort().catch(() => {});
 		}
 	});
 }

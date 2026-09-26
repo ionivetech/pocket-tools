@@ -63,13 +63,13 @@ test.describe("Phase 0 shell", () => {
 		await page.addInitScript(() => {
 			window.localStorage.setItem("pockettools-theme", "dark");
 		});
-		await page.goto("/", { waitUntil: "domcontentloaded" });
+		await page.goto("/", { waitUntil: "domcontentloaded", timeout: 20_000 });
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
 	test("applies the system theme before the app mounts", async ({ page }) => {
 		await page.emulateMedia({ colorScheme: "dark" });
-		await page.goto("/", { waitUntil: "domcontentloaded" });
+		await page.goto("/", { waitUntil: "domcontentloaded", timeout: 20_000 });
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 

@@ -8,7 +8,7 @@ export default defineConfig({
 	testMatch: "**/*.pw.ts",
 	fullyParallel: true,
 	forbidOnly: Boolean(process.env.CI),
-	retries: process.env.CI ? 1 : 0,
+	retries: 0,
 	reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]],
 	use: {
 		baseURL,

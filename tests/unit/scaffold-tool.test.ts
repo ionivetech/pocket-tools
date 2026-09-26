@@ -434,11 +434,14 @@ describe("hostile --name", () => {
 			// A `*/` break-out transpiles without complaint and lands as a top-level
 			// statement, so the guard has to be the executed result, not the parse.
 			delete (globalThis as Record<string, unknown>).__pwned;
-			for (const fileName of ["metadata.ts", "schema.ts", "logic.ts"]) {
-				await import(pathToFileURL(toolFile(outRoot, fileName)).href);
+			try {
+				for (const fileName of ["metadata.ts", "schema.ts", "logic.ts"]) {
+					await import(pathToFileURL(toolFile(outRoot, fileName)).href);
+				}
+				expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
+			} finally {
+				delete (globalThis as Record<string, unknown>).__pwned;
 			}
-			expect((globalThis as Record<string, unknown>).__pwned).toBeUndefined();
-			delete (globalThis as Record<string, unknown>).__pwned;
 			// schema.ts interpolated the name in exactly one place: the JSDoc.
 			expect(await Bun.file(toolFile(outRoot, "schema.ts")).text()).not.toContain(name);
 			expect(await Bun.file(toolFile(outRoot, "logic.ts")).text()).toContain(

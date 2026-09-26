@@ -75,7 +75,7 @@ Runner separation is non-negotiable. Pure logic runs under `bun test` (`tests/un
 
 1. No `waitForTimeout` and no fixed sleeps. Wait on observable state: locators, `expect(...).toBeVisible()`, `waitForURL`, or a bounded `waitForResponse`.
 2. Every wait is bounded. Navigation and network waits get a short explicit timeout (e.g. 20 s) and assert the expected state.
-3. Assert semantics, not styling. Query by role, accessible name, or test id — never by CSS class, hash, or generated asset name.
+3. Assert semantics, not styling. Query by role, accessible name, or test id — never by a utility, generated, or hashed class name. A documented project-owned state hook is allowed (e.g. `app-dark`, Tailwind's `darkModeSelector`), because it proves the state applied rather than only reported.
 4. When intercepting a request, capture `status`, `headers`, and `body` BEFORE `route.fulfill()`. Never fulfill from a `Response` whose body was already read; a disposed `Response` is the classic source of `Response has been disposed` flakes.
 5. When rewriting a response body, drop `content-encoding` and `content-length` and write the body you actually hold.
 6. Chunk-abort tests use a bounded gate that is always released in a `finally`, so a failed assertion can never hang the next test.

@@ -10,7 +10,7 @@ export function waitForAppReady(page: Page) {
 
 /** Navigates to `path` and waits for the app to be ready. @example `await gotoAppReady(page, "/tools");` */
 export async function gotoAppReady(page: Page, path: string) {
-	await page.goto(path);
+	await page.goto(path, { timeout: 20_000 });
 	await waitForAppReady(page);
 }
 
