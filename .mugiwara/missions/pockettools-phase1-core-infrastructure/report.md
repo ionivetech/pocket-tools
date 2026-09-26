@@ -5060,6 +5060,13 @@ Used **187,199** of 50,000 tokens (374%). Lane `full`. 2 heal cycles.
 
 ## Final W3 re-confirmation
 
+> **Note on `evidence/`:** the mission's `evidence/` directory — the axe and performance notes plus
+> six responsive screenshots — is **not committed**, by repository rule. The screenshots are
+> regenerated automatically by `tests/e2e/shell.pw.ts`, which creates the directory and writes them on
+> every browser run, so `.gitignore` now excludes `.mugiwara/missions/*/evidence/` to stop a later
+> `git add -A` from pulling ~1.8 MB of binaries back into a diff. The measured figures they carried are
+> preserved in §7 of this report and in `pr-verdict.md`, so nothing was lost by removing them.
+
 The human answered `go` to the third and final W3 question, on the numbers the gate owner measured
 first-hand at `3dc815d`: **+7,567 net / 8,109 churn / 68 files**, with `app/` **unchanged at 27 files
 / +1,551 net** — `git diff --shortstat 2343df1..3dc815d -- app/` is empty, so the basis of the #57
