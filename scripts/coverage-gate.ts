@@ -137,13 +137,33 @@ export type DiffRange = {
 	baseError: string;
 };
 
-function count(block: readonly string[], key: string): number {
+/**
+ * Reads one count off a record. An absent key reads as 0, which is what a truncated but
+ * otherwise valid record has always meant. A *present* value that is not a finite number is
+ * malformed data and is rejected here, where the offending record can still be named:
+ * `Number("abc")` is NaN, and every NaN comparison is false, so letting one reach the gate used
+ * to make it pass on a report that measured nothing.
+ */
+function count(block: readonly string[], key: string, path: string): number {
 	const prefix = `${key}:`;
 	const line = block.find((candidate) => candidate.startsWith(prefix));
-	return line === undefined ? 0 : Number(line.slice(prefix.length));
+	if (line === undefined) {
+		return 0;
+	}
+	const raw = line.slice(prefix.length).trim();
+	const parsed = Number(raw);
+	if (raw === "" || !Number.isFinite(parsed)) {
+		throw new Error(
+			`malformed lcov record for ${path}: ${key} is "${raw}", which is not a finite count`,
+		);
+	}
+	return parsed;
 }
 
-/** Parses an lcov report into per-file records. */
+/**
+ * Parses an lcov report into per-file records. Throws when a count is present but not a finite
+ * number, so a malformed report fails the gate instead of quietly reading as fully covered.
+ */
 export function parseLcov(raw: string): CoverageRecord[] {
 	const records: CoverageRecord[] = [];
 	let block: string[] = [];
@@ -153,10 +173,10 @@ export function parseLcov(raw: string): CoverageRecord[] {
 		if (path !== undefined) {
 			records.push({
 				path,
-				linesFound: count(block, "LF"),
-				linesHit: count(block, "LH"),
-				functionsFound: count(block, "FNF"),
-				functionsHit: count(block, "FNH"),
+				linesFound: count(block, "LF", path),
+				linesHit: count(block, "LH", path),
+				functionsFound: count(block, "FNF", path),
+				functionsHit: count(block, "FNH", path),
 			});
 		}
 		block = [];
@@ -209,12 +229,35 @@ export function coverageRatio(records: readonly CoverageRecord[]): CoverageRatio
 	};
 }
 
-/** Fails when any metric is below its minimum, and when there is no data at all. */
+/**
+ * The gate's single comparison: a coverage number against its floor. A non-finite ratio is a
+ * shortfall, never a pass, because `NaN < 0.85` and `NaN >= 0.85` are both false -- an
+ * open-coded comparison records nothing for a NaN metric and the gate then fails OPEN. Every
+ * verdict the gate prints comes through here, so a second path cannot disagree with this one.
+ */
+export function coverageShortfalls(ratio: CoverageRatio, minimums: CoverageMinimums): string[] {
+	const below = (
+		metric: "lines" | "functions",
+		actual: number,
+		minimum: number,
+	): string | undefined => {
+		if (!Number.isFinite(actual)) {
+			return `${metric} is ${actual}, which is not a finite ratio, so it cannot clear ${percent(minimum)}`;
+		}
+		return actual < minimum
+			? `${metric} ${percent(actual)} is below ${percent(minimum)}`
+			: undefined;
+	};
+
+	return [
+		below("lines", ratio.lines, minimums.lines),
+		below("functions", ratio.functions, minimums.functions),
+	].filter((shortfall): shortfall is string => shortfall !== undefined);
+}
+
+/** Fails on no data at all, on a non-finite ratio, and on any shortfall. */
 export function isCoverageAcceptable(ratio: CoverageRatio, minimums: CoverageMinimums): boolean {
-	if (ratio.files === 0) {
-		return false;
-	}
-	return ratio.lines >= minimums.lines && ratio.functions >= minimums.functions;
+	return ratio.files > 0 && coverageShortfalls(ratio, minimums).length === 0;
 }
 
 /**
@@ -387,7 +430,11 @@ function drillMinimum(
 	return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-/** Prints one class and records every shortfall against its own minimums. */
+/**
+ * Prints one class and records every shortfall against its own minimums. The verdict comes from
+ * `isCoverageAcceptable` and the wording from `coverageShortfalls`, so the printed explanation
+ * and the returned boolean can never come from two different comparisons.
+ */
 function checkClass(
 	out: GateOutput,
 	label: string,
@@ -400,18 +447,9 @@ function checkClass(
 			`${percent(ratio.functions)} functions (min ${percent(minimums.functions)})`,
 	);
 
-	const failed: string[] = [];
-	if (ratio.lines < minimums.lines) {
-		failed.push(`${label} lines ${percent(ratio.lines)} is below ${percent(minimums.lines)}`);
-	}
-	if (ratio.functions < minimums.functions) {
-		failed.push(
-			`${label} functions ${percent(ratio.functions)} is below ${percent(minimums.functions)}`,
-		);
-	}
-	shortfalls.push(...failed);
+	shortfalls.push(...coverageShortfalls(ratio, minimums).map((each) => `${label} ${each}`));
 
-	return failed.length === 0;
+	return isCoverageAcceptable(ratio, minimums);
 }
 
 /** The aggregate path used when the base ref is unresolvable. Never silent, never a plain PASS. */
@@ -457,7 +495,16 @@ export function runGate(inputs: GateInputs, out: GateOutput): number {
 		return 1;
 	}
 
-	const records = parseLcov(inputs.lcov);
+	let records: CoverageRecord[];
+	try {
+		records = parseLcov(inputs.lcov);
+	} catch (error) {
+		// A report the gate cannot read is a failure, never a pass. It is reported here, naming
+		// the record, rather than becoming a NaN ratio that every comparison quietly accepts.
+		out.error(`Coverage gate FAILED: ${error instanceof Error ? error.message : String(error)}`);
+		return 1;
+	}
+
 	const repoRecords = selectRepoRecords(records, repositoryRoot);
 	if (repoRecords.length === 0) {
 		out.error("Coverage gate FAILED: no repository files were instrumented");

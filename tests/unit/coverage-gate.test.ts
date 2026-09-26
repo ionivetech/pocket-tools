@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -291,6 +291,104 @@ describe("coverage gate failure modes", () => {
 
 		expect(runGate(inputs({ environment: { COVERAGE_GATE_MIN_NEW_LINES: "1.01" } }), out)).toBe(1);
 		expect(error.join("\n")).toContain("new lines 100.00% is below 101.00%");
+	});
+});
+
+describe("coverage gate malformed coverage data", () => {
+	/** Replaces every `key:` count in a report with a non-numeric value. */
+	function withCount(raw: string, key: string, value: string): string {
+		return raw
+			.split("\n")
+			.map((line) => (line.startsWith(`${key}:`) ? `${key}:${value}` : line))
+			.join("\n");
+	}
+
+	// F-09: a non-numeric count used to make the ratio NaN, and every `NaN < minimum` is false,
+	// so the gate recorded no shortfall and printed PASSED over an entirely uncovered report.
+	// The regression is the *exit code and the wording*, so both are asserted: the message must
+	// name the offending record, and it must never print `NaN%` or a pass.
+	for (const key of ["LF", "FNF"]) {
+		test(`fails closed on a non-numeric ${key} and names the offending record`, () => {
+			const { out, log, error } = capture();
+			const result = runGate(
+				inputs({ lcov: withCount(passingSplit.lcov, key, "not-a-number") }),
+				out,
+			);
+			const printed = [...log, ...error].join("\n");
+
+			expect(result).not.toBe(0);
+			expect(result).toBe(1);
+			expect(printed).toContain("app/utils/url-state.ts");
+			expect(printed).toContain(key);
+			expect(printed).not.toContain("NaN%");
+			expect(printed).not.toContain("PASSED");
+		});
+	}
+
+	test("reads an absent count as 0, so a truncated but valid report is still measured", () => {
+		// The distinction that makes rejecting a non-numeric value safe: a *missing* key is a
+		// truncated record and has always counted as 0. Only a present, unparseable value is
+		// malformed, so this behaviour is unchanged and still fails closed on the ratio.
+		const truncated = [
+			"SF:app/utils/url-state.ts",
+			"LF:100",
+			"LH:100",
+			"end_of_record",
+			"SF:app/data/tools.ts",
+			"LF:40",
+			"LH:20",
+			"FNF:4",
+			"FNH:4",
+			"end_of_record",
+		].join("\n");
+
+		expect(parseLcov(truncated)[0]).toEqual({
+			path: "app/utils/url-state.ts",
+			linesFound: 100,
+			linesHit: 100,
+			functionsFound: 0,
+			functionsHit: 0,
+		});
+
+		// The absent FNF reads as 0, so the new class measures 0% functions and fails closed on
+		// it. The truncation is measured, not waved past, and it is not an error.
+		const { out, error } = capture();
+		expect(runGate(inputs({ lcov: truncated }), out)).toBe(1);
+		expect(error.join("\n")).toContain("new functions 0.00% is below 90.00%");
+	});
+
+	test("never accepts a non-finite ratio, because no NaN comparison can be trusted", () => {
+		// The predicate the gate routes every verdict through. `NaN >= 0.85` is false, so the
+		// old `>=` form failed closed by accident while the open-coded `<` form failed open.
+		expect(
+			isCoverageAcceptable(
+				{ files: 1, lines: Number.NaN, functions: 1 },
+				{ lines: 0.85, functions: 0.9 },
+			),
+		).toBe(false);
+		expect(
+			isCoverageAcceptable(
+				{ files: 1, lines: 1, functions: Number.NaN },
+				{ lines: 0.85, functions: 0.9 },
+			),
+		).toBe(false);
+		expect(
+			isCoverageAcceptable(
+				{ files: 1, lines: Number.POSITIVE_INFINITY, functions: 1 },
+				{ lines: 0.85, functions: 0.9 },
+			),
+		).toBe(false);
+	});
+
+	test("compares a ratio against its minimum in exactly one place", () => {
+		// F-09's root cause was structural: `isCoverageAcceptable` was exported and unused by
+		// `runGate`, which open-coded its own NaN-unsafe comparison. A second path cannot be
+		// ruled out by a behavioural test alone, so this asserts the shape directly: no
+		// comparison may be written against a ratio field anywhere in the gate.
+		const source = readFileSync(resolve(import.meta.dir, "../../scripts/coverage-gate.ts"), "utf8");
+		const openCoded = source.match(/ratio\.(lines|functions)\s*(?:<|<=|>|>=)/g) ?? [];
+
+		expect(openCoded).toEqual([]);
 	});
 });
 
