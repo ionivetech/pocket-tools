@@ -112,9 +112,12 @@ with an independent parser, not cited from the implementer. Headroom is 55 uncov
 
 ## 8. Residual risks
 
-1. **W3 waiver needs re-confirmation.** Approved at +4,295 / 4,809 / 56 files with `app/` untouched;
-   the diff is now **+6,959 / 7,495 / 66 files** with `app/` at 27 files / +1,551. The waiver lapsed
-   by its own clause. The gate owner refuses to extend it; only the human can.
+1. **W3 waiver re-confirmed at the final measurement** (decisions.md #57). Granted at +4,295 /
+   4,809 / 56 files with `app/` untouched; the diff is now **+6,959 / 7,495 / 66 files** with
+   `app/` at 27 files / +1,551. The gate failed on measurement and passes only under this waiver —
+   the 400 threshold is unchanged and the waiver expires at archive. The changed basis is recorded
+   rather than glossed: waves R4–R6 touched three `app/` files, all validation, escaping, and
+   contract work that was requested.
 2. **The per-tool component path is contract-proven, not Vite-proven.** No scaffolded tool exists in
    the repo, so the nested `~/tools/<slug>/ToolComponent.vue` shape is not exercised at runtime. The
    four shipped tools still point at `ToolPlaceholder.vue`, so nothing user-facing depends on it, and
@@ -150,8 +153,9 @@ the project's own configured metric; the browser suite deterministic **by measur
 by retry**; security free of Critical, High, and Medium findings; all three original review majors
 resolved.
 
-**May not claim:** that the diff-size gate passed — it **failed** and was waived, and the waiver
-needs re-confirmation; that all security findings are closed; that the shared components have render
+**May not claim:** that the diff-size gate passed — it **failed on measurement** at +6,959 net LOC
+against an unchanged ≤400 threshold and was waived three times, most recently at the final number
+(`decisions.md` #57); that all security findings are closed; that the shared components have render
 coverage; any Lighthouse score; any Phase 2 capability.
 
 ## 12. Corrections on the record

@@ -99,23 +99,31 @@ are byte-unchanged. **No dependency moved.**
 - **Security (Jinbe): PASS** — **0 Critical / 0 High / 0 Medium**. F-01, F-06, F-07, F-08, F-09
   closed; **F-02 withdrawn as erroneous**; three Low findings open with no live caller; two rows
   flagged **To Review** rather than invented to balance a count.
-- **Gates (Franky): NO-GO, then re-run.** The diff-size gate **failed on measurement** at
-  +6,959 net LOC against an unchanged ≤400 threshold and passes only under an explicit,
-  mission-scoped human waiver whose approved number no longer describes the diff. **This is the one
-  item awaiting the human.**
+- **Gates (Franky): NO-GO, answered, then GO on the same numbers.** The gate owner returned NO-GO
+  twice — first because the coverage gate reported green while the project's own standard was red
+  (84.99% vs 85), then because the waiver's approved number no longer described the diff and four
+  ledger rows were stale. All of it was answered, and the diff-size gate **failed on measurement** at
+  +6,959 net LOC against an unchanged ≤400 threshold, passing only under an explicit, mission-scoped
+  human waiver **re-confirmed at that exact number** (the user answered `go`, `decisions.md` #57). Zero
+  `app/` files were excluded from the count and the threshold was never moved.
 
 # Verdict
 
-**Ready for review, with one open decision for the reviewer.**
+**Ready for review.** Every gate is green on the final state, the review is PASS at reliability A,
+and security is free of Critical, High, and Medium findings. The one item that was outstanding — the
+diff-size waiver — is re-confirmed at the exact final number.
 
-Known-open and carried deliberately: the **W3 diff-size waiver needs re-confirmation** (approved at
-+4,295 with `app/` untouched; the diff is now +6,959 with `app/` at 27 files), **F-03 / F-04 / F-05**
-at Low with no live caller, two security rows **To Review**, and no render coverage for the three
-shared components — which `ROADMAP.md` now states plainly rather than implying otherwise.
+Known-open and carried deliberately: **F-03 / F-04 / F-05** at Low with no live caller, two security
+rows **To Review** (their provenance was a lost transcript; no IDs were invented to balance a count),
+and no render coverage for the three shared components — which `ROADMAP.md` now states plainly rather
+than implying otherwise.
 
-One residual is worth naming: the per-tool component path is **contract-proven, not Vite-proven**,
-because no scaffolded tool exists in the repo to exercise it. The four shipped tools still point at
-`ToolPlaceholder.vue`, so nothing user-facing depends on it and a mistake would surface as a loud
-build-time resolve error.
+Two things a reviewer should know before approving:
+
+1. **The diff-size gate failed and was waived.** +6,959 net LOC against an unchanged ≤400 threshold,
+   re-confirmed at that number. It is not a pass.
+2. **The per-tool component path is contract-proven, not Vite-proven**, because no scaffolded tool
+   exists in the repo to exercise it. The four shipped tools still point at `ToolPlaceholder.vue`, so
+   nothing user-facing depends on it, and a mistake would surface as a loud build-time resolve error.
 
 This PR does **not** claim the diff-size gate passed, and does **not** claim all findings are closed.
