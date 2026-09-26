@@ -2,7 +2,7 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { type Result } from "../app/types/tool";
 import { parseScaffoldArgs, type ScaffoldArgs, type ScaffoldErrorCode } from "./scaffold-tool-args";
-import { buildFiles, infrastructureComponentPath } from "./scaffold-tool-files";
+import { buildFiles, toolComponentPath } from "./scaffold-tool-files";
 
 export { parseScaffoldArgs };
 export type { ScaffoldArgs, ScaffoldErrorCode };
@@ -64,15 +64,17 @@ async function writeStubFiles(
 		await writeFile(join(directory, fileName), content, { flag: "wx" });
 	}
 
+	const componentPath = toolComponentPath(args.slug);
+
 	return {
 		ok: true,
 		value: {
 			slug: args.slug,
 			directory,
 			files: [...files.keys()],
-			componentPath: infrastructureComponentPath,
+			componentPath,
 			notes: [
-				`componentPath stays ${infrastructureComponentPath}: the T1 contract only accepts ~/components/<PascalName>.vue, so the per-tool ToolComponent.vue is not wired until that contract changes.`,
+				`componentPath is ${componentPath}: the tool renders its own ToolComponent.vue, which stays a placeholder until the real logic replaces it.`,
 			],
 		},
 	};

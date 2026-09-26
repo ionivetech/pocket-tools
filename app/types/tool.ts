@@ -43,7 +43,14 @@ export const toolCategoryValues = metadataCategories;
 export type ToolCategory = "All" | (typeof toolCategoryValues)[number];
 export type AppIconName = (typeof appIconNames)[number];
 export type ToolAccent = (typeof metadataAccents)[number];
-export type ToolComponentPath = `~/components/${string}.vue`;
+/**
+ * The two shapes `isToolComponentPath` allows: a shared component under `app/components/`
+ * or a tool's own `app/tools/<slug>/ToolComponent.vue`. A closed allowlist, so no remote or
+ * `data:` module specifier is representable.
+ */
+export type ToolComponentPath =
+	| `~/components/${string}.vue`
+	| `~/tools/${string}/ToolComponent.vue`;
 
 export type ToolMetadata = {
 	slug: string;
@@ -86,8 +93,12 @@ function isKeywords(value: unknown): value is string[] {
 	return Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
 }
 
+/** The per-tool stem obeys the same kebab rule as `isToolSlug`, so no dot, case, or `..`. */
+const toolComponentPathPattern =
+	/^(?:~\/components\/[A-Z][A-Za-z0-9]*\.vue|~\/tools\/[a-z0-9]+(?:-[a-z0-9]+)*\/ToolComponent\.vue)$/;
+
 function isToolComponentPath(value: unknown): value is ToolComponentPath {
-	return typeof value === "string" && /^~\/components\/[A-Z][A-Za-z0-9]*\.vue$/.test(value);
+	return typeof value === "string" && toolComponentPathPattern.test(value);
 }
 
 function invalidMetadata(code: string, message: string): Result<ToolMetadata> {

@@ -2,9 +2,11 @@ import { type ScaffoldArgs } from "./scaffold-tool-args";
 
 const defaultIcon = "sparkles";
 const defaultAccent = "blue";
-// T1 validates `~/components/<PascalName>.vue` only, so every scaffolded tool
-// points at the shared infrastructure placeholder until that contract grows.
-export const infrastructureComponentPath = "~/components/ToolPlaceholder.vue";
+
+/** The per-tool component path the tool allowlist accepts; the slug is already kebab-case. */
+export function toolComponentPath(slug: string): string {
+	return `~/tools/${slug}/ToolComponent.vue`;
+}
 
 function pascalCase(slug: string): string {
 	return slug
@@ -27,7 +29,7 @@ function metadataFile(args: ScaffoldArgs): string {
 		`\ticon: ${JSON.stringify(defaultIcon)},`,
 		`\taccent: ${JSON.stringify(defaultAccent)},`,
 		`\tkeywords: [${keywords}],`,
-		`\tcomponentPath: ${JSON.stringify(infrastructureComponentPath)},`,
+		`\tcomponentPath: ${JSON.stringify(toolComponentPath(args.slug))},`,
 		"};",
 		"",
 	].join("\n");
@@ -106,15 +108,24 @@ function logicFile(args: ScaffoldArgs): string {
 	].join("\n");
 }
 
+/**
+ * The tool name is bound in `<script setup>` and the template renders `{{ toolName }}`,
+ * so it can never become markup. `JSON.stringify` escapes quotes, backslashes, newlines and
+ * backticks but not `<`, so every `<` is emitted as the escape `\u003c`: without it a name
+ * carrying `</script>` would close the block early (decisions.md #42). Do not reintroduce a
+ * template interpolation of the name.
+ */
+function scriptLiteral(value: string): string {
+	return JSON.stringify(value).replaceAll("<", "\\u003c");
+}
+
 function componentFile(args: ScaffoldArgs): string {
-	// The name stays out of the template on purpose: it is cosmetic in a stub no
-	// route renders, and any interpolation of it is an injection surface.
 	return [
 		"<template>",
 		`\t<section class="pt-empty" data-testid="${args.slug}-placeholder" aria-labelledby="${args.slug}-placeholder-title">`,
 		'\t\t<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="sparkles" /></span>',
 		"\t\t<div>",
-		`\t\t\t<h2 id="${args.slug}-placeholder-title">This tool is not available yet.</h2>`,
+		`\t\t\t<h2 id="${args.slug}-placeholder-title">{{ toolName }}</h2>`,
 		"\t\t\t<p>",
 		"\t\t\t\tThe working version is still being built. There is nothing to enter or download here",
 		"\t\t\t\tyet.",
@@ -122,6 +133,10 @@ function componentFile(args: ScaffoldArgs): string {
 		"\t\t</div>",
 		"\t</section>",
 		"</template>",
+		"",
+		'<script setup lang="ts">',
+		`const toolName = ${scriptLiteral(args.name)};`,
+		"</script>",
 		"",
 	].join("\n");
 }

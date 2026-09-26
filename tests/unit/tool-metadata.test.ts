@@ -58,6 +58,12 @@ const invalidMetadata = [
 	["icon", "sparkle", "invalid_tool_icon"],
 	["keywords", "json", "invalid_tool_keywords"],
 	["componentPath", "../Tool.vue", "invalid_tool_component_path"],
+	["componentPath", "~/tools/word-count/Component.vue", "invalid_tool_component_path"],
+] as const;
+
+const allowedComponentPaths = [
+	"~/components/ToolPlaceholder.vue",
+	"~/tools/json-formatter/ToolComponent.vue",
 ] as const;
 
 describe("tool metadata", () => {
@@ -82,5 +88,40 @@ describe("tool metadata", () => {
 		}
 
 		expect(result.error.code).toBe(code);
+	});
+
+	test.each(allowedComponentPaths)("accepts the allowed shape %s", (componentPath) => {
+		const record = { ...jsonFormatterMetadata, componentPath };
+
+		expect(validateToolMetadata(record)).toEqual({ ok: true, value: record });
+	});
+
+	test("refuses a slug carrying a trailing newline or carriage return", () => {
+		for (const slug of ["word-count\n", "word-count\r", "word-count\r\n"]) {
+			const result = validateToolMetadata({ ...jsonFormatterMetadata, slug });
+
+			if (result.ok) {
+				throw new Error(`Expected ${JSON.stringify(slug)} to be refused`);
+			}
+
+			expect(result.error.code).toBe("invalid_tool_slug");
+		}
+	});
+
+	test("refuses a component path carrying a trailing newline or carriage return", () => {
+		for (const componentPath of [
+			"~/tools/word-count/ToolComponent.vue\n",
+			"~/tools/word-count/ToolComponent.vue\r",
+			"~/tools/word-count/ToolComponent.vue\r\n",
+			"~/components/ToolPlaceholder.vue\n",
+		]) {
+			const result = validateToolMetadata({ ...jsonFormatterMetadata, componentPath });
+
+			if (result.ok) {
+				throw new Error(`Expected ${JSON.stringify(componentPath)} to be refused`);
+			}
+
+			expect(result.error.code).toBe("invalid_tool_component_path");
+		}
 	});
 });

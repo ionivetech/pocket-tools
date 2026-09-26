@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { parse } from "vue/compiler-sfc";
 import { type Result, validateToolMetadata } from "../../app/types/tool";
 import { generateToolRegistry } from "../../scripts/generate-tool-registry";
 import {
@@ -65,6 +66,34 @@ function expectedArguments(outRoot: string): ScaffoldArgs {
 		outRoot,
 	};
 }
+
+/** Every valid metadata field except `componentPath`, so a test can vary just that. */
+function metadataWith(componentPath: string) {
+	return {
+		slug: "word-count",
+		name: "Word count",
+		description: "Count words and characters in your text.",
+		category: "Text",
+		icon: "sparkles",
+		accent: "blue",
+		keywords: ["words"],
+		componentPath,
+	};
+}
+
+/** Paths outside the two allowed shapes: traversal, escapes, remote and data: specifiers. */
+const hostileComponentPaths = [
+	"~/tools/../evil/ToolComponent.vue",
+	"~/components/tools/word-count/ToolComponent.vue",
+	"/etc/passwd",
+	"~/tools/../../etc/passwd",
+	"https://evil.example/ToolComponent.vue",
+	"//evil.example/ToolComponent.vue",
+	"data:text/javascript,export default {}",
+	"~/tools/Word-Count/ToolComponent.vue",
+	"~/tools/word.count/ToolComponent.vue",
+	"~/tools/word-count/Component.vue",
+] as const;
 
 async function createOutRoot(): Promise<string> {
 	const root = await mkdtemp(join(tmpdir(), "pocket-tools-scaffold-"));
@@ -306,15 +335,15 @@ describe("scaffoldTool", () => {
 				description: "Count words and characters in your text.",
 				category: "Text",
 				keywords: ["words", "count", "characters"],
-				componentPath: "~/components/ToolPlaceholder.vue",
+				componentPath: "~/tools/word-count/ToolComponent.vue",
 			},
 		});
 		expect(validation.ok && validation.value.componentPath).toBe(
-			"~/components/ToolPlaceholder.vue",
+			"~/tools/word-count/ToolComponent.vue",
 		);
 	});
 
-	test("keeps the T1 component-path contract and explains the placeholder choice", async () => {
+	test("accepts the per-tool component path and reports it in the notes", async () => {
 		const outRoot = await createOutRoot();
 		const result = await scaffoldTool(await parsedScaffoldArgs(outRoot));
 
@@ -323,19 +352,27 @@ describe("scaffoldTool", () => {
 			return;
 		}
 
-		expect(
-			validateToolMetadata({
-				slug: "word-count",
-				name: "Word count",
-				description: "Count words and characters in your text.",
-				category: "Text",
-				icon: "sparkles",
-				accent: "blue",
-				keywords: ["words"],
-				componentPath: "~/components/tools/word-count/ToolComponent.vue",
-			}).error.code,
-		).toBe("invalid_tool_component_path");
-		expect(result.value.notes.join(" ")).toContain("ToolPlaceholder.vue");
+		expect(result.value.componentPath).toBe("~/tools/word-count/ToolComponent.vue");
+		expect(validateToolMetadata(metadataWith("~/tools/word-count/ToolComponent.vue")).ok).toBe(
+			true,
+		);
+		expect(validateToolMetadata(metadataWith("~/components/ToolPlaceholder.vue")).ok).toBe(true);
+		expect(result.value.notes.join(" ")).toContain("~/tools/word-count/ToolComponent.vue");
+	});
+
+	test("still refuses every component path outside the two allowed shapes", async () => {
+		const outRoot = await createOutRoot();
+		expect((await scaffoldTool(await parsedScaffoldArgs(outRoot))).ok).toBe(true);
+
+		for (const componentPath of hostileComponentPaths) {
+			const validation = validateToolMetadata(metadataWith(componentPath));
+
+			if (validation.ok) {
+				throw new Error(`Expected ${componentPath} to be rejected`);
+			}
+
+			expect(validation.error.code).toBe("invalid_tool_component_path");
+		}
 	});
 
 	test("generates stubs with no tool algorithm, style literals, or fake success", async () => {
@@ -449,17 +486,23 @@ describe("hostile --name", () => {
 			);
 		});
 
-		test(`keeps ${JSON.stringify(name)} out of the placeholder markup`, async () => {
+		test(`binds ${JSON.stringify(name)} into an inert script literal`, async () => {
 			const outRoot = await createOutRoot();
 			await scaffoldInto(outRoot, { name });
 			const component = await Bun.file(toolFile(outRoot, "ToolComponent.vue")).text();
+			const { descriptor, errors } = parse(component);
+			const script = descriptor.scriptSetup?.content ?? "";
+			const template = descriptor.template?.content ?? "";
 
-			expect(component).toContain(
-				'<h2 id="word-count-placeholder-title">This tool is not available yet.</h2>',
-			);
-			expect(component).not.toContain(name);
-			// No interpolation at all, so no name can hide inside an expression.
-			expect(component).not.toContain("{{");
+			// The compiler accepts the block: `<` was escaped, so nothing closed it early.
+			expect(errors).toEqual([]);
+			expect(component.match(/<\/script>/g)).toHaveLength(1);
+			// The literal round-trips to the exact name, so nothing was mangled or dropped.
+			expect(JSON.parse(/const toolName = (.*);/.exec(script)?.[1] ?? "null")).toBe(name);
+			// The name is bound, never interpolated: the template's only expression is
+			// the binding, and the raw name never reaches the markup.
+			expect(template).toContain("{{ toolName }}");
+			expect(template).not.toContain(name);
 			expect(component).toContain('data-testid="word-count-placeholder"');
 			expect(component).toContain('id="word-count-placeholder-title"');
 		});
@@ -476,6 +519,12 @@ describe("scaffoldTool registry freshness", () => {
 		expect(result).toEqual({ ok: true, definitionCount: 1, slugs: ["word-count"] });
 		expect(await Bun.file(registryOutput).text()).toContain('from "../tools/word-count/metadata";');
 		expect(await Bun.file(routesOutput).text()).toContain('"word-count"');
+		// The lazy loader now points at the file the scaffolder actually wrote, so the
+		// per-tool path is reachable rather than only type-correct.
+		const registry = await Bun.file(registryOutput).text();
+		const specifier = /loadComponent: \(\) => import\("([^"]+)"\)/.exec(registry)?.[1] ?? "";
+		expect(specifier).toBe("~/tools/word-count/ToolComponent.vue");
+		expect(await Bun.file(toolFile(outRoot, "ToolComponent.vue")).exists()).toBe(true);
 		const imported = (await import(pathToFileURL(toolFile(outRoot, "metadata.ts")).href)) as {
 			readonly toolMetadata?: unknown;
 		};

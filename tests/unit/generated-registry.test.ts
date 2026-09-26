@@ -132,6 +132,36 @@ describe("generated tool registry", () => {
 		);
 	});
 
+	test("emits a per-tool specifier that resolves to the scaffolded component", async () => {
+		const testCase = await createTestCase();
+		await writeMetadataSource(
+			testCase,
+			"word-count",
+			`export const toolMetadata = ${JSON.stringify({
+				...createMetadata("word-count"),
+				componentPath: "~/tools/word-count/ToolComponent.vue",
+			})};\n`,
+		);
+		await Bun.write(
+			join(testCase.toolsRoot, "word-count", "ToolComponent.vue"),
+			"<template><p>placeholder</p></template>\n",
+		);
+
+		const result = await generateToolRegistry(testCase);
+		const specifier =
+			/loadComponent: \(\) => import\("([^"]+)"\)/.exec(
+				await Bun.file(testCase.registryOutput).text(),
+			)?.[1] ?? "";
+
+		expect(result).toEqual({ ok: true, definitionCount: 1, slugs: ["word-count"] });
+		expect(specifier).toBe("~/tools/word-count/ToolComponent.vue");
+		// `~` is the Nuxt srcDir alias for `app/`, so the emitted specifier must land on
+		// the component the tool folder holds — a path the bundler would not resolve
+		// would be worse than the gap this replaces.
+		expect(specifier.startsWith("~/")).toBe(true);
+		expect(await Bun.file(join(testCase.root, "app", specifier.slice(2))).exists()).toBe(true);
+	});
+
 	test("rejects an empty tools root", async () => {
 		const testCase = await createTestCase();
 		expectGenerationFailure(await generateToolRegistry(testCase), "no_tool_sources");
