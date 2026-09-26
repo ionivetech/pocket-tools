@@ -6,7 +6,7 @@
 
 - Runtime/package manager: **Bun 1.2+** only. Never npm, yarn, or pnpm.
 - Framework: **Nuxt 4** with the `app/` source directory.
-- UI: **PrimeVue 4.5.5** through `@primevue/nuxt-module` (MIT/open-source).
+- UI: **PrimeVue 4.5.5** through `@primevue/nuxt-module`. The Prime packages `bun.lock` pins are MIT; PrimeUI also publishes packages under its Community License, so read the licence note in `README.md` before adding one.
 - Theme: `@primeuix/themes` Aura preset with a blue semantic primary palette.
 - CSS: **Tailwind CSS v4** through `@tailwindcss/vite` and a CSS-first token file.
 - Language: TypeScript strict. No `any` and no `@ts-ignore` without an ADR.
