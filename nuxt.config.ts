@@ -93,6 +93,20 @@ export default defineNuxtConfig({
 					method: "GET",
 					options: {
 						cacheName: "pockettools-pages",
+						// `app/utils/url-state.ts` will put tool state in the query, but no
+						// route reads the query yet, so all query variants of a path serve
+						// the same response. Keying by path keeps that from fragmenting this
+						// 12-entry cache once it does.
+						matchOptions: { ignoreSearch: true },
+						plugins: [
+							{
+								cacheKeyWillBeUsed: async ({ request }) => {
+									const url = new URL(request.url);
+									url.search = "";
+									return url.toString();
+								},
+							},
+						],
 						cacheableResponse: { statuses: [0, 200] },
 						expiration: { maxEntries: 12, maxAgeSeconds: 86_400 },
 						networkTimeoutSeconds: 3,
