@@ -7,15 +7,19 @@ import {
 	coverageRatio,
 	parseNameStatus,
 	isCoverageAcceptable,
+	isInstrumentable,
 	parseLcov,
+	partitionAbsentFromLcov,
 	readDiffRange,
 	resolveBase,
 	runGate,
 	selectRepoRecords,
 	splitByDiff,
+	ABSENT_FROM_LCOV_ALLOWLIST,
 	MINIMUM_FUNCTIONS,
 	MINIMUM_MODIFIED_LINES,
 	MINIMUM_NEW_LINES,
+	UNINSTRUMENTABLE_EXTENSIONS,
 	type GateInputs,
 	type GateOutput,
 } from "../../scripts/coverage-gate";
@@ -227,12 +231,15 @@ describe("coverage gate split enforcement", () => {
 	});
 
 	test("reports a diff file that was never instrumented instead of hiding it", () => {
+		// A `.vue` file: Bun cannot instrument one, so it belongs in the reported-never-gating
+		// bucket. An absent `.ts` used to sit in this same fixture, which asserted exit 0 -- the
+		// exact hole this rule closes. The fixture moved; the test's purpose did not.
 		const { out, log } = capture();
 
 		expect(
-			runGate(inputs({ nameStatus: "A\tapp/utils/url-state.ts\nA\tapp/untested.ts" }), out),
+			runGate(inputs({ nameStatus: "A\tapp/utils/url-state.ts\nA\tapp/untested.vue" }), out),
 		).toBe(0);
-		expect(log.join("\n")).toContain("app/untested.ts");
+		expect(log.join("\n")).toContain("app/untested.vue");
 	});
 
 	test("enforces only the class that has files when the diff has no modified code", () => {
@@ -255,6 +262,181 @@ describe("coverage gate split enforcement", () => {
 
 		expect(runGate(inputs({ nameStatus: "" }), out)).toBe(1);
 		expect(error.join("\n")).toContain("no instrumented files in the diff");
+	});
+});
+
+describe("coverage gate absent-from-lcov accounting", () => {
+	// The hole this rule closes. A file no unit test imports never reaches lcov, so the
+	// new/modified split cannot see it: an untested new module used to be reported and then
+	// ignored, and the gate still said PASSED. These four tests pin both halves of the
+	// partition -- a real source file absent from lcov is now a failure.
+	const absentSource = "app/utils/absent-module.ts";
+
+	test("fails and names a new .ts that the diff adds but lcov never instrumented", () => {
+		const { out, log, error } = capture();
+		const result = runGate(
+			inputs({ nameStatus: `A\tapp/utils/url-state.ts\nA\t${absentSource}` }),
+			out,
+		);
+		const printed = [...log, ...error].join("\n");
+
+		expect(result).toBe(1);
+		expect(printed).toContain(absentSource);
+		// The reason has to be unambiguous: absent from lcov, therefore invisible to the split.
+		expect(printed).toContain("absent from lcov");
+		expect(printed).toContain("invisible");
+		expect(printed).not.toContain("PASSED");
+	});
+
+	test("passes once the same file appears in lcov, so the rule tracks instrumentation", () => {
+		const { out } = capture();
+		const result = runGate(
+			inputs({
+				lcov: lcovOf(
+					record("app/utils/url-state.ts", 100, 100),
+					record(absentSource, 100, 100),
+					record("app/data/tools.ts", 40, 40),
+				),
+				nameStatus: `A\tapp/utils/url-state.ts\nA\t${absentSource}\nM\tapp/data/tools.ts`,
+			}),
+			out,
+		);
+
+		expect(result).toBe(0);
+	});
+
+	test("reports a diff of only uninstrumentable extensions without gating on it", () => {
+		// 12 .vue, 3 .md and one each of .yml/.json/.css/.d.ts cannot be instrumented by Bun at
+		// all, so failing on them would be a permanent false red. They are named, and named as
+		// reported-not-gating, rather than passed over in silence.
+		//
+		// One instrumented file stays in the diff on purpose: the pre-existing rule that a diff
+		// measuring nothing at all is a failure is kept, and this test is about which *absent*
+		// files are allowed to be absent, not about emptying the split.
+		const { out, log } = capture();
+		const result = runGate(
+			inputs({
+				nameStatus: [
+					"A\tapp/utils/url-state.ts",
+					"A\tapp/components/ToolHost.vue",
+					"A\tREADME.md",
+					"M\t.github/workflows/ci.yml",
+					"M\tpackage.json",
+					"M\tapp/assets/css/main.css",
+					"A\tvue-shims.d.ts",
+				].join("\n"),
+			}),
+			out,
+		);
+		const printed = log.join("\n");
+
+		expect(result).toBe(0);
+		for (const path of [
+			"app/components/ToolHost.vue",
+			"README.md",
+			".github/workflows/ci.yml",
+			"package.json",
+			"app/assets/css/main.css",
+			"vue-shims.d.ts",
+		]) {
+			expect(printed).toContain(path);
+		}
+		expect(printed).toContain("NOT gating");
+	});
+
+	test("passes an allowlisted absent source file and prints the reason it is allowed", () => {
+		// Seeded entry: nuxt.config.ts is consumed by the Nuxt build, not by `bun test`.
+		const { out, log } = capture();
+		const result = runGate(
+			inputs({ nameStatus: "A\tapp/utils/url-state.ts\nM\tnuxt.config.ts" }),
+			out,
+		);
+		const printed = log.join("\n");
+
+		expect(result).toBe(0);
+		expect(printed).toContain("nuxt.config.ts");
+		// The reason is part of the exemption, not a comment beside it.
+		expect(printed).toContain("not by `bun test`");
+	});
+
+	test("fails an allowlist entry whose reason is empty or only whitespace", () => {
+		// The failure mode a correct allowlist cannot demonstrate through runGate, so it is driven
+		// at the partition that decides it. A blank reason excuses nothing, and the only way to
+		// reach this state is for someone to have stopped maintaining the reasons.
+		for (const reason of ["", "   ", "\n\t "]) {
+			const absent = partitionAbsentFromLcov(
+				["app/utils/rotting.ts"],
+				new Set(),
+				new Map([["app/utils/rotting.ts", reason]]),
+			);
+
+			expect(absent.reasonless).toEqual(["app/utils/rotting.ts"]);
+			expect(absent.allowlisted).toEqual([]);
+		}
+	});
+
+	test("accepts an allowlist entry that carries a real reason", () => {
+		// The other half of the case above, so the test is not merely asserting a failure.
+		const absent = partitionAbsentFromLcov(
+			["app/utils/exempt.ts"],
+			new Set(),
+			new Map([["app/utils/exempt.ts", "covered by the production build"]]),
+		);
+
+		expect(absent.reasonless).toEqual([]);
+		expect(absent.unaccounted).toEqual([]);
+		expect(absent.allowlisted).toEqual([
+			{ path: "app/utils/exempt.ts", reason: "covered by the production build" },
+		]);
+	});
+
+	test("never gates on a file Bun cannot instrument, and gates on one it can", () => {
+		// `.d.ts` is the trap: its last extension is `.ts`, so reading the tail would treat a
+		// declarations file as instrumentable and make the gate permanently red.
+		for (const path of [
+			"vue-shims.d.ts",
+			"app/types/tool.d.ts",
+			"app/components/ToolHost.vue",
+			"README.md",
+			".github/workflows/ci.yml",
+			"docs/notes.yaml",
+			"package.json",
+			"app/assets/css/main.css",
+			"LICENSE",
+		]) {
+			expect(isInstrumentable(path)).toBe(false);
+		}
+		for (const path of [
+			"nuxt.config.ts",
+			"app/data/tool-routes.generated.ts",
+			"scripts/coverage-gate.ts",
+			"app/utils/url-state.mjs",
+			"app/utils/url-state.cjs",
+			"app/utils/url-state.jsx",
+		]) {
+			expect(isInstrumentable(path)).toBe(true);
+		}
+	});
+
+	test("keeps the allowlist and the uninstrumentable set exactly as reviewed", () => {
+		// Both lists are policy, so they are asserted by name. Widening either one to silence a
+		// red gate has to change a test on purpose, which is the point.
+		expect([...ABSENT_FROM_LCOV_ALLOWLIST.keys()].sort()).toEqual([
+			"app/data/tool-routes.generated.ts",
+			"nuxt.config.ts",
+		]);
+		for (const reason of ABSENT_FROM_LCOV_ALLOWLIST.values()) {
+			expect(reason.trim()).not.toBe("");
+		}
+		expect(UNINSTRUMENTABLE_EXTENSIONS).toEqual([
+			".vue",
+			".md",
+			".yml",
+			".yaml",
+			".json",
+			".css",
+			".d.ts",
+		]);
 	});
 });
 
