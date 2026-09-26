@@ -51,6 +51,16 @@ function getDefaultDownloadEnvironment(): DownloadEnvironment {
 	};
 }
 
+/**
+ * Windows resolves these stems to a device, not a file, whatever follows the
+ * first dot. Matched case-insensitively on the stem, so `con.txt` is refused too.
+ */
+const reservedDeviceStems = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+
+function isReservedDeviceName(filename: string): boolean {
+	return reservedDeviceStems.test(filename.split(".")[0] ?? "");
+}
+
 function sanitizeFilename(filename: string): string | undefined {
 	if (typeof filename !== "string") {
 		return undefined;
@@ -60,12 +70,15 @@ function sanitizeFilename(filename: string): string | undefined {
 	const withoutControls = [...basename]
 		.filter((character) => {
 			const codePoint = character.codePointAt(0) ?? 0;
-			return codePoint > 31 && codePoint !== 127;
+			// \p{Cf} drops invisible format characters such as U+202E RIGHT-TO-LEFT
+			// OVERRIDE, which otherwise disguise the extension in a file manager.
+			// A category filter keeps `café.txt` and `简历.pdf` intact.
+			return codePoint > 31 && codePoint !== 127 && !/\p{Cf}/u.test(character);
 		})
 		.join("");
 	const sanitized = withoutControls.replace(/[<>:"|?*]/g, "-").trim();
 
-	if (!sanitized || sanitized === "." || sanitized === "..") {
+	if (!sanitized || sanitized === "." || sanitized === ".." || isReservedDeviceName(sanitized)) {
 		return undefined;
 	}
 

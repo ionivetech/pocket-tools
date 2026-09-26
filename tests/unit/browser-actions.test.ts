@@ -116,6 +116,58 @@ describe("browser actions", () => {
 		expect(result.revoked).toEqual(["blob:test"]);
 	});
 
+	test("drops invisible format characters that can disguise an extension", () => {
+		const result = createDownloadEnvironment();
+
+		downloadText("hello", "invoice\u202Etxt.exe", result.environment);
+
+		expect(result.anchor.download).toBe("invoicetxt.exe");
+	});
+
+	test("neutralises directional isolates and a byte-order mark", () => {
+		for (const [filename, expected] of [
+			["report\u2066name.txt", "reportname.txt"],
+			["summary\uFEFF.txt", "summary.txt"],
+			["\u200Eleft\u200F.txt", "left.txt"],
+		] as const) {
+			const result = createDownloadEnvironment();
+
+			downloadText("hello", filename, result.environment);
+
+			expect(result.anchor.download).toBe(expected);
+		}
+	});
+
+	test("rejects Windows reserved device names before creating a download", () => {
+		for (const filename of ["CON", "con.txt", "NUL", "COM1.log", "LPT9", "lpt1.TXT"]) {
+			const result = createDownloadEnvironment();
+
+			try {
+				downloadText("private value", filename, result.environment);
+			} catch (error) {
+				expectActionError(error, "invalid_filename");
+				// Rejected before any object URL exists, so none is created to release.
+				expect(result.blobs).toHaveLength(0);
+				expect(result.revoked).toEqual([]);
+				expect(result.wasClicked()).toBe(false);
+				continue;
+			}
+
+			throw new Error(`Expected ${filename} to be rejected`);
+		}
+	});
+
+	test("keeps non-Latin filenames intact", () => {
+		for (const filename of ["café.txt", "简历.pdf"]) {
+			const result = createDownloadEnvironment();
+
+			downloadText("hello", filename, result.environment);
+
+			expect(result.anchor.download).toBe(filename);
+			expect(result.revoked).toEqual(["blob:test"]);
+		}
+	});
+
 	test("normalizes download failures and still cleans up", () => {
 		const result = createDownloadEnvironment();
 		result.anchor.click = () => {
