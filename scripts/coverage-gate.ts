@@ -57,22 +57,23 @@ import { fileURLToPath } from "node:url";
 
 /**
  * Minimum covered-line ratio for NEW code, mirroring the project's configured coverage
- * standard `coverage_new` in `.mugiwara/config`.
+ * standard `coverage_new` in `.mugiwara/config`. Exported so a test can hold it to that mirror:
+ * the constants are the one thing here nothing else checks.
  */
-const MINIMUM_NEW_LINES = 0.85;
+export const MINIMUM_NEW_LINES = 0.85;
 
 /**
  * Minimum covered-line ratio for MODIFIED code, mirroring `coverage_modified` in
- * `.mugiwara/config`.
+ * `.mugiwara/config`. Exported for the same reason as `MINIMUM_NEW_LINES`.
  */
-const MINIMUM_MODIFIED_LINES = 0.9;
+export const MINIMUM_MODIFIED_LINES = 0.9;
 
 /**
  * Minimum covered-function ratio for either class. `.mugiwara/config` names no function
  * floor, so this one is carried over unchanged from the previous gate: this gate may get
- * stricter, never looser.
+ * stricter, never looser. Exported for the same reason as the two floors above.
  */
-const MINIMUM_FUNCTIONS = 0.9;
+export const MINIMUM_FUNCTIONS = 0.9;
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const coverageFile = resolve(repositoryRoot, "coverage/lcov.info");

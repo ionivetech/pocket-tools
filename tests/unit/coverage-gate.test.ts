@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import {
@@ -13,6 +13,9 @@ import {
 	runGate,
 	selectRepoRecords,
 	splitByDiff,
+	MINIMUM_FUNCTIONS,
+	MINIMUM_MODIFIED_LINES,
+	MINIMUM_NEW_LINES,
 	type GateInputs,
 	type GateOutput,
 } from "../../scripts/coverage-gate";
@@ -486,5 +489,69 @@ describe("coverage gate base discovery", () => {
 		expect(resolved.base).toBeUndefined();
 		expect(resolved.baseError).toContain("no default branch could be discovered");
 		rmSync(empty, { recursive: true, force: true });
+	});
+});
+
+describe("coverage gate floors against the configured standard", () => {
+	const configPath = resolve(import.meta.dir, "../../.mugiwara/config");
+	const configExists = existsSync(configPath);
+
+	/**
+	 * The floors `.mugiwara/config` names, as ratios. Throws when the file is there but does not
+	 * name them: a present config that has drifted is drift, and must never be mistaken for the
+	 * absent-config case that skips.
+	 */
+	function configuredFloors(path: string): { new: number; modified: number } {
+		const read = (key: string): number => {
+			const line = readFileSync(path, "utf8")
+				.split("\n")
+				.find((candidate) => candidate.startsWith(`${key}=`));
+			const parsed = Number(line?.slice(key.length + 1));
+			if (line === undefined || !Number.isFinite(parsed)) {
+				throw new Error(`${path} does not name a finite ${key}`);
+			}
+			return parsed / 100;
+		};
+
+		return { new: read("coverage_new"), modified: read("coverage_modified") };
+	}
+
+	// Skip-over-fail is deliberate here. This gate ships as repo tooling and runs in clones that
+	// have no `.mugiwara` directory at all, where a hard failure would be a red gate over a file
+	// that does not exist. Where the config IS present -- this repo -- the mirror is enforced.
+	// `skipIf` reports a visible `skip` in the tally, so an absent config is declared, not silent.
+	test.skipIf(!configExists)("mirrors the configured new and modified coverage floors", () => {
+		const configured = configuredFloors(configPath);
+
+		expect(MINIMUM_NEW_LINES).toBeCloseTo(configured.new, 10);
+		expect(MINIMUM_MODIFIED_LINES).toBeCloseTo(configured.modified, 10);
+	});
+
+	test.skipIf(!configExists)(
+		"keeps a function floor that the configured floors would allow",
+		() => {
+			// The config names no function floor, so the constant is carried over. This asserts it
+			// was not quietly dropped to whatever the line floors happen to be, and never exceeds
+			// the stricter of the two: the gate may get stricter, never looser.
+			expect(MINIMUM_FUNCTIONS).toBeGreaterThanOrEqual(0.9);
+		},
+	);
+
+	test("reads the floors out of a config file", () => {
+		const fixture = join(tmpdir(), "pockettools-config-fixture");
+		writeFileSync(fixture, "mode=auto\ncoverage_new=85\ncoverage_modified=90\n");
+
+		expect(configuredFloors(fixture)).toEqual({ new: 0.85, modified: 0.9 });
+		rmSync(fixture, { force: true });
+	});
+
+	test("throws on a config that is present but does not name the floors", () => {
+		// The skip is for an absent file only. Silence here would be the drift this test exists
+		// to catch, so the absence of a floor is a failure, not a reason to skip.
+		const fixture = join(tmpdir(), "pockettools-config-no-floors");
+		writeFileSync(fixture, "mode=auto\nverbosity=normal\n");
+
+		expect(() => configuredFloors(fixture)).toThrow(/coverage_new/);
+		rmSync(fixture, { force: true });
 	});
 });

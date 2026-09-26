@@ -15,6 +15,13 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      # Paired with `fetch-depth: 0` on the checkout below, and deliberately in this order:
+      # full history is what makes the new/modified split resolvable here, and this variable is
+      # what makes its absence fatal. Without it a hosted runner that could not resolve the base
+      # would print the loud AGGREGATE-ONLY banner and still exit 0, so the weaker check would be
+      # the default in CI -- exactly the failure the split exists to prevent.
+      COVERAGE_GATE_REQUIRE_SPLIT: "1"
     steps:
       - uses: actions/checkout@v4
         with:
