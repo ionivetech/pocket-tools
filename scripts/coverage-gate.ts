@@ -20,18 +20,21 @@
  * `COVERAGE_GATE_BASE` overrides it for a local run against any other range.
  *
  * Measured 2026-09-26 on branch feature/phase-1-core-infrastructure, against base
- * cbd3f2044aa6a93377a78953cb33de04592560e7, over the tree committed as
- * `fix(ci): enforce the configured new and modified coverage split`:
+ * cbd3f2044aa6a93377a78953cb33de04592560e7, at commit 1750c2e:
  *
- *   new       89.12% lines (1212/1360), 92.81% functions, 17 instrumented files
- *   modified 100.00% lines (42/42),   100.00% functions,  2 instrumented files
- *   aggregate 89.44% lines (1254/1402), 92.91% functions, 19 instrumented files
+ *   new       89.08% lines (1216/1365), 92.81% functions, 17 instrumented files
+ *   modified 100.00% lines (42/42),    100.00% functions,  2 instrumented files
+ *   aggregate 89.41% lines (1258/1407), 92.91% functions, 19 instrumented files
+ *
+ * The figures are anchored to that commit rather than to "the current file" on purpose:
+ * this header is inside the file it measures, so rewriting the number would move it. At
+ * 1750c2e this file stood at 310/348 lines (89.08%) and 29/30 functions.
  *
  * This file is itself instrumented and counts toward the new class, which is deliberate: it
  * has no exemption from its own gate. Before the split was unit-tested it entered that
- * class at 69/129 lines (53.49%) and pulled it under the floor; it now stands at 306/343
- * (89.21%). Before the split existed at all, new code measured 84.99% (968/1139) against
- * the configured 85, and the gate then reported green on the more generous aggregate.
+ * class at 69/129 lines (53.49%) and pulled it under the floor. Before the split existed
+ * at all, new code measured 84.99% (968/1139) against the configured 85, and the gate then
+ * reported green on the more generous aggregate.
  *
  * Three limits stated rather than hidden:
  *
