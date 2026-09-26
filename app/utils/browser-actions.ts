@@ -78,7 +78,9 @@ function sanitizeFilename(filename: string): string | undefined {
 		.join("");
 	const sanitized = withoutControls.replace(/[<>:"|?*]/g, "-").trim();
 
-	if (!sanitized || sanitized === "." || sanitized === ".." || isReservedDeviceName(sanitized)) {
+	// A leading dot hides the name in a file manager and makes `.` and `..` degenerate
+	// downloads, so one check covers the whole class.
+	if (!sanitized || sanitized.startsWith(".") || isReservedDeviceName(sanitized)) {
 		return undefined;
 	}
 

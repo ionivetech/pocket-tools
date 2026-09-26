@@ -157,6 +157,24 @@ describe("browser actions", () => {
 		}
 	});
 
+	test("rejects a dotfile download name", () => {
+		for (const filename of [".bashrc", ".env", ".gitignore", "../.bashrc", ".", ".."]) {
+			const result = createDownloadEnvironment();
+
+			try {
+				downloadText("private value", filename, result.environment);
+			} catch (error) {
+				expectActionError(error, "invalid_filename");
+				expect(result.blobs).toHaveLength(0);
+				expect(result.revoked).toEqual([]);
+				expect(result.wasClicked()).toBe(false);
+				continue;
+			}
+
+			throw new Error(`Expected ${filename} to be rejected`);
+		}
+	});
+
 	test("keeps non-Latin filenames intact", () => {
 		for (const filename of ["café.txt", "简历.pdf"]) {
 			const result = createDownloadEnvironment();
