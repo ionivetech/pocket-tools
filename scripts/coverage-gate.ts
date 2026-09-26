@@ -20,21 +20,29 @@
  * `COVERAGE_GATE_BASE` overrides it for a local run against any other range.
  *
  * Measured 2026-09-26 on branch feature/phase-1-core-infrastructure, against base
- * cbd3f2044aa6a93377a78953cb33de04592560e7, at commit 1750c2e:
+ * cbd3f2044aa6a93377a78953cb33de04592560e7, at commit 3426136:
  *
- *   new       89.08% lines (1216/1365), 92.81% functions, 17 instrumented files
+ *   new       89.80% lines (1312/1461), 93.10% functions, 17 instrumented files
  *   modified 100.00% lines (42/42),    100.00% functions,  2 instrumented files
- *   aggregate 89.41% lines (1258/1407), 92.91% functions, 19 instrumented files
+ *   aggregate 90.09% lines (1354/1503), 93.20% functions, 19 instrumented files
  *
- * The figures are anchored to that commit rather than to "the current file" on purpose:
- * this header is inside the file it measures, so rewriting the number would move it. At
- * 1750c2e this file stood at 310/348 lines (89.08%) and 29/30 functions.
+ * Those are the figures `bun run coverage:gate` printed against that commit, and they are a
+ * SNAPSHOT OF 3426136, not a live reading of the working tree: re-running the gate today reports
+ * whatever today's tree measures, which is not these numbers. The figures are anchored to a named
+ * commit rather than to "the current file" on purpose -- this header is inside the file it
+ * measures, so rewriting the number would move it. At 3426136 this file stood at 406/444 lines
+ * (91.44%) and 35/36 functions.
  *
  * This file is itself instrumented and counts toward the new class, which is deliberate: it
  * has no exemption from its own gate. Before the split was unit-tested it entered that
  * class at 69/129 lines (53.49%) and pulled it under the floor. Before the split existed
  * at all, new code measured 84.99% (968/1139) against the configured 85, and the gate then
  * reported green on the more generous aggregate.
+ *
+ * That self-instrumentation is also why the absent-from-lcov rule below does not trip on this
+ * file: `tests/unit/coverage-gate.test.ts` imports it, so `scripts/coverage-gate.ts` is in lcov
+ * and is never a candidate for the allowlist. An entry for it would be the tell that something
+ * had stopped the gate from measuring its own implementation.
  *
  * Three limits stated rather than hidden:
  *
