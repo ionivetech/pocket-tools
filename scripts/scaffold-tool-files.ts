@@ -110,10 +110,11 @@ function logicFile(args: ScaffoldArgs): string {
 
 /**
  * The tool name is bound in `<script setup>` and the template renders `{{ toolName }}`,
- * so it can never become markup. `JSON.stringify` escapes quotes, backslashes, newlines and
- * backticks but not `<`, so every `<` is emitted as the escape `\u003c`: without it a name
- * carrying `</script>` would close the block early (decisions.md #42). Do not reintroduce a
- * template interpolation of the name.
+ * so it can never become markup. `JSON.stringify` escapes quotes, backslashes and control
+ * characters, but not `<` and not backticks -- a backtick is harmless inside the
+ * double-quoted literal it emits. So every `<` is emitted as the escape `\u003c`: without
+ * it a name carrying `</script>` would close the block early (decisions.md #42). Do not
+ * reintroduce a template interpolation of the name.
  */
 function scriptLiteral(value: string): string {
 	return JSON.stringify(value).replaceAll("<", "\\u003c");

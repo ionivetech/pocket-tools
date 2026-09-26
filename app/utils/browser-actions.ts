@@ -53,13 +53,22 @@ function getDefaultDownloadEnvironment(): DownloadEnvironment {
 
 /**
  * Windows resolves these stems to a device, not a file, whatever follows the
- * first dot. Matched case-insensitively on the stem, so `con.txt` is refused too.
+ * first dot. The `(?:\.|$)` keeps the test on the whole name, so `con.txt` is
+ * refused too and no split-and-default is needed.
  */
-const reservedDeviceStems = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+const reservedDeviceStems = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 
 function isReservedDeviceName(filename: string): boolean {
-	return reservedDeviceStems.test(filename.split(".")[0] ?? "");
+	return reservedDeviceStems.test(filename);
 }
+
+/**
+ * U+200C ZERO WIDTH NON-JOINER and U+200D ZERO WIDTH JOINER are `\p{Cf}`, but they
+ * are ordinary letters in Persian, Hindi and emoji sequences rather than spoofing
+ * devices. Exempting exactly these two keeps those names intact while the broad
+ * category filter still drops every bidi control.
+ */
+const permittedFormatCharacters = new Set(["\u200c", "\u200d"]);
 
 function sanitizeFilename(filename: string): string | undefined {
 	if (typeof filename !== "string") {
@@ -73,10 +82,19 @@ function sanitizeFilename(filename: string): string | undefined {
 			// \p{Cf} drops invisible format characters such as U+202E RIGHT-TO-LEFT
 			// OVERRIDE, which otherwise disguise the extension in a file manager.
 			// A category filter keeps `café.txt` and `简历.pdf` intact.
-			return codePoint > 31 && codePoint !== 127 && !/\p{Cf}/u.test(character);
+			return (
+				codePoint > 31 &&
+				codePoint !== 127 &&
+				(permittedFormatCharacters.has(character) || !/\p{Cf}/u.test(character))
+			);
 		})
 		.join("");
-	const sanitized = withoutControls.replace(/[<>:"|?*]/g, "-").trim();
+	// Windows silently drops trailing dots and spaces, so `report.txt.` is written as
+	// `report.txt`; stripping them keeps one requested name to one file on disk.
+	const sanitized = withoutControls
+		.replace(/[<>:"|?*]/g, "-")
+		.replace(/[. ]+$/, "")
+		.trim();
 
 	// A leading dot hides the name in a file manager and makes `.` and `..` degenerate
 	// downloads, so one check covers the whole class.

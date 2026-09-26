@@ -186,6 +186,70 @@ describe("browser actions", () => {
 		}
 	});
 
+	test("keeps zero-width joiners, which are ordinary letters in Persian, Indic and emoji", () => {
+		// U+200C ZWNJ and U+200D ZWJ are \p{Cf}, but mangling them silently renames a
+		// legitimate file rather than refusing a hostile one.
+		for (const filename of ["می\u200cرام.txt", "नमस्ते\u200d.pdf", "family\u200Dphoto.png"]) {
+			const result = createDownloadEnvironment();
+
+			downloadText("hello", filename, result.environment);
+
+			expect(result.anchor.download).toBe(filename);
+		}
+	});
+
+	test("still strips the whole bidi range, a zero-width no-break space and a soft hyphen", () => {
+		for (const [filename, expected] of [
+			["invoice\u202Etxt.exe", "invoicetxt.exe"],
+			["\u202Aleft\u202B.txt", "left.txt"],
+			["\u202Cend\u202D.txt", "end.txt"],
+			["\u202Ename\u202E.txt", "name.txt"],
+			["\u2066name\u2069.txt", "name.txt"],
+			["left\u200F.txt", "left.txt"],
+			["soft\u00ADhyphen.txt", "softhyphen.txt"],
+			["zero\uFEFFwidth.txt", "zerowidth.txt"],
+		] as const) {
+			const result = createDownloadEnvironment();
+
+			downloadText("hello", filename, result.environment);
+
+			expect(result.anchor.download).toBe(expected);
+		}
+	});
+
+	test("strips a trailing dot, which Windows silently drops and can collide on", () => {
+		for (const [filename, expected] of [
+			["report.txt.", "report.txt"],
+			["report.txt..", "report.txt"],
+			["report.txt. ", "report.txt"],
+			["report.txt . .", "report.txt"],
+			["no-extension.", "no-extension"],
+		] as const) {
+			const result = createDownloadEnvironment();
+
+			downloadText("hello", filename, result.environment);
+
+			expect(result.anchor.download).toBe(expected);
+		}
+	});
+
+	test("rejects a name that is nothing but dots and spaces", () => {
+		for (const filename of ["...", ". . .", " .. "]) {
+			const result = createDownloadEnvironment();
+
+			try {
+				downloadText("private value", filename, result.environment);
+			} catch (error) {
+				expectActionError(error, "invalid_filename");
+				expect(result.blobs).toHaveLength(0);
+				expect(result.wasClicked()).toBe(false);
+				continue;
+			}
+
+			throw new Error(`Expected ${filename} to be rejected`);
+		}
+	});
+
 	test("normalizes download failures and still cleans up", () => {
 		const result = createDownloadEnvironment();
 		result.anchor.click = () => {

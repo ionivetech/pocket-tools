@@ -433,17 +433,17 @@
 
 ## Milestones
 
-| Milestone | Deliverable                                        | Status |
-| --------- | -------------------------------------------------- | ------ |
-| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`  |
-| M1        | Registry, routing, shared components, test harness | `[x]`  | — evidence: T1–T10, bun run ci:local |
-| M2        | First general-purpose tools                        | `[ ]`  |
-| M3        | Palette, favorites, history, paste, landing        | `[ ]`  |
-| M4        | MVP everyday toolkit                               | `[ ]`  |
-| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`  |
-| M6        | v1.0 launch                                        | `[ ]`  |
-| M7        | v1.1 expanded catalog                              | `[ ]`  |
-| M8        | v2 advanced features                               | `[ ]`  |
+| Milestone | Deliverable                                        | Status                                     |
+| --------- | -------------------------------------------------- | ------------------------------------------ |
+| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`                                      |
+| M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local |
+| M2        | First general-purpose tools                        | `[ ]`                                      |
+| M3        | Palette, favorites, history, paste, landing        | `[ ]`                                      |
+| M4        | MVP everyday toolkit                               | `[ ]`                                      |
+| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                      |
+| M6        | v1.0 launch                                        | `[ ]`                                      |
+| M7        | v1.1 expanded catalog                              | `[ ]`                                      |
+| M8        | v2 advanced features                               | `[ ]`                                      |
 
 ---
 
