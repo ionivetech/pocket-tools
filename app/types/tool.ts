@@ -105,12 +105,40 @@ function isKeywords(value: unknown): value is string[] {
 	return Array.isArray(value) && value.length > 0 && value.every(isNonEmptyString);
 }
 
-/** The per-tool stem obeys the same kebab rule as `isToolSlug`, so no dot, case, or `..`. */
-const toolComponentPathPattern =
-	/^(?:~\/components\/[A-Z][A-Za-z0-9]*\.vue|~\/tools\/[a-z0-9]+(?:-[a-z0-9]+)*\/ToolComponent\.vue)$/;
+/** A shared component: `~/components/` and a PascalCase file name. */
+const sharedComponentPathPattern = /^~\/components\/[A-Z][A-Za-z0-9]*\.vue$/;
 
+/** A tool's own component is these two literal pieces around its slug. */
+const toolComponentDirPrefix = "~/tools/";
+const toolComponentFileName = "/ToolComponent.vue";
+
+/**
+ * Parses the path instead of pattern-matching the whole of it. The per-tool branch
+ * delegates the slug to `isToolSlug` rather than re-encoding that rule here, so the
+ * slug has one owner and a slug the scaffolder accepts is a path this accepts.
+ * The shape is still closed: `~/tools/`, a slug, and the fixed file name with
+ * nothing between them, and the slug alphabet holds no dot, slash, or backslash,
+ * so no traversal, second segment, or `//` survives.
+ */
 function isToolComponentPath(value: unknown): value is ToolComponentPath {
-	return typeof value === "string" && toolComponentPathPattern.test(value);
+	if (typeof value !== "string") {
+		return false;
+	}
+
+	if (sharedComponentPathPattern.test(value)) {
+		return true;
+	}
+
+	if (!value.startsWith(toolComponentDirPrefix) || !value.endsWith(toolComponentFileName)) {
+		return false;
+	}
+
+	const slug = value.slice(
+		toolComponentDirPrefix.length,
+		value.length - toolComponentFileName.length,
+	);
+
+	return isToolSlug(slug);
 }
 
 function invalidMetadata(code: string, message: string): Result<ToolMetadata> {
