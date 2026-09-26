@@ -132,11 +132,13 @@
 
 ### 1.4 Shared component system
 
-- [x] Add shared copy/download action component. — evidence: T6, app/components/ToolActions.vue; bun test tests/unit/browser-actions.test.ts
+- [x] Add shared copy/download action component. — delivered: T6, app/components/ToolActions.vue. Its copy/download logic delegates to app/utils/browser-actions.ts, which is unit-tested (bun test tests/unit/browser-actions.test.ts); the component itself is not rendered by any route and not asserted by any test.
 - [x] Add shared empty/error/loading state components. — evidence: T6, app/components/ToolState.vue; bun run test:e2e
 - [x] Add tool header/footer composition. — evidence: T7, app/components/ToolHeader.vue; bun run build
-- [x] Add dual-pane and file-drop patterns for future tools. — evidence: T7, app/components/ToolDualPane.vue; bun run build
+- [x] Add dual-pane and file-drop patterns for future tools. — delivered: T7, app/components/ToolDualPane.vue, app/components/ToolFileDrop.vue. Both compile (bun run build), but neither is rendered by any route or asserted by any test, and both keep their logic inline in the component rather than in a tested utility, so no unit test covers them yet. They wait for the first tool that uses them.
 - [x] Use PrimeVue components and project tokens only. — evidence: T9, tests/e2e/accessibility.pw.ts; bun run test:e2e
+
+> Coverage gap: `ToolActions.vue`, `ToolDualPane.vue`, and `ToolFileDrop.vue` are shared primitives delivered ahead of the tools that will use them. None is rendered by a route or asserted by a test, so the shared component system is **not** covered end to end; only the logic `ToolActions` delegates to is. Closing this needs a component-rendering test runner (a dev dependency such as `@vue/test-utils`) or a test-only route, both out of scope here. `scripts/coverage-gate.ts` measures the unit-tested logic, not rendering.
 
 ### 1.5 Testing and quality harness
 
