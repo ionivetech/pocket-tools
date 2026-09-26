@@ -132,13 +132,13 @@
 
 ### 1.4 Shared component system
 
-- [x] Add shared copy/download action component. — delivered: T6, app/components/ToolActions.vue. Its copy/download logic delegates to app/utils/browser-actions.ts, which is unit-tested (bun test tests/unit/browser-actions.test.ts); the component itself is not rendered by any route and not asserted by any test.
+- [x] Add shared copy/download action component. — delivered: T6, app/components/ToolActions.vue. Its copy/download logic delegates to app/utils/browser-actions.ts, which is unit-tested (bun test tests/unit/browser-actions.test.ts); tests/unit/shared-components.test.ts asserts the component imports that logic and exposes its expected bindings, but the component is still not rendered by any route or browser test.
 - [x] Add shared empty/error/loading state components. — evidence: T6, app/components/ToolState.vue; bun run test:e2e
 - [x] Add tool header/footer composition. — evidence: T7, app/components/ToolHeader.vue; bun run build
-- [x] Add dual-pane and file-drop patterns for future tools. — delivered: T7, app/components/ToolDualPane.vue, app/components/ToolFileDrop.vue. Both compile (bun run build), but neither is rendered by any route or asserted by any test, and both keep their logic inline in the component rather than in a tested utility, so no unit test covers them yet. They wait for the first tool that uses them.
+- [x] Add dual-pane and file-drop patterns for future tools. — delivered: T7, app/components/ToolDualPane.vue, app/components/ToolFileDrop.vue. Both compile (bun run build), and tests/unit/shared-components.test.ts asserts each parses, compiles, and exposes its expected bindings. Neither is rendered by a route or a browser test, and both keep their logic inline in the component rather than in a tested utility, so no unit test exercises their behaviour. They wait for the first tool that uses them.
 - [x] Use PrimeVue components and project tokens only. — evidence: T9, tests/e2e/accessibility.pw.ts; bun run test:e2e
 
-> Coverage gap: `ToolActions.vue`, `ToolDualPane.vue`, and `ToolFileDrop.vue` are shared primitives delivered ahead of the tools that will use them. None is rendered by a route or asserted by a test, so the shared component system is **not** covered end to end; only the logic `ToolActions` delegates to is. Closing this needs a component-rendering test runner (a dev dependency such as `@vue/test-utils`) or a test-only route, both out of scope here. `scripts/coverage-gate.ts` measures the unit-tested logic, not rendering.
+> Coverage gap: `ToolActions.vue`, `ToolDualPane.vue`, and `ToolFileDrop.vue` are shared primitives delivered ahead of the tools that will use them. `tests/unit/shared-components.test.ts` now verifies that each parses and compiles with no template or script errors and exposes its expected top-level bindings, and that `ToolActions.vue` is the component importing the tested `copyText`/`downloadText` logic from `app/utils/browser-actions.ts`. That is a compile and contract check, **not** render coverage: no component is mounted, and **none of the three is rendered by a route or a browser test**, so the shared component system is still **not** covered end to end — a component that compiles and then behaves wrongly would pass. Closing the gap needs a component-rendering test runner (a dev dependency such as `@vue/test-utils`) or a test-only route, both out of scope here. `scripts/coverage-gate.ts` measures the unit-tested logic, not rendering.
 
 ### 1.5 Testing and quality harness
 
@@ -154,6 +154,8 @@
 - [x] Define size limits and clear overflow behavior. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
 - [x] Add round-trip tests. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
 - [x] Keep URL state optional and privacy-safe. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
+
+> Not yet consumed: `app/utils/url-state.ts` is delivered and unit-tested, but **no route or component imports it** — nothing reads or writes tool state in the query string today. The `pockettools-pages` navigation-cache rule in `nuxt.config.ts` is keyed by path rather than by query string so it stays correct once that wiring lands; that fix is anticipatory, not a response to current query traffic. Wiring the codec is product behaviour and is out of scope for this infrastructure mission.
 
 ### 1.7 Error handling
 
