@@ -3,25 +3,44 @@ import { expect, type Page } from "@playwright/test";
 
 const appReady = '[data-app-ready="true"]';
 const toolReady = '[data-testid="tool-host"][data-tool-ready="true"]';
+const toolDetailPath = /^\/tools\/[^/]+\/?$/;
 
-/** Waits for the shell marker that the app sets once it has mounted. @example `await waitForAppReady(page);` */
-export function waitForAppReady(page: Page) {
-	return expect(page.locator(appReady)).toBeVisible();
+/**
+ * Waits for the shell marker the app sets on mount, and on a tool detail page
+ * also for `data-tool-ready`. Tool pages are prerendered: their controls exist
+ * in the HTML before the tool's lazy chunk mounts, so a click (or a read of
+ * client-rendered markup) in that window hits content Vue is about to replace.
+ * @example `await waitForAppReady(page);`
+ */
+export async function waitForAppReady(page: Page) {
+	await expect(page.locator(appReady)).toBeVisible();
+	if (toolDetailPath.test(new URL(page.url()).pathname)) {
+		await expect(page.locator(toolReady)).toBeAttached({ timeout: 20_000 });
+	}
 }
 
 /**
- * Navigates to `path` and waits for the app to be ready. On a tool detail page
- * it also waits for `data-tool-ready`, because tool pages are prerendered: their
- * controls exist in the HTML before the tool's lazy chunk mounts, and a click in
- * that window lands on markup Vue is about to replace.
+ * Navigates to `path` and waits for the app — and, on a tool detail page, the
+ * real tool component — to be interactive.
  * @example `await gotoAppReady(page, "/tools/json-formatter");`
  */
 export async function gotoAppReady(page: Page, path: string) {
 	await page.goto(path, { timeout: 20_000 });
 	await waitForAppReady(page);
-	if (/^\/tools\/[^/]+\/?$/.test(path)) {
-		await expect(page.locator(toolReady)).toBeAttached({ timeout: 20_000 });
-	}
+}
+
+/**
+ * Waits for a CodeMirror editor's content element, then reads it. CodeMirror
+ * creates that element only when its view is built — in the tool component's
+ * `onMounted`, after a dynamic import — so a cold machine can be a tick behind
+ * the tool being ready, and reading before it exists silently yields "".
+ * @example `await editorText(page, "json-formatter-input");`
+ */
+export async function editorText(page: Page, testid: string): Promise<string> {
+	const content = page.locator(`[data-testid="${testid}"]`);
+	await expect(content).toBeAttached({ timeout: 20_000 });
+	const lines = await content.locator(".cm-line").allTextContents();
+	return lines.join("\n");
 }
 
 /** Fails with `context` when the page scrolls sideways, which breaks use on a 375px phone. @example `await expectNoHorizontalOverflow(page, "375px light");` */

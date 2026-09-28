@@ -1,5 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
+	editorText,
 	expectNoHorizontalOverflow,
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
@@ -7,12 +8,6 @@ import {
 	openToolOptions,
 	waitForAppReady,
 } from "./helpers/app";
-
-/** CodeMirror renders one div per line, so the document is the lines joined. */
-async function editorText(page: Page, testid: string): Promise<string> {
-	const lines = await page.locator(`[data-testid="${testid}"] .cm-line`).allTextContents();
-	return lines.join("\n");
-}
 
 test.describe("JSON formatter", () => {
 	test.use({ viewport: { width: 375, height: 812 } });
