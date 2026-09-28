@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { countText, runTextCleaner } from "./logic";
-import { isTextCaseTransform, parseTextCleanerInput } from "./schema";
+import { countText, detectEnding, readingTimeLabel, runTextCleaner } from "./logic";
+import { isTextCaseTransform, isTextLineEnding, parseTextCleanerInput } from "./schema";
 
 describe("text-cleaner schema", () => {
 	test("accepts a valid record", () => {
@@ -110,5 +110,94 @@ describe("runTextCleaner", () => {
 			caseTransform: "none",
 		});
 		expect(result).toMatchObject({ ok: true, value: { result: "  Keep  Me  " } });
+	});
+
+	test("removes empty lines while keeping the rest", () => {
+		const result = runTextCleaner({
+			text: "one\n\n   \ntwo\n",
+			trim: true,
+			collapseWhitespace: false,
+			caseTransform: "none",
+			removeEmptyLines: true,
+		});
+		expect(result).toMatchObject({ ok: true, value: { result: "one\ntwo" } });
+	});
+
+	test("removes duplicate lines keeping the first occurrence", () => {
+		const result = runTextCleaner({
+			text: "b\na\nb\nc\na",
+			trim: false,
+			collapseWhitespace: false,
+			caseTransform: "none",
+			removeDuplicateLines: true,
+		});
+		expect(result).toMatchObject({ ok: true, value: { result: "b\na\nc" } });
+	});
+
+	test("converts line endings to CRLF", () => {
+		const result = runTextCleaner({
+			text: "one\ntwo",
+			trim: false,
+			collapseWhitespace: false,
+			caseTransform: "none",
+			lineEnding: "crlf",
+		});
+		expect(result).toMatchObject({ ok: true, value: { result: "one\r\ntwo" } });
+	});
+
+	test("keeps CRLF input as CRLF by default", () => {
+		const result = runTextCleaner({
+			text: "one\r\ntwo",
+			trim: false,
+			collapseWhitespace: false,
+			caseTransform: "none",
+		});
+		expect(result).toMatchObject({ ok: true, value: { result: "one\r\ntwo" } });
+	});
+
+	test("strips HTML tags before collapsing spaces", () => {
+		const result = runTextCleaner({
+			text: "<p>Hello  <b>World</b></p>",
+			trim: true,
+			collapseWhitespace: true,
+			caseTransform: "none",
+			stripHtml: true,
+		});
+		expect(result).toMatchObject({ ok: true, value: { result: "Hello World" } });
+	});
+
+	test("rejects a non-boolean stripHtml flag", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "none",
+				stripHtml: "yes",
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("accepts every line ending value", () => {
+		expect(isTextLineEnding("keep")).toBe(true);
+		expect(isTextLineEnding("lf")).toBe(true);
+		expect(isTextLineEnding("crlf")).toBe(true);
+		expect(isTextLineEnding("cr")).toBe(false);
+	});
+});
+
+describe("detectEnding", () => {
+	test("prefers CRLF when present, LF otherwise", () => {
+		expect(detectEnding("a\r\nb")).toBe("\r\n");
+		expect(detectEnding("a\nb")).toBe("\n");
+		expect(detectEnding("single")).toBe("\n");
+	});
+});
+
+describe("readingTimeLabel", () => {
+	test("labels empty, short, and long text", () => {
+		expect(readingTimeLabel(0)).toBe("nothing to read yet");
+		expect(readingTimeLabel(30)).toBe("under a min read");
+		expect(readingTimeLabel(400)).toBe("2 min read");
 	});
 });

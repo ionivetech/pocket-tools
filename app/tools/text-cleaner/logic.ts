@@ -54,7 +54,9 @@ export function countText(text: string): TextCleanerCounts {
 }
 
 /**
- * Cleans up whitespace and case, then counts the result.
+ * Cleans up whitespace, lines, markup, and case, then counts the result.
+ * Transform order is fixed (markup → whitespace → trim → line filters → case)
+ * so combined options behave predictably.
  *
  * @example
  * ```ts
@@ -62,8 +64,15 @@ export function countText(text: string): TextCleanerCounts {
  * ```
  */
 export function runTextCleaner(input: TextCleanerInput): Result<TextCleanerOutput> {
+	const ending = input.lineEnding ?? "keep";
+	const targetEnding =
+		ending === "crlf" ? "\r\n" : ending === "lf" ? "\n" : detectEnding(input.text);
+
 	let result = input.text;
 
+	if (input.stripHtml === true) {
+		result = result.replace(/<[^>]*>/g, "");
+	}
 	if (input.collapseWhitespace) {
 		// Collapse runs of horizontal whitespace, but keep line breaks so
 		// paragraph structure survives a "clean up spacing" pass.
@@ -77,7 +86,58 @@ export function runTextCleaner(input: TextCleanerInput): Result<TextCleanerOutpu
 			.trim();
 	}
 
+	// Split on any newline style; the output ending is applied once at the end.
+	let lines = result.split(/\r\n|\r|\n/);
+	if (input.removeEmptyLines === true) {
+		lines = lines.filter((line) => line.trim() !== "");
+	}
+	if (input.removeDuplicateLines === true) {
+		const seen = new Set<string>();
+		lines = lines.filter((line) => {
+			if (seen.has(line)) {
+				return false;
+			}
+			seen.add(line);
+			return true;
+		});
+	}
+	result = lines.join(targetEnding);
+
 	result = applyCase(result, input.caseTransform);
 
 	return { ok: true, value: { result, counts: countText(result) } };
+}
+
+/**
+ * Detects the dominant newline style (`\r\n` wins on any occurrence),
+ * falling back to `\n` for single-line or empty text.
+ *
+ * @example
+ * ```ts
+ * detectEnding("a\r\nb"); // "\r\n"
+ * ```
+ */
+export function detectEnding(text: string): "\n" | "\r\n" {
+	return text.includes("\r\n") ? "\r\n" : "\n";
+}
+
+/**
+ * Labels a word count as an estimated reading time at 200 words per minute.
+ *
+ * @example
+ * ```ts
+ * readingTimeLabel(400); // "2 min read"
+ * readingTimeLabel(30); // "under a min read"
+ * ```
+ */
+export function readingTimeLabel(words: number): string {
+	if (words <= 0) {
+		return "nothing to read yet";
+	}
+	const minutes = words / 200;
+	if (minutes < 1) {
+		return "under a min read";
+	}
+	const rounded = Math.round(minutes);
+	return `${rounded} min read`;
 }

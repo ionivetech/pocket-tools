@@ -36,6 +36,15 @@ test.describe("Text cleaner", () => {
 		await expect(page.getByTestId("text-cleaner-output")).toHaveValue("  keep   spacing  ");
 	});
 
+	test("removes empty and duplicate lines", async ({ page }) => {
+		await gotoAppReady(page, "/tools/text-cleaner");
+
+		await page.getByTestId("text-cleaner-empty-lines").click();
+		await page.getByTestId("text-cleaner-duplicate-lines").click();
+		await page.getByTestId("text-cleaner-input").fill("b\n\na\nb\nc");
+		await expect(page.getByTestId("text-cleaner-output")).toHaveValue("b\na\nc");
+	});
+
 	test("has no serious axe violations and keeps touch targets at 44px", async ({ page }) => {
 		await gotoAppReady(page, "/tools/text-cleaner");
 		await expectNoSeriousAxeViolations(page);
