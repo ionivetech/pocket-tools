@@ -4,6 +4,7 @@ import {
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
 	gotoAppReady,
+	openToolOptions,
 } from "./helpers/app";
 
 test.describe("Base64 encoder/decoder", () => {
@@ -25,6 +26,7 @@ test.describe("Base64 encoder/decoder", () => {
 
 	test("lets the user force a direction", async ({ page }) => {
 		await gotoAppReady(page, "/tools/base64-tool");
+		await openToolOptions(page);
 		await page.getByTestId("base64-direction").click();
 		await page.getByRole("option", { name: "Encode" }).click();
 		await page.getByTestId("base64-input").fill("aGVsbG8=");
@@ -34,6 +36,7 @@ test.describe("Base64 encoder/decoder", () => {
 	test("encodes URL-safe and wraps long output", async ({ page }) => {
 		await gotoAppReady(page, "/tools/base64-tool");
 
+		await openToolOptions(page);
 		await page.getByTestId("base64-url-safe").click();
 		await page.getByTestId("base64-input").fill("hello?");
 		await expect(page.getByTestId("base64-output")).toHaveValue("aGVsbG8_");

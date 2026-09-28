@@ -14,9 +14,15 @@ const headingId = `tool-heading-${useId()}`;
 		<p class="pt-kicker">{{ props.tool.category }} tool</p>
 		<h1 :id="headingId">{{ props.tool.name }}</h1>
 		<p class="pt-tool-head__description">{{ props.tool.description }}</p>
-		<p class="pt-tool-head__status">
-			<AppIcon name="shield" />
-			<span>Your work stays in this browser.</span>
-		</p>
+		<div class="pt-tool-head__status">
+			<p>
+				<AppIcon name="shield" />
+				<span>Your work stays in this browser.</span>
+			</p>
+			<p>
+				<AppIcon name="wifi" />
+				<span>Saved tools keep working without a connection.</span>
+			</p>
+		</div>
 	</header>
 </template>

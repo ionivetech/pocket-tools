@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useToast } from "primevue/usetoast";
 import { BrowserActionError, copyText, downloadText } from "~/utils/browser-actions";
 
 const props = withDefaults(
@@ -16,28 +17,22 @@ const emit = defineEmits<{
 	error: [error: BrowserActionError];
 }>();
 
+const toast = useToast();
 const copyPending = ref(false);
-const status = ref("");
-const statusState = ref<"idle" | "success" | "error">("idle");
 
-function clearStatus(): void {
-	status.value = "";
-	statusState.value = "idle";
-}
-
-function reportError(error: unknown, fallback: BrowserActionError): void {
-	const actionError = error instanceof BrowserActionError ? error : fallback;
-	statusState.value = "error";
-
-	if (actionError.code === "clipboard_unavailable") {
-		status.value = "Copy failed. Check clipboard access and try again.";
-	} else if (actionError.code === "invalid_filename") {
-		status.value = "Download failed. Choose a valid filename and try again.";
+function notifyCopyError(error: unknown): void {
+	const actionError = error instanceof BrowserActionError ? error : undefined;
+	if (actionError?.code === "clipboard_unavailable") {
+		toast.add({
+			severity: "error",
+			summary: "Copy failed.",
+			detail: "Check clipboard access and try again.",
+			life: 4000,
+		});
 	} else {
-		status.value = "Download failed. Try again or choose another browser.";
+		toast.add({ severity: "error", summary: "Copy failed.", detail: "Try again.", life: 4000 });
 	}
-
-	emit("error", actionError);
+	emit("error", actionError ?? new BrowserActionError("clipboard_unavailable"));
 }
 
 async function handleCopy(): Promise<void> {
@@ -46,16 +41,14 @@ async function handleCopy(): Promise<void> {
 	}
 
 	copyPending.value = true;
-	clearStatus();
 
 	try {
 		const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard;
 		await copyText(props.value, clipboard);
-		status.value = "Copied to clipboard.";
-		statusState.value = "success";
+		toast.add({ severity: "success", summary: "Copied to clipboard.", life: 3000 });
 		emit("copy");
 	} catch (error) {
-		reportError(error, new BrowserActionError("clipboard_unavailable"));
+		notifyCopyError(error);
 	} finally {
 		copyPending.value = false;
 	}
@@ -66,15 +59,20 @@ function handleDownload(): void {
 		return;
 	}
 
-	clearStatus();
-
 	try {
 		downloadText(props.value, props.filename);
-		status.value = "Download started.";
-		statusState.value = "success";
+		toast.add({
+			severity: "success",
+			summary: "Download started.",
+			detail: props.filename,
+			life: 3000,
+		});
 		emit("download");
 	} catch (error) {
-		reportError(error, new BrowserActionError("download_unavailable"));
+		const actionError =
+			error instanceof BrowserActionError ? error : new BrowserActionError("download_unavailable");
+		toast.add({ severity: "error", summary: "Download failed.", detail: "Try again.", life: 4000 });
+		emit("error", actionError);
 	}
 }
 </script>
@@ -100,15 +98,5 @@ function handleDownload(): void {
 			data-testid="tool-actions-download"
 			@click="handleDownload"
 		/>
-		<p
-			class="pt-tool-actions__status"
-			data-testid="tool-actions-status"
-			:data-state="statusState"
-			role="status"
-			aria-live="polite"
-			aria-atomic="true"
-		>
-			{{ status }}
-		</p>
 	</div>
 </template>

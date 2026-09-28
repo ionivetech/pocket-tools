@@ -72,3 +72,16 @@ export async function expectTouchTargetsAtLeast44(
 		);
 	expect(undersized).toEqual([]);
 }
+
+/**
+ * Opens the floating tool-options drawer when it is rendered (mobile widths
+ * hide the inline toolbar behind it). A no-op on desktop, where the toolbar
+ * is already visible. @example `await openToolOptions(page);`
+ */
+export async function openToolOptions(page: Page) {
+	const fab = page.getByTestId("tool-options-fab");
+	if (await fab.isVisible()) {
+		await fab.click();
+		await expect(page.getByTestId("tool-options-drawer")).toBeVisible();
+	}
+}

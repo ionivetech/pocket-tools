@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Select from "primevue/select";
+import { useToast } from "primevue/usetoast";
 import { computed, ref, useId, watch } from "vue";
 import { BrowserActionError, copyText } from "~/utils/browser-actions";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
@@ -23,7 +24,8 @@ const text = ref(typeof initial.text === "string" ? initial.text : sampleJson);
 const indent = ref<JsonFormatterIndent>(isJsonFormatterIndent(initial.indent) ? initial.indent : 2);
 const mode = ref<JsonFormatterMode>(isJsonFormatterMode(initial.mode) ? initial.mode : "format");
 const sortKeys = ref(initial.sortKeys === true);
-const escapeStatus = ref("");
+
+const toast = useToast();
 
 const indentOptions = [
 	{ label: "2 spaces", value: 2 },
@@ -91,12 +93,10 @@ function jumpToErrorLine(): void {
 
 function loadSample(): void {
 	text.value = sampleJson;
-	escapeStatus.value = "";
 }
 
 function clearInput(): void {
 	text.value = "";
-	escapeStatus.value = "";
 }
 
 async function copyEscaped(): Promise<void> {
@@ -106,12 +106,17 @@ async function copyEscaped(): Promise<void> {
 	try {
 		const clipboard = typeof navigator === "undefined" ? undefined : navigator.clipboard;
 		await copyText(JSON.stringify(outputText.value), clipboard);
-		escapeStatus.value = "Copied as an escaped string.";
+		toast.add({ severity: "success", summary: "Copied as an escaped string.", life: 3000 });
 	} catch (error) {
-		escapeStatus.value =
-			error instanceof BrowserActionError
-				? "Copy failed. Check clipboard access and try again."
-				: "Copy failed. Try again.";
+		toast.add({
+			severity: "error",
+			summary: "Copy failed.",
+			detail:
+				error instanceof BrowserActionError
+					? "Check clipboard access and try again."
+					: "Try again.",
+			life: 4000,
+		});
 	}
 }
 
@@ -169,14 +174,7 @@ watch(
 						aria-label="Indent width"
 						data-testid="json-formatter-indent"
 					/>
-					<Button
-						type="button"
-						label="Sort keys"
-						:aria-pressed="sortKeys"
-						:outlined="!sortKeys"
-						data-testid="json-formatter-sort-keys"
-						@click="sortKeys = !sortKeys"
-					/>
+					<ToolSwitch v-model="sortKeys" label="Sort keys" testid="json-formatter-sort-keys" />
 				</div>
 			</fieldset>
 
@@ -278,16 +276,6 @@ watch(
 					@click="copyEscaped"
 				/>
 			</div>
-			<p
-				v-if="escapeStatus"
-				class="pt-output-status"
-				role="status"
-				aria-live="polite"
-				aria-atomic="true"
-				data-testid="json-formatter-escape-status"
-			>
-				{{ escapeStatus }}
-			</p>
 		</template>
 	</ToolDualPane>
 </template>
@@ -345,11 +333,5 @@ watch(
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.75rem;
-}
-
-.pt-output-status {
-	margin: 0;
-	color: var(--pt-muted);
-	font-size: 0.86rem;
 }
 </style>

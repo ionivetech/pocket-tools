@@ -58,21 +58,11 @@ const isEmpty = computed(() => text.value.trim() === "");
 			<fieldset class="pt-option-group">
 				<legend>Spacing</legend>
 				<div class="pt-option-group__controls">
-					<Button
-						type="button"
-						label="Trim line edges"
-						:aria-pressed="trim"
-						:outlined="!trim"
-						data-testid="text-cleaner-trim"
-						@click="trim = !trim"
-					/>
-					<Button
-						type="button"
+					<ToolSwitch v-model="trim" label="Trim line edges" testid="text-cleaner-trim" />
+					<ToolSwitch
+						v-model="collapseWhitespace"
 						label="Collapse spaces"
-						:aria-pressed="collapseWhitespace"
-						:outlined="!collapseWhitespace"
-						data-testid="text-cleaner-collapse"
-						@click="collapseWhitespace = !collapseWhitespace"
+						testid="text-cleaner-collapse"
 					/>
 				</div>
 			</fieldset>
@@ -80,21 +70,15 @@ const isEmpty = computed(() => text.value.trim() === "");
 			<fieldset class="pt-option-group">
 				<legend>Lines</legend>
 				<div class="pt-option-group__controls">
-					<Button
-						type="button"
+					<ToolSwitch
+						v-model="removeEmptyLines"
 						label="Remove empty lines"
-						:aria-pressed="removeEmptyLines"
-						:outlined="!removeEmptyLines"
-						data-testid="text-cleaner-empty-lines"
-						@click="removeEmptyLines = !removeEmptyLines"
+						testid="text-cleaner-empty-lines"
 					/>
-					<Button
-						type="button"
+					<ToolSwitch
+						v-model="removeDuplicateLines"
 						label="Remove duplicate lines"
-						:aria-pressed="removeDuplicateLines"
-						:outlined="!removeDuplicateLines"
-						data-testid="text-cleaner-duplicate-lines"
-						@click="removeDuplicateLines = !removeDuplicateLines"
+						testid="text-cleaner-duplicate-lines"
 					/>
 					<label class="pt-sr-only" :for="lineEndingId">Line breaks</label>
 					<Select
@@ -122,13 +106,10 @@ const isEmpty = computed(() => text.value.trim() === "");
 						aria-label="Change letter case"
 						data-testid="text-cleaner-case"
 					/>
-					<Button
-						type="button"
+					<ToolSwitch
+						v-model="stripHtml"
 						label="Strip HTML tags"
-						:aria-pressed="stripHtml"
-						:outlined="!stripHtml"
-						data-testid="text-cleaner-strip-html"
-						@click="stripHtml = !stripHtml"
+						testid="text-cleaner-strip-html"
 					/>
 				</div>
 			</fieldset>

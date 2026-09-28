@@ -75,6 +75,30 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
+	test("opens the global quick-search palette and navigates", async ({ page }) => {
+		await gotoAppReady(page, "/");
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("home-palette")).toBeVisible();
+		await page.getByTestId("home-palette-input").fill("uuid");
+		await page.getByTestId("home-palette-results").getByRole("option").first().click();
+		await expect(page).toHaveURL(/\/tools\/uuid-generator/);
+	});
+
+	test("opens the palette from the header on any page", async ({ page }) => {
+		await gotoAppReady(page, "/tools/json-formatter");
+		await page.getByTestId("header-palette-trigger").click();
+		await expect(page.getByTestId("home-palette-input")).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(page.getByTestId("home-palette")).toHaveCount(0);
+	});
+
+	test("shows favorites first on the all-tools view", async ({ page }) => {
+		await gotoAppReady(page, "/tools");
+		await expect(page.getByTestId("tools-favorites-first")).toHaveCount(0);
+		await page.getByRole("button", { name: "Add JSON formatter to favorites" }).click();
+		await expect(page.getByTestId("tools-favorites-first")).toContainText("JSON formatter");
+	});
+
 	test.describe("mobile navigation", () => {
 		test.use({ viewport: { width: 375, height: 812 } });
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Toast from "primevue/toast";
 import { resolveToolRoute } from "~/data/tool-route";
 import { tools } from "~/data/tools";
 
@@ -37,7 +38,7 @@ onMounted(() => {
 
 			<ToolHeader :tool="tool" />
 			<ToolHost :tool="tool" />
-			<ToolFooter :tool="tool" />
+			<Toast position="bottom-right" data-testid="app-toast" />
 		</main>
 
 		<AppFooter />

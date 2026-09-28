@@ -4,6 +4,7 @@ import {
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
 	gotoAppReady,
+	openToolOptions,
 	waitForAppReady,
 } from "./helpers/app";
 
@@ -28,6 +29,7 @@ test.describe("JSON formatter", () => {
 		await expect(status).toContainText("Valid JSON, formatted.");
 		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "b": 1,\n  "a": 2\n}');
 
+		await openToolOptions(page);
 		await page.getByTestId("json-formatter-minify").click();
 		expect(await editorText(page, "json-formatter-output")).toBe('{"b":1,"a":2}');
 		await expect(status).toContainText("Valid JSON, minified.");
@@ -45,6 +47,7 @@ test.describe("JSON formatter", () => {
 		await input.fill('{"b":1,"a":2}');
 		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "b": 1,\n  "a": 2\n}');
 
+		await openToolOptions(page);
 		await page.getByTestId("json-formatter-sort-keys").click();
 		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "a": 2,\n  "b": 1\n}');
 		await expect(page.getByTestId("json-formatter-stats")).toContainText("2 keys");
@@ -52,6 +55,7 @@ test.describe("JSON formatter", () => {
 
 	test("shows an empty state before any input", async ({ page }) => {
 		await gotoAppReady(page, "/tools/json-formatter");
+		await openToolOptions(page);
 		await page.getByTestId("json-formatter-clear").click();
 		await expect(page.getByTestId("json-formatter-status")).toContainText(
 			"Paste or type JSON to format",

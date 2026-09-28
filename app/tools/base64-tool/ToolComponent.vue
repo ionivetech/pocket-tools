@@ -142,14 +142,7 @@ async function handleFiles(files: File[]): Promise<void> {
 			<fieldset class="pt-option-group">
 				<legend>Format</legend>
 				<div class="pt-option-group__controls">
-					<Button
-						type="button"
-						label="URL-safe"
-						:aria-pressed="urlSafe"
-						:outlined="!urlSafe"
-						data-testid="base64-url-safe"
-						@click="urlSafe = !urlSafe"
-					/>
+					<ToolSwitch v-model="urlSafe" label="URL-safe alphabet" testid="base64-url-safe" />
 					<label class="pt-sr-only" :for="wrapId">Wrap encoded output</label>
 					<Select
 						:id="wrapId"

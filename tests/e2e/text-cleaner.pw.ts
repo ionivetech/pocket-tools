@@ -4,6 +4,7 @@ import {
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
 	gotoAppReady,
+	openToolOptions,
 } from "./helpers/app";
 
 test.describe("Text cleaner", () => {
@@ -23,6 +24,7 @@ test.describe("Text cleaner", () => {
 	test("applies a case transform", async ({ page }) => {
 		await gotoAppReady(page, "/tools/text-cleaner");
 		await page.getByTestId("text-cleaner-input").fill("hello world");
+		await openToolOptions(page);
 		await page.getByTestId("text-cleaner-case").click();
 		await page.getByRole("option", { name: "UPPERCASE" }).click();
 		await expect(page.getByTestId("text-cleaner-output")).toHaveValue("HELLO WORLD");
@@ -30,6 +32,7 @@ test.describe("Text cleaner", () => {
 
 	test("toggles cleanup options off", async ({ page }) => {
 		await gotoAppReady(page, "/tools/text-cleaner");
+		await openToolOptions(page);
 		await page.getByTestId("text-cleaner-trim").click();
 		await page.getByTestId("text-cleaner-collapse").click();
 		await page.getByTestId("text-cleaner-input").fill("  keep   spacing  ");
@@ -39,6 +42,7 @@ test.describe("Text cleaner", () => {
 	test("removes empty and duplicate lines", async ({ page }) => {
 		await gotoAppReady(page, "/tools/text-cleaner");
 
+		await openToolOptions(page);
 		await page.getByTestId("text-cleaner-empty-lines").click();
 		await page.getByTestId("text-cleaner-duplicate-lines").click();
 		await page.getByTestId("text-cleaner-input").fill("b\n\na\nb\nc");
