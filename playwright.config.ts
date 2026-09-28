@@ -15,6 +15,10 @@ export default defineConfig({
 		trace: "retain-on-failure",
 		screenshot: "only-on-failure",
 		serviceWorkers: "allow",
+		// Chromium requires explicit clipboard-write permission in a headless/automated
+		// context; without it the copy actions this repo's tools use (`ToolActions`, the
+		// UUID generator's per-row copy) throw `NotAllowedError` even from a real click.
+		permissions: ["clipboard-read", "clipboard-write"],
 	},
 	webServer: {
 		command: `PORT=${port} bun .output/server/index.mjs`,

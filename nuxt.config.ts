@@ -3,7 +3,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { generatedToolSlugs } from "./app/data/tool-routes.generated";
 import { AuraBlue } from "./app/theme/aura-blue";
 
-const precacheBudgetBytes = 512 * 1024;
+// Phase 0 measured 512 KiB for the shell alone. Phase 2 adds four real tools; each tool's
+// PrimeVue components (Select, InputNumber, Textarea) are imported locally inside that
+// tool's own lazy ToolComponent.vue rather than globally via `primevue.components.include`,
+// so they land in that tool's chunk instead of every route's initial payload. Total precache
+// still grows with real tool content: measured 598.2 KiB on 2026-09-28, commit range from
+// 07b3f59. Re-measure and raise again, deliberately, as more tools land.
+const precacheBudgetBytes = 704 * 1024;
 
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",
@@ -34,6 +40,13 @@ export default defineNuxtConfig({
 	primevue: {
 		autoImport: false,
 		components: {
+			// ponytail: Textarea/Select/InputNumber/Message are used by exactly one tool's
+			// lazy-loaded ToolComponent.vue each, so they are imported locally in those files
+			// instead of listed here. The PrimeVue Nuxt module registers `include`d components
+			// globally, which bundles them into every route's initial payload (this repo's home
+			// page JS budget e2e test caught the 27 KiB regression from adding them here);
+			// importing them inside the already-lazy tool component keeps them in that tool's
+			// own chunk instead.
 			include: ["Button", "InputText", "Drawer"],
 		},
 		options: {

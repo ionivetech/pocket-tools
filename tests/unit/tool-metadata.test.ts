@@ -5,7 +5,7 @@ import { toolMetadata as passwordGeneratorMetadata } from "../../app/tools/passw
 import { toolMetadata as textCleanerMetadata } from "../../app/tools/text-cleaner/metadata";
 import { validateToolMetadata } from "../../app/types/tool";
 
-const componentPath = "~/components/ToolPlaceholder.vue";
+const placeholderComponentPath = "~/components/ToolPlaceholder.vue";
 
 const expectedRecords = [
 	{
@@ -16,7 +16,7 @@ const expectedRecords = [
 		icon: "code",
 		accent: "blue",
 		keywords: ["json", "format", "validate", "developer"],
-		componentPath,
+		componentPath: "~/tools/json-formatter/ToolComponent.vue",
 	},
 	{
 		slug: "password-generator",
@@ -26,7 +26,7 @@ const expectedRecords = [
 		icon: "lock",
 		accent: "blue-strong",
 		keywords: ["password", "security", "random", "everyday"],
-		componentPath,
+		componentPath: placeholderComponentPath,
 	},
 	{
 		slug: "color-picker",
@@ -36,7 +36,7 @@ const expectedRecords = [
 		icon: "palette",
 		accent: "blue-soft",
 		keywords: ["color", "hex", "rgb", "media"],
-		componentPath,
+		componentPath: placeholderComponentPath,
 	},
 	{
 		slug: "text-cleaner",
@@ -46,7 +46,7 @@ const expectedRecords = [
 		icon: "align-left",
 		accent: "blue-muted",
 		keywords: ["text", "clean", "count", "whitespace"],
-		componentPath,
+		componentPath: "~/tools/text-cleaner/ToolComponent.vue",
 	},
 ] as const;
 

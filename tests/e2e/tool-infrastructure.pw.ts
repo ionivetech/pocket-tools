@@ -27,6 +27,8 @@ test.describe("Phase 1 tool infrastructure", () => {
 	});
 
 	test("detail renders its lazy local placeholder", async ({ context, page }) => {
+		// color-picker is still an unimplemented Phase 1 placeholder; json-formatter
+		// has a real component as of Phase 2, so this exercises color-picker instead.
 		const chunkGate = createChunkGate(routeTimeout);
 		interceptLazyChunk(context, lazyToolMarker, async (chunk, route) => {
 			chunkGate.markIntercepted();
@@ -35,10 +37,10 @@ test.describe("Phase 1 tool infrastructure", () => {
 		});
 
 		await gotoAppReady(page, "/tools");
-		const jsonCard = page
+		const colorPickerCard = page
 			.getByRole("article")
-			.filter({ has: page.getByRole("heading", { name: "JSON formatter" }) });
-		const navigation = jsonCard.getByRole("link", { name: "Open tool" }).click();
+			.filter({ has: page.getByRole("heading", { name: "Color picker" }) });
+		const navigation = colorPickerCard.getByRole("link", { name: "Open tool" }).click();
 		// The click outlives this block while the chunk is held; keep it from rejecting on teardown.
 		navigation.catch(() => {});
 		try {
@@ -138,7 +140,7 @@ test.describe("Phase 1 tool infrastructure", () => {
 			await route.abort("failed");
 		});
 
-		await gotoAppReady(page, "/tools/json-formatter");
+		await gotoAppReady(page, "/tools/color-picker");
 
 		const errorState = page.getByRole("alert").filter({ hasText: "This tool could not open" });
 		await expect(errorState).toBeVisible();

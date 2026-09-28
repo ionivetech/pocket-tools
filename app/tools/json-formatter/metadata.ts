@@ -8,5 +8,5 @@ export const toolMetadata: ToolMetadata = {
 	icon: "code",
 	accent: "blue",
 	keywords: ["json", "format", "validate", "developer"],
-	componentPath: "~/components/ToolPlaceholder.vue",
+	componentPath: "~/tools/json-formatter/ToolComponent.vue",
 };

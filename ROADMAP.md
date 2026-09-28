@@ -12,7 +12,7 @@
 4. If stuck > 2 hours, record it in the active mission log.
 5. For technical details, refer to `PLAN.md`.
 
-**Current delivery:** Phase 1 core infrastructure delivered. Later phases remain documented but are not part of the current commit.
+**Current delivery:** Phase 2 first general-purpose tools delivered (JSON formatter, text cleaner, Base64 encoder/decoder, UUID/ULID generator). Phase 0-2 are part of the current commit; later phases remain documented but not yet started.
 
 **Tooling:** Bun only, oxfmt, oxlint/Oxc, Nuxt 4, Tailwind CSS v4, PrimeVue 4.5.5.
 
@@ -175,35 +175,35 @@
 
 ### 2.1 JSON formatter and validator
 
-- [ ] Pure formatter/minifier/validator logic.
-- [ ] Schema and shareable state.
-- [ ] PrimeVue input/output layout.
-- [ ] Specific line/column errors.
-- [ ] Unit, E2E, and accessibility tests.
-- [ ] Light/dark screenshots.
+- [x] Pure formatter/minifier/validator logic. — evidence: app/tools/json-formatter/logic.ts, json-parser.ts (hand-rolled parser with engine-independent errors); bun test app/tools/json-formatter
+- [x] Schema and shareable state. — evidence: app/tools/json-formatter/schema.ts; state shared via app/utils/url-state.ts in ToolComponent.vue
+- [x] PrimeVue input/output layout. — evidence: app/tools/json-formatter/ToolComponent.vue, app/components/ToolDualPane.vue
+- [x] Specific line/column errors. — evidence: app/tools/json-formatter/json-parser.ts; bun test app/tools/json-formatter/json-parser.test.ts
+- [x] Unit, E2E, and accessibility tests. — evidence: app/tools/json-formatter/{logic,json-parser}.test.ts; tests/e2e/json-formatter.pw.ts; bun run test:e2e
+- [x] Light/dark screenshots. — evidence: .mugiwara/missions/pockettools-phase2-general-tools/evidence/screenshots/json-formatter-{light,dark}.png (captured before mission cleanup)
 
 ### 2.2 Text cleaner and counter
 
-- [ ] Whitespace and case cleanup.
-- [ ] Word/character/line count.
-- [ ] Copy and download actions.
-- [ ] Unit, E2E, and accessibility tests.
+- [x] Whitespace and case cleanup. — evidence: app/tools/text-cleaner/logic.ts; bun test app/tools/text-cleaner
+- [x] Word/character/line count. — evidence: app/tools/text-cleaner/logic.ts (countText); bun test app/tools/text-cleaner
+- [x] Copy and download actions. — evidence: app/tools/text-cleaner/ToolComponent.vue (ToolActions)
+- [x] Unit, E2E, and accessibility tests. — evidence: app/tools/text-cleaner/logic.test.ts; tests/e2e/text-cleaner.pw.ts; bun run test:e2e
 
 ### 2.3 Base64 encoder/decoder
 
-- [ ] Text encode/decode.
-- [ ] File drag/drop.
-- [ ] Auto-detect direction.
-- [ ] Copy and download.
-- [ ] Unit, E2E, and accessibility tests.
+- [x] Text encode/decode. — evidence: app/tools/base64-tool/logic.ts; bun test app/tools/base64-tool
+- [x] File drag/drop. — evidence: app/tools/base64-tool/ToolComponent.vue (ToolFileDrop); tests/e2e/base64-tool.pw.ts
+- [x] Auto-detect direction. — evidence: app/tools/base64-tool/logic.ts (looksLikeBase64); bun test app/tools/base64-tool
+- [x] Copy and download. — evidence: app/tools/base64-tool/ToolComponent.vue (ToolActions)
+- [x] Unit, E2E, and accessibility tests. — evidence: app/tools/base64-tool/logic.test.ts; tests/e2e/base64-tool.pw.ts; bun run test:e2e
 
 ### 2.4 UUID/ULID generator
 
-- [ ] UUID versions and batch size.
-- [ ] Copy actions.
-- [ ] Unit, E2E, and accessibility tests.
+- [x] UUID versions and batch size. — evidence: app/tools/uuid-generator/logic.ts (UUID v4, v7, ULID via native crypto), schema.ts (1-100 batch); bun test app/tools/uuid-generator
+- [x] Copy actions. — evidence: app/tools/uuid-generator/ToolComponent.vue (per-row copy + ToolActions copy-all)
+- [x] Unit, E2E, and accessibility tests. — evidence: app/tools/uuid-generator/logic.test.ts; tests/e2e/uuid-generator.pw.ts; bun run test:e2e
 
-**✅ Gate Phase 2:** first tools are understandable to non-developers and still useful for technical work.
+**✅ Gate Phase 2:** first tools are understandable to non-developers and still useful for technical work. Evidence: `bun run ci:local` green (fmt, lint, typecheck, registry check, coverage gate, audit, 319 unit tests, build, 43 Playwright specs including axe + 44px touch targets at 375px for all four tools).
 
 ---
 
@@ -435,17 +435,17 @@
 
 ## Milestones
 
-| Milestone | Deliverable                                        | Status                                     |
-| --------- | -------------------------------------------------- | ------------------------------------------ |
-| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`                                      |
-| M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local |
-| M2        | First general-purpose tools                        | `[ ]`                                      |
-| M3        | Palette, favorites, history, paste, landing        | `[ ]`                                      |
-| M4        | MVP everyday toolkit                               | `[ ]`                                      |
-| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                      |
-| M6        | v1.0 launch                                        | `[ ]`                                      |
-| M7        | v1.1 expanded catalog                              | `[ ]`                                      |
-| M8        | v2 advanced features                               | `[ ]`                                      |
+| Milestone | Deliverable                                        | Status                                      |
+| --------- | -------------------------------------------------- | ------------------------------------------- |
+| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`                                       |
+| M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local  |
+| M2        | First general-purpose tools                        | `[x]` — evidence: Phase 2, bun run ci:local |
+| M3        | Palette, favorites, history, paste, landing        | `[ ]`                                       |
+| M4        | MVP everyday toolkit                               | `[ ]`                                       |
+| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                       |
+| M6        | v1.0 launch                                        | `[ ]`                                       |
+| M7        | v1.1 expanded catalog                              | `[ ]`                                       |
+| M8        | v2 advanced features                               | `[ ]`                                       |
 
 ---
 
