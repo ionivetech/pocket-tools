@@ -60,7 +60,6 @@ onMounted(() => {
 	<Drawer
 		v-model:visible="open"
 		position="bottom"
-		class="pt-palette"
 		data-testid="home-palette"
 		aria-label="Quick search tools"
 	>
