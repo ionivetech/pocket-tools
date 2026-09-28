@@ -1,19 +1,115 @@
 import { describe, expect, test } from "bun:test";
-import { runBase64Tool } from "./logic";
-import { parseBase64ToolInput } from "./schema";
+import { decodeBase64ToBytes, encodeBase64Bytes, looksLikeBase64, runBase64Tool } from "./logic";
+import { isBase64Direction, parseBase64ToolInput } from "./schema";
 
-describe("base64-tool scaffold", () => {
+describe("base64-tool schema", () => {
+	test.each(["encode", "decode", "auto"])("accepts direction %p", (direction) => {
+		expect(isBase64Direction(direction)).toBe(true);
+	});
+
+	test("rejects an unsupported direction", () => {
+		expect(isBase64Direction("both")).toBe(false);
+	});
+
 	test("rejects a non-string text value", () => {
-		expect(parseBase64ToolInput({ text: 1 })).toMatchObject({
+		expect(parseBase64ToolInput({ text: 1, direction: "encode" })).toMatchObject({
 			ok: false,
 			error: { code: "invalid_input" },
 		});
 	});
+});
 
-	test("keeps the empty-state contract until the tool is implemented", () => {
-		expect(runBase64Tool({ text: "" })).toMatchObject({
+describe("encodeBase64Bytes / decodeBase64ToBytes", () => {
+	test("round-trips arbitrary bytes", () => {
+		const bytes = new Uint8Array([0, 1, 2, 250, 251, 252, 253, 254, 255]);
+		expect(decodeBase64ToBytes(encodeBase64Bytes(bytes))).toEqual(bytes);
+	});
+
+	test("rejects text outside the base64 alphabet", () => {
+		expect(decodeBase64ToBytes("not base64!!")).toBeUndefined();
+	});
+
+	test("rejects a length that is not a multiple of four", () => {
+		expect(decodeBase64ToBytes("abcde")).toBeUndefined();
+	});
+
+	test("ignores embedded whitespace", () => {
+		expect(decodeBase64ToBytes("aGVs\nbG8=")).toEqual(new TextEncoder().encode("hello"));
+	});
+});
+
+describe("looksLikeBase64", () => {
+	test("recognizes a real base64 payload", () => {
+		expect(looksLikeBase64("aGVsbG8gd29ybGQ=")).toBe(true);
+	});
+
+	test("rejects plain English text", () => {
+		expect(looksLikeBase64("hello world")).toBe(false);
+	});
+
+	test("rejects a short string even if technically valid base64", () => {
+		expect(looksLikeBase64("YWI=")).toBe(false);
+	});
+});
+
+describe("runBase64Tool", () => {
+	test("encodes text", () => {
+		expect(runBase64Tool({ text: "hello", direction: "encode" })).toEqual({
+			ok: true,
+			value: { result: "aGVsbG8=", direction: "encode" },
+		});
+	});
+
+	test("decodes text", () => {
+		expect(runBase64Tool({ text: "aGVsbG8=", direction: "decode" })).toEqual({
+			ok: true,
+			value: { result: "hello", direction: "decode" },
+		});
+	});
+
+	test("round-trips unicode text through encode then decode", () => {
+		const encoded = runBase64Tool({ text: "héllo 👋", direction: "encode" });
+		expect(encoded.ok).toBe(true);
+		if (encoded.ok) {
+			expect(runBase64Tool({ text: encoded.value.result, direction: "decode" })).toEqual({
+				ok: true,
+				value: { result: "héllo 👋", direction: "decode" },
+			});
+		}
+	});
+
+	test("auto-detects a base64 payload as decode", () => {
+		expect(runBase64Tool({ text: "aGVsbG8gd29ybGQ=", direction: "auto" })).toEqual({
+			ok: true,
+			value: { result: "hello world", direction: "decode" },
+		});
+	});
+
+	test("auto-detects plain text as encode", () => {
+		const result = runBase64Tool({ text: "hello world", direction: "auto" });
+		expect(result).toMatchObject({ ok: true, value: { direction: "encode" } });
+	});
+
+	test("rejects empty input", () => {
+		expect(runBase64Tool({ text: "", direction: "encode" })).toMatchObject({
 			ok: false,
-			error: { code: "not_implemented" },
+			error: { code: "empty_input" },
+		});
+	});
+
+	test("rejects invalid base64 on decode", () => {
+		expect(runBase64Tool({ text: "not base64!!", direction: "decode" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_base64" },
+		});
+	});
+
+	test("reports non-UTF8 bytes as not_utf8_text", () => {
+		// 0xff 0xfe is not valid UTF-8 on its own.
+		const invalidUtf8 = encodeBase64Bytes(new Uint8Array([0xff, 0xfe]));
+		expect(runBase64Tool({ text: invalidUtf8, direction: "decode" })).toMatchObject({
+			ok: false,
+			error: { code: "not_utf8_text" },
 		});
 	});
 });

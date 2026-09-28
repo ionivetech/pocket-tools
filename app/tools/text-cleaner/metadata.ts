@@ -8,5 +8,5 @@ export const toolMetadata: ToolMetadata = {
 	icon: "align-left",
 	accent: "blue-muted",
 	keywords: ["text", "clean", "count", "whitespace"],
-	componentPath: "~/components/ToolPlaceholder.vue",
+	componentPath: "~/tools/text-cleaner/ToolComponent.vue",
 };

@@ -5,7 +5,7 @@ export const toolMetadata: ToolMetadata = {
 	name: "Base64 encoder/decoder",
 	description: "Encode or decode Base64 text and files, right in your browser.",
 	category: "Developer",
-	icon: "sparkles",
+	icon: "shield",
 	accent: "blue",
 	keywords: ["base64", "encode", "decode", "developer"],
 	componentPath: "~/tools/base64-tool/ToolComponent.vue",

@@ -34,7 +34,7 @@ export default defineNuxtConfig({
 	primevue: {
 		autoImport: false,
 		components: {
-			include: ["Button", "InputText", "Drawer"],
+			include: ["Button", "InputText", "Drawer", "Textarea", "Select", "InputNumber", "Message"],
 		},
 		options: {
 			theme: {
