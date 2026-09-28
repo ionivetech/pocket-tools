@@ -22,3 +22,7 @@ See `plan.md`.
 - Updated `nuxt.config.ts` PrimeVue `components.include` to add `Textarea`, `Select`, `InputNumber`, `Message` (needed across all 4 tools; kept the include list explicit/tree-shaken per Phase 0 convention, no new deps).
 - Remaining: json-formatter component + e2e/a11y + screenshots; text-cleaner; base64-tool; uuid-generator; update shared test fixtures that hardcode `ToolPlaceholder.vue` for json-formatter/text-cleaner; regenerate registry; run `bun run ci:local`; checkpoint/quality/gates/review; ship gate; ROADMAP.md sync; archive; push.
 logged: coverage-gate.test.ts base-discovery test is pre-existing-flaky on main (07b3f59), unrelated to this mission (confirmed via clean worktree at 07b3f59).
+
+## Correction — branch hygiene
+- Coordinator flagged: first two mission commits (a2f4938, 9686827) landed directly on `main` instead of a feature branch. Fixed: created `feature/phase-2-general-tools` at 9686827, reset local `main` back to `origin/main` (07b3f59) via `git branch -f main origin/main`. No push has happened at any point, so `origin/main` was never at risk. All further mission commits happen on `feature/phase-2-general-tools`.
+- PLAN.md → RFC.md: confirmed by the user directly as an intentional rename outside this mission's scope. Not touched, not reverted, not treated as a mission artifact.
