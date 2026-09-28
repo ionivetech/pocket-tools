@@ -12,39 +12,39 @@ Lane: Full (3). Mode: auto. Solo. Baseline preflight: `bun test` and `nuxt typec
 - [x] `schema.ts`: input validation (text, indent 2/4/tab, mode format/minify).
 - [x] `logic.ts`: `validateJson`, `runJsonFormatter`.
 - [x] `logic.test.ts`, `json-parser.test.ts`: unit coverage.
-- [ ] `ToolComponent.vue`: dual-pane PrimeVue layout, live validation, format/minify actions, shareable URL state via `app/utils/url-state.ts`, copy/download via `ToolActions`.
-- [ ] e2e (`tests/e2e/json-formatter.pw.ts`) + a11y coverage.
-- [ ] Light/dark screenshots.
-- [ ] metadata componentPath updated (done).
+- [x] `ToolComponent.vue`: dual-pane PrimeVue layout, live validation, format/minify actions, shareable URL state via `app/utils/url-state.ts`, copy/download via `ToolActions`.
+- [x] e2e (`tests/e2e/json-formatter.pw.ts`) + a11y coverage.
+- [x] Light/dark screenshots (captured to mission evidence, removed at cleanup per convention).
+- [x] metadata componentPath updated.
 
 ### T3 — Text cleaner (2.2)
-- [ ] `schema.ts`, `logic.ts` (trim/collapse-whitespace/case transforms; word/char/line counts), unit tests.
-- [ ] `ToolComponent.vue`: single input, transform controls, live counts, copy/download.
-- [ ] e2e + a11y.
-- [ ] metadata componentPath update.
+- [x] `schema.ts`, `logic.ts` (trim/collapse-whitespace/case transforms; word/char/line counts), unit tests.
+- [x] `ToolComponent.vue`: single input, transform controls, live counts, copy/download.
+- [x] e2e + a11y.
+- [x] metadata componentPath update.
 
 ### T4 — Base64 encoder/decoder (2.3)
-- [ ] `schema.ts`, `logic.ts` (encode/decode text, auto-detect direction), unit tests.
-- [ ] `ToolComponent.vue`: dual-pane + `ToolFileDrop` for file input, copy/download.
-- [ ] e2e + a11y.
+- [x] `schema.ts`, `logic.ts` (encode/decode text, auto-detect direction), unit tests.
+- [x] `ToolComponent.vue`: dual-pane + `ToolFileDrop` for file input, copy/download.
+- [x] e2e + a11y.
 
 ### T5 — UUID/ULID generator (2.4)
-- [ ] `schema.ts`, `logic.ts` (UUID v4/v7 via native crypto, ULID), unit tests.
-- [ ] `ToolComponent.vue`: version select, batch size, generate + copy actions.
-- [ ] e2e + a11y.
+- [x] `schema.ts`, `logic.ts` (UUID v4/v7 via native crypto, ULID), unit tests.
+- [x] `ToolComponent.vue`: version select, batch size, generate + copy actions.
+- [x] e2e + a11y.
 
 ### T6 — Shared fixture updates
-- [ ] `tests/unit/tool-metadata.test.ts`: real componentPaths for json-formatter/text-cleaner.
-- [ ] `tests/unit/generated-registry.test.ts`: regenerate expectation.
-- [ ] `tests/e2e/tool-infrastructure.pw.ts`, `shell.pw.ts`, `accessibility.pw.ts`: swap the "still a lazy placeholder" fixture from json-formatter to color-picker (still unimplemented, out of Phase 2 scope).
-- [ ] `bun run generate:registry` (writes `.generated.ts` files).
+- [x] `tests/unit/tool-metadata.test.ts`: real componentPaths for json-formatter/text-cleaner.
+- [x] `tests/unit/generated-registry.test.ts`: confirmed self-contained (temp-dir fixtures), no change needed.
+- [x] `tests/e2e/tool-infrastructure.pw.ts`, `shell.pw.ts`, `accessibility.pw.ts`: swapped the "still a lazy placeholder" fixture from json-formatter to color-picker.
+- [x] `bun run generate:registry` (writes `.generated.ts` files).
 
 ### T7 — Gates
-- [ ] `bun run ci:local` green.
-- [ ] Checkpoint (re-verify acceptance), Quality (lint/format/tests), Gates (coverage/build/DoD), Review (diff findings), heal loop if needed (max 3).
+- [x] `bun run ci:local` green (fmt, lint, typecheck, registry check, coverage gate, audit, 319 unit tests, build, 43 Playwright specs).
+- [x] Checkpoint (re-verified acceptance against spec.md), Quality (lint/format/tests all clean), Gates (coverage 88.43%/100% new, 90.08%/97.50% modified; build green), Review (see decisions.md — base64 double-encode bug found+fixed, JSON parser `__proto__` prototype-hijack found+fixed, InputNumber a11y label found+fixed, home-page JS budget regression found+fixed, PWA precache budget found+fixed). Heal cycles: see decisions.md Flow 8 sections (all resolved same-session, none exceeded max 3).
 
 ### T8 — Closure
-- [ ] Ship gate (GO/NO-GO).
-- [ ] ROADMAP.md: check off delivered items, update "Current delivery" + M2 row.
+- [x] Ship gate (GO/NO-GO) — see decisions.md.
+- [x] ROADMAP.md: checked off delivered items, updated "Current delivery" + M2 row.
 - [ ] Delete evidence artifacts, archive mission (`report.md`, `pr-verdict.md`).
-- [ ] Push branch (direct to `main` per user's explicit instruction) + ROADMAP.md commit.
+- [ ] Push branch — held pending explicit user confirmation (coordinator instructed not to push until confirmed, after the main-branch mistake earlier this mission).
