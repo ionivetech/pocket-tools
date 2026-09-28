@@ -1,9 +1,11 @@
 import { expect, test } from "@playwright/test";
 import {
+	editorText,
 	expectNoHorizontalOverflow,
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
 	gotoAppReady,
+	openToolOptions,
 	waitForAppReady,
 } from "./helpers/app";
 
@@ -16,15 +18,15 @@ test.describe("JSON formatter", () => {
 		await gotoAppReady(page, "/tools/json-formatter");
 
 		const input = page.getByTestId("json-formatter-input");
-		const output = page.getByTestId("json-formatter-output");
 		const status = page.getByTestId("json-formatter-status");
 
 		await input.fill('{"b":1,"a":2}');
 		await expect(status).toContainText("Valid JSON, formatted.");
-		await expect(output).toHaveValue('{\n  "b": 1,\n  "a": 2\n}');
+		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "b": 1,\n  "a": 2\n}');
 
+		await openToolOptions(page);
 		await page.getByTestId("json-formatter-minify").click();
-		await expect(output).toHaveValue('{"b":1,"a":2}');
+		expect(await editorText(page, "json-formatter-output")).toBe('{"b":1,"a":2}');
 		await expect(status).toContainText("Valid JSON, minified.");
 
 		await page.getByTestId("json-formatter-format").click();
@@ -32,9 +34,24 @@ test.describe("JSON formatter", () => {
 		await expect(status).toContainText(/Line \d+, column \d+/);
 	});
 
+	test("sorts keys on demand and shows result stats", async ({ page }) => {
+		await gotoAppReady(page, "/tools/json-formatter");
+
+		const input = page.getByTestId("json-formatter-input");
+
+		await input.fill('{"b":1,"a":2}');
+		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "b": 1,\n  "a": 2\n}');
+
+		await openToolOptions(page);
+		await page.getByTestId("json-formatter-sort-keys").click();
+		expect(await editorText(page, "json-formatter-output")).toBe('{\n  "a": 2,\n  "b": 1\n}');
+		await expect(page.getByTestId("json-formatter-stats")).toContainText("2 keys");
+	});
+
 	test("shows an empty state before any input", async ({ page }) => {
 		await gotoAppReady(page, "/tools/json-formatter");
-		await page.getByTestId("json-formatter-input").fill("");
+		await openToolOptions(page);
+		await page.getByTestId("json-formatter-clear").click();
 		await expect(page.getByTestId("json-formatter-status")).toContainText(
 			"Paste or type JSON to format",
 		);
@@ -48,7 +65,7 @@ test.describe("JSON formatter", () => {
 		const shareUrl = page.url();
 		await page.goto(shareUrl, { timeout: 20_000 });
 		await waitForAppReady(page);
-		await expect(page.getByTestId("json-formatter-input")).toHaveValue('{"shared":true}');
+		expect(await editorText(page, "json-formatter-input")).toBe('{"shared":true}');
 	});
 
 	test("has no serious axe violations and keeps touch targets at 44px", async ({ page }) => {

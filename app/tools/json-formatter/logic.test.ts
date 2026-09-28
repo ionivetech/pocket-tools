@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { runJsonFormatter, validateJson } from "./logic";
+import { getJsonStats, runJsonFormatter, sortJsonKeys, validateJson } from "./logic";
 import { isJsonFormatterIndent, isJsonFormatterMode, parseJsonFormatterInput } from "./schema";
 
 describe("json-formatter schema", () => {
@@ -27,6 +27,42 @@ describe("json-formatter schema", () => {
 			ok: false,
 			error: { code: "invalid_input" },
 		});
+	});
+
+	test("accepts a record with sorting enabled", () => {
+		expect(
+			parseJsonFormatterInput({ text: "{}", indent: 2, mode: "format", sortKeys: true }),
+		).toEqual({
+			ok: true,
+			value: { text: "{}", indent: 2, mode: "format", sortKeys: true },
+		});
+	});
+
+	test("rejects a non-object value", () => {
+		expect(parseJsonFormatterInput(null)).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported indent", () => {
+		expect(parseJsonFormatterInput({ text: "{}", indent: 3, mode: "format" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported mode", () => {
+		expect(parseJsonFormatterInput({ text: "{}", indent: 2, mode: "tree" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects a non-boolean sortKeys flag", () => {
+		expect(
+			parseJsonFormatterInput({ text: "{}", indent: 2, mode: "format", sortKeys: "yes" }),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
 	});
 });
 
@@ -99,5 +135,85 @@ describe("runJsonFormatter", () => {
 			ok: false,
 			error: { code: "invalid_json" },
 		});
+	});
+
+	test("sorts object keys when sortKeys is true", () => {
+		expect(
+			runJsonFormatter({ text: '{"b":1,"a":2}', indent: 2, mode: "format", sortKeys: true }),
+		).toEqual({
+			ok: true,
+			value: { result: '{\n  "a": 2,\n  "b": 1\n}', mode: "format" },
+		});
+	});
+
+	test("sorts nested keys without touching array order", () => {
+		const result = runJsonFormatter({
+			text: '{"z":{"d":1,"c":2},"list":[3,2,1]}',
+			indent: 2,
+			mode: "format",
+			sortKeys: true,
+		});
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(JSON.parse(result.value.result)).toEqual({ z: { c: 2, d: 1 }, list: [3, 2, 1] });
+			expect(result.value.result.indexOf('"list"')).toBeLessThan(
+				result.value.result.indexOf('"z"'),
+			);
+		}
+	});
+
+	test("keeps key order when sortKeys is absent", () => {
+		expect(runJsonFormatter({ text: '{"b":1,"a":2}', indent: 2, mode: "format" })).toEqual({
+			ok: true,
+			value: { result: '{\n  "b": 1,\n  "a": 2\n}', mode: "format" },
+		});
+	});
+});
+
+describe("sortJsonKeys", () => {
+	test("sorts keys recursively", () => {
+		expect(sortJsonKeys({ b: 1, a: { d: 1, c: 2 } })).toEqual({ a: { c: 2, d: 1 }, b: 1 });
+	});
+
+	test("maps arrays without reordering them", () => {
+		expect(sortJsonKeys([{ b: 1, a: 2 }])).toEqual([{ a: 2, b: 1 }]);
+	});
+
+	test("does not let a __proto__ key hijack the prototype", () => {
+		const sorted = sortJsonKeys(JSON.parse('{"b":1,"__proto__":2,"a":3}')) as Record<
+			string,
+			unknown
+		>;
+		expect(Object.getPrototypeOf(sorted)).toBe(Object.prototype);
+		expect(Object.keys(sorted)).toEqual(["__proto__", "a", "b"]);
+		expect(JSON.stringify(sorted)).toBe('{"__proto__":2,"a":3,"b":1}');
+	});
+});
+
+describe("getJsonStats", () => {
+	test("reports lines, bytes, keys, and depth", () => {
+		expect(getJsonStats('{\n  "a": 1,\n  "b": {"c": 2}\n}')).toEqual({
+			ok: true,
+			value: { lines: 4, bytes: 29, keys: 3, depth: 2 },
+		});
+	});
+
+	test("counts a flat object as depth 1", () => {
+		expect(getJsonStats('{"a":1}')).toMatchObject({ ok: true, value: { keys: 1, depth: 1 } });
+	});
+
+	test("counts keys inside arrays and measures nesting depth", () => {
+		expect(getJsonStats('{"list":[1,{"a":2}]}')).toMatchObject({
+			ok: true,
+			value: { lines: 1, keys: 2, depth: 3 },
+		});
+	});
+
+	test("counts a primitive as zero keys and zero depth", () => {
+		expect(getJsonStats("42")).toMatchObject({ ok: true, value: { keys: 0, depth: 0 } });
+	});
+
+	test("passes through invalid_json errors", () => {
+		expect(getJsonStats("{")).toMatchObject({ ok: false, error: { code: "invalid_json" } });
 	});
 });

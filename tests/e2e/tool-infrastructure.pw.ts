@@ -2,7 +2,14 @@ import { expect, test } from "@playwright/test";
 import { expectNoHorizontalOverflow, gotoAppReady, waitForAppReady } from "./helpers/app";
 import { createChunkGate, interceptLazyChunk } from "./helpers/chunk";
 
-const javascriptBudgetBytes = 120 * 1024;
+// Measured, not aspirational. 120 KiB held while the shell, the tool library,
+// and the home page were the only first-load surfaces. UX round 2 (ADR 002)
+// added the global quick-search palette, whose PrimeVue `Dialog` chunk
+// (6.5 KiB compressed) ships with the shell because the palette is a global
+// keyboard affordance, not a page feature. Measured total: 127.0 KiB, so the
+// budget moves to 128 KiB. Re-measure and trim here before raising further:
+// the palette is the only thing this budget bought.
+const javascriptBudgetBytes = 128 * 1024;
 const cssBudgetBytes = 30 * 1024;
 const lazyToolMarker = "This tool is not available yet.";
 const routeTimeout = 20_000;
@@ -72,6 +79,11 @@ test.describe("Phase 1 tool infrastructure", () => {
 		await expect(page.getByRole("heading", { name: "We could not find that page." })).toBeVisible();
 		await expect(page.getByText(/Browse the tool collection or go back/)).toBeVisible();
 
+		// The recovery buttons are click handlers, so wait for the error page to be
+		// live: committing on headers alone leaves the click without a handler.
+		await expect(page.locator('[data-error-ready="true"]')).toBeVisible({
+			timeout: routeTimeout,
+		});
 		await page.getByRole("button", { name: "Browse tools" }).click();
 		await expect(page).toHaveURL(/\/tools$/, { timeout: routeTimeout });
 		await expect(page.getByRole("heading", { name: "All tools" })).toBeVisible();

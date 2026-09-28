@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { usePalette } from "~/composables/usePalette";
+
 const drawerOpen = ref(false);
 const { isDark, toggleTheme } = useTheme();
+const { open: openPalette } = usePalette();
 
 function closeDrawer() {
 	drawerOpen.value = false;
@@ -23,6 +26,15 @@ function closeDrawer() {
 
 			<div class="pt-topbar__actions">
 				<span class="pt-status"> <AppIcon name="shield" /> Private by default</span>
+				<button
+					class="pt-theme-toggle"
+					type="button"
+					aria-label="Open quick search"
+					data-testid="header-palette-trigger"
+					@click="openPalette"
+				>
+					<AppIcon name="search" />
+				</button>
 				<button
 					class="pt-theme-toggle"
 					type="button"

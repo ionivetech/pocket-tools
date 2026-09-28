@@ -63,7 +63,12 @@ export type ToolMetadata = {
 	componentPath: ToolComponentPath;
 };
 
-export type ToolComponentLoader = () => Promise<Component>;
+/**
+ * A tool's component loader. The generated registry writes
+ * `() => import("~/tools/...")`, which resolves to a module namespace, so
+ * callers must accept either shape rather than assuming a bare component.
+ */
+export type ToolComponentLoader = () => Promise<Component | { default: Component }>;
 
 export type ToolDefinition = ToolMetadata & {
 	loadComponent: ToolComponentLoader;

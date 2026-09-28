@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { filterTools } from "~/data/tool-search";
 import { toolCategories, tools } from "~/data/tools";
+import { usePalette } from "~/composables/usePalette";
 
 type CategoryFilter = (typeof toolCategories)[number];
 
 const categories = toolCategories;
+const { open: openPalette } = usePalette();
 const query = ref("");
 const activeCategory = ref<CategoryFilter>("All");
 const resultsSection = ref<HTMLElement | null>(null);
@@ -58,6 +60,13 @@ function setCategory(category: CategoryFilter) {
 						/>
 						<Button type="submit" label="Find a tool" data-testid="home-search-submit" />
 					</form>
+					<p class="pt-search-kbd">
+						Press
+						<button type="button" data-testid="home-palette-hint" @click="openPalette">
+							<kbd>Ctrl K</kbd>
+						</button>
+						for quick search anywhere.
+					</p>
 
 					<div class="pt-hero__hint">
 						<span>Try</span>

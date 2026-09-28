@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Toast from "primevue/toast";
 import { resolveToolRoute } from "~/data/tool-route";
 import { tools } from "~/data/tools";
 
@@ -30,14 +31,14 @@ onMounted(() => {
 	<div class="pt-shell">
 		<AppHeader />
 
-		<main id="main-content" class="pt-detail-page">
+		<main id="main-content" class="pt-detail-page pt-detail-page--wide">
 			<NuxtLink class="pt-back-link" to="/tools" data-testid="tool-detail-back-link">
 				<AppIcon name="arrow-left" /> Back to tools
 			</NuxtLink>
 
 			<ToolHeader :tool="tool" />
 			<ToolHost :tool="tool" />
-			<ToolFooter :tool="tool" />
+			<Toast position="bottom-right" data-testid="app-toast" />
 		</main>
 
 		<AppFooter />

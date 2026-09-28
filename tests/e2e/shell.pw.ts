@@ -75,6 +75,48 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.locator("html")).toHaveClass(/app-dark/);
 	});
 
+	test("opens the global quick-search palette and navigates", async ({ page }) => {
+		await gotoAppReady(page, "/");
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("home-palette")).toBeVisible();
+		await page.getByTestId("home-palette-input").fill("uuid");
+		await page.getByTestId("home-palette-results").getByRole("option").first().click();
+		await expect(page).toHaveURL(/\/tools\/uuid-generator/);
+	});
+
+	test("opens the palette from the header on any page", async ({ page }) => {
+		await gotoAppReady(page, "/tools/json-formatter");
+		await page.getByTestId("header-palette-trigger").click();
+		await expect(page.getByTestId("home-palette-input")).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(page.getByTestId("home-palette")).toHaveCount(0);
+	});
+
+	test("shows favorites first on the all-tools view", async ({ page }) => {
+		await gotoAppReady(page, "/tools");
+		await expect(page.getByTestId("tools-favorites-first")).toHaveCount(0);
+		await page.getByRole("button", { name: "Add JSON formatter to favorites" }).click();
+		await expect(page.getByTestId("tools-favorites-first")).toContainText("JSON formatter");
+	});
+
+	test("shows the palette as a centered dialog on desktop and a bottom sheet on mobile", async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: 950 });
+		await gotoAppReady(page, "/");
+		await page.keyboard.press("Control+K");
+		await expect(page.getByTestId("home-palette")).toBeVisible();
+
+		const mask = page.locator(".p-dialog-mask");
+		await expect(mask).toHaveCSS("align-items", "center");
+
+		await page.setViewportSize({ width: 375, height: 812 });
+		await expect(mask).toHaveCSS("align-items", "flex-end");
+		// A bottom sheet is rounded at the top and flush with the viewport bottom.
+		await expect(page.getByTestId("home-palette")).toHaveCSS("border-top-left-radius", "20px");
+		await expect(page.getByTestId("home-palette")).toHaveCSS("border-bottom-left-radius", "0px");
+	});
+
 	test.describe("mobile navigation", () => {
 		test.use({ viewport: { width: 375, height: 812 } });
 

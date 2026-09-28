@@ -4,6 +4,7 @@ import {
 	expectNoSeriousAxeViolations,
 	expectTouchTargetsAtLeast44,
 	gotoAppReady,
+	openToolOptions,
 } from "./helpers/app";
 
 test.describe("Base64 encoder/decoder", () => {
@@ -25,10 +26,30 @@ test.describe("Base64 encoder/decoder", () => {
 
 	test("lets the user force a direction", async ({ page }) => {
 		await gotoAppReady(page, "/tools/base64-tool");
+		await openToolOptions(page);
 		await page.getByTestId("base64-direction").click();
 		await page.getByRole("option", { name: "Encode" }).click();
 		await page.getByTestId("base64-input").fill("aGVsbG8=");
 		await expect(page.getByTestId("base64-status")).toContainText("Encoded to base64.");
+	});
+
+	test("encodes URL-safe and wraps long output", async ({ page }) => {
+		await gotoAppReady(page, "/tools/base64-tool");
+
+		await openToolOptions(page);
+		await page.getByTestId("base64-url-safe").click();
+		await page.getByTestId("base64-input").fill("hello?");
+		await expect(page.getByTestId("base64-output")).toHaveValue("aGVsbG8_");
+
+		const longText = "a".repeat(50);
+		const raw = Buffer.from(longText).toString("base64");
+		await page.getByTestId("base64-url-safe").click();
+		await page.getByTestId("base64-wrap").click();
+		await page.getByRole("option", { name: "Wrap at 64" }).click();
+		await page.getByTestId("base64-input").fill(longText);
+		await expect(page.getByTestId("base64-output")).toHaveValue(
+			`${raw.slice(0, 64)}\n${raw.slice(64)}`,
+		);
 	});
 
 	test("encodes a dropped file to base64", async ({ page }) => {

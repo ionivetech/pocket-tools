@@ -21,6 +21,14 @@ const filteredTools = computed(() =>
 	filterTools(collection.value, { query: query.value, category: activeCategory.value }),
 );
 
+const favoriteFiltered = computed(() =>
+	filterTools(favoriteTools.value, { query: query.value, category: activeCategory.value }),
+);
+
+const showFavoritesFirst = computed(
+	() => activeView.value === "all" && favoriteFiltered.value.length > 0,
+);
+
 const pageTitle = computed(() => {
 	if (activeView.value === "favorites") return "Favorite tools";
 	if (activeView.value === "recent") return "Recent tools";
@@ -147,6 +155,26 @@ function openTool(tool: Tool) {
 					</button>
 				</div>
 
+				<div
+					v-if="showFavoritesFirst"
+					class="pt-favorites-first"
+					data-testid="tools-favorites-first"
+				>
+					<h3 class="pt-grid-label">Your favorites</h3>
+					<div class="pt-tool-grid">
+						<ToolCard
+							v-for="tool in favoriteFiltered"
+							:key="tool.slug"
+							:tool="tool"
+							show-favorite
+							:favorite="true"
+							@toggle-favorite="toggleFavorite"
+							@open="openTool"
+						/>
+					</div>
+				</div>
+
+				<h3 v-if="showFavoritesFirst" class="pt-grid-label">All tools</h3>
 				<div
 					v-if="filteredTools.length"
 					class="pt-tool-grid"
