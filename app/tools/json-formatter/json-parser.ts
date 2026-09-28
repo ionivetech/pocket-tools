@@ -224,7 +224,19 @@ function parseObject(text: string, cursor: Cursor): StepResult<Record<string, un
 		if (!value.ok) {
 			return value;
 		}
-		result[key.value] = value.value;
+		// `result[key.value] = ...` would invoke `Object.prototype`'s `__proto__` setter for a
+		// `"__proto__"` key instead of creating an own property -- it never touches the shared
+		// `Object.prototype` here (this only reassigns `result`'s own prototype pointer, so it
+		// is not the classic cross-object pollution a recursive merge produces), but it does
+		// silently rewrite this one parsed object's prototype and drop the key, unlike real
+		// `JSON.parse`. `defineProperty` always creates a real own data property regardless of
+		// the key's name, matching `JSON.parse`'s behavior for this exact input.
+		Object.defineProperty(result, key.value, {
+			value: value.value,
+			writable: true,
+			enumerable: true,
+			configurable: true,
+		});
 		skipWhitespace(text, cursor);
 
 		const next = text[cursor.index];
