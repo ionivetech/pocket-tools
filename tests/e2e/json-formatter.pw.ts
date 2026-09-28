@@ -32,6 +32,20 @@ test.describe("JSON formatter", () => {
 		await expect(status).toContainText(/Line \d+, column \d+/);
 	});
 
+	test("sorts keys on demand and shows result stats", async ({ page }) => {
+		await gotoAppReady(page, "/tools/json-formatter");
+
+		const input = page.getByTestId("json-formatter-input");
+		const output = page.getByTestId("json-formatter-output");
+
+		await input.fill('{"b":1,"a":2}');
+		await expect(output).toHaveValue('{\n  "b": 1,\n  "a": 2\n}');
+
+		await page.getByTestId("json-formatter-sort-keys").click();
+		await expect(output).toHaveValue('{\n  "a": 2,\n  "b": 1\n}');
+		await expect(page.getByTestId("json-formatter-stats")).toContainText("2 keys");
+	});
+
 	test("shows an empty state before any input", async ({ page }) => {
 		await gotoAppReady(page, "/tools/json-formatter");
 		await page.getByTestId("json-formatter-input").fill("");

@@ -7,6 +7,8 @@ export type JsonFormatterInput = Readonly<{
 	text: string;
 	indent: JsonFormatterIndent;
 	mode: JsonFormatterMode;
+	/** Alphabetically sort object keys. Optional for backwards compatibility; defaults to false. */
+	sortKeys?: boolean;
 }>;
 
 const indentValues = [2, 4, "tab"] as const;
@@ -35,7 +37,7 @@ export function parseJsonFormatterInput(value: unknown): Result<JsonFormatterInp
 		return { ok: false, error: { code: "invalid_input", message: "Input must be an object." } };
 	}
 
-	const { text, indent, mode } = value as Record<string, unknown>;
+	const { text, indent, mode, sortKeys } = value as Record<string, unknown>;
 
 	if (typeof text !== "string") {
 		return { ok: false, error: { code: "invalid_input", message: "Text must be a string." } };
@@ -52,6 +54,12 @@ export function parseJsonFormatterInput(value: unknown): Result<JsonFormatterInp
 			error: { code: "invalid_input", message: 'Mode must be "format" or "minify".' },
 		};
 	}
+	if (sortKeys !== undefined && typeof sortKeys !== "boolean") {
+		return {
+			ok: false,
+			error: { code: "invalid_input", message: "Sort keys must be a boolean." },
+		};
+	}
 
-	return { ok: true, value: { text, indent, mode } };
+	return { ok: true, value: { text, indent, mode, sortKeys } };
 }
