@@ -16,6 +16,7 @@ import {
 	selectRepoRecords,
 	splitByDiff,
 	ABSENT_FROM_LCOV_ALLOWLIST,
+	GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST,
 	MINIMUM_FUNCTIONS,
 	MINIMUM_MODIFIED_LINES,
 	MINIMUM_NEW_LINES,
@@ -428,6 +429,12 @@ describe("coverage gate absent-from-lcov accounting", () => {
 			"nuxt.config.ts",
 		]);
 		for (const reason of ABSENT_FROM_LCOV_ALLOWLIST.values()) {
+			expect(reason.trim()).not.toBe("");
+		}
+		expect([...GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.keys()].sort()).toEqual([
+			"app/data/tool-registry.generated.ts",
+		]);
+		for (const reason of GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.values()) {
 			expect(reason.trim()).not.toBe("");
 		}
 		expect(UNINSTRUMENTABLE_EXTENSIONS).toEqual([

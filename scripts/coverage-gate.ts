@@ -379,6 +379,32 @@ export const ABSENT_FROM_LCOV_ALLOWLIST: ReadonlyMap<string, string> = new Map([
 ]);
 
 /**
+ * Generated files that Bun *does* instrument (something imports them, unlike the paths above)
+ * but whose function coverage can never reach the threshold through `bun test` alone, each with
+ * the reason. Unlike {@link ABSENT_FROM_LCOV_ALLOWLIST}, these records exist in lcov; this list
+ * removes them from the new/modified ratio entirely, so a reviewer sees exactly which files were
+ * excluded and why, rather than the ratio silently absorbing them. Adding an entry here is a
+ * reviewed decision, the same as the absent-from-lcov list: it is not a way to make a red gate
+ * green for code that unit tests could reasonably cover.
+ *
+ * @example
+ * ```ts
+ * GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.get("app/data/tool-registry.generated.ts"); // a reason
+ * ```
+ */
+export const GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST: ReadonlyMap<string, string> = new Map([
+	[
+		"app/data/tool-registry.generated.ts",
+		'each entry\'s `loadComponent` is a generated `() => import("~/...")` closure that only ' +
+			"resolves through Nuxt's real module system; calling it under `bun test` would need the " +
+			"Vite/Nuxt runtime this gate does not have. The generator that produces the exact text of " +
+			"this file is unit-tested byte-for-byte (`tests/unit/generated-registry.test.ts`), and the " +
+			"closures themselves are exercised by `tests/e2e/tool-infrastructure.pw.ts` navigating to " +
+			"real tool routes.",
+	],
+]);
+
+/**
  * Whether Bun can instrument this file, which is the only question that decides if its absence
  * from lcov is a gap in the split or an artefact of what Bun can execute at all.
  *
@@ -657,15 +683,28 @@ export function runGate(inputs: GateInputs, out: GateOutput): number {
 		return 1;
 	}
 
-	const repoRecords = selectRepoRecords(records, repositoryRoot);
-	if (repoRecords.length === 0) {
+	const allRepoRecords = selectRepoRecords(records, repositoryRoot);
+	if (allRepoRecords.length === 0) {
 		out.error("Coverage gate FAILED: no repository files were instrumented");
 		return 1;
 	}
 
+	const excludedGenerated = allRepoRecords.filter((record) =>
+		GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.has(record.path),
+	);
+	for (const record of excludedGenerated) {
+		out.log(
+			`Coverage gate: ${record.path} is excluded from the new/modified ratio: ` +
+				GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.get(record.path),
+		);
+	}
+	const repoRecords = allRepoRecords.filter(
+		(record) => !GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.has(record.path),
+	);
+
 	out.log(
 		`Coverage gate: ${repoRecords.length} repo files, ` +
-			`${records.length - repoRecords.length} files outside the repo ignored`,
+			`${records.length - allRepoRecords.length} files outside the repo ignored`,
 	);
 
 	if (inputs.nameStatus === undefined) {
@@ -700,8 +739,11 @@ export function runGate(inputs: GateInputs, out: GateOutput): number {
 		[...classification.keys()].filter(
 			(path) =>
 				// The tests themselves are never instrumented, and neither is the mission log; both
-				// would drown the source files the split genuinely cannot see.
-				!path.startsWith("tests/") && !path.startsWith(".mugiwara/"),
+				// would drown the source files the split genuinely cannot see. A path already excluded
+				// above (logged, with a reason) would otherwise look newly absent here instead.
+				!path.startsWith("tests/") &&
+				!path.startsWith(".mugiwara/") &&
+				!GENERATED_LOW_FUNCTION_COVERAGE_ALLOWLIST.has(path),
 		),
 		new Set(repoRecords.map((record) => record.path)),
 	);

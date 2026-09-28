@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Select from "primevue/select";
+import Textarea from "primevue/textarea";
 import { computed, ref, useId } from "vue";
 import { encodeBase64Bytes, runBase64Tool } from "./logic";
 import type { Base64Direction } from "./schema";
@@ -6,6 +8,10 @@ import type { Base64Direction } from "./schema";
 const text = ref("");
 const direction = ref<Base64Direction>("auto");
 const fileError = ref("");
+// A dropped file's base64 is already a final result, not more input to feed back through
+// encode/decode -- keeping it separate from `text` is what stops a file's output from being
+// re-encoded the next time `outcome` recomputes.
+const fileResult = ref<string | undefined>(undefined);
 
 const directionOptions: readonly { label: string; value: Base64Direction }[] = [
 	{ label: "Auto-detect", value: "auto" },
@@ -17,12 +23,21 @@ const componentId = useId();
 const inputId = `base64-input-${componentId}`;
 
 const outcome = computed(() => runBase64Tool({ text: text.value, direction: direction.value }));
-const outputText = computed(() => (outcome.value.ok ? outcome.value.value.result : ""));
-const isEmpty = computed(() => text.value === "");
+const outputText = computed(() =>
+	fileResult.value !== undefined
+		? fileResult.value
+		: outcome.value.ok
+			? outcome.value.value.result
+			: "",
+);
+const isEmpty = computed(() => text.value === "" && fileResult.value === undefined);
 
 const statusKind = computed<"empty" | "error" | "success">(() => {
 	if (isEmpty.value) {
 		return "empty";
+	}
+	if (fileResult.value !== undefined) {
+		return "success";
 	}
 	return outcome.value.ok ? "success" : "error";
 });
@@ -30,6 +45,9 @@ const statusKind = computed<"empty" | "error" | "success">(() => {
 const statusMessage = computed(() => {
 	if (statusKind.value === "empty") {
 		return "Paste text, or drop a file below, to encode or decode it.";
+	}
+	if (fileResult.value !== undefined) {
+		return "File encoded to base64.";
 	}
 	if (outcome.value.ok) {
 		return outcome.value.value.direction === "encode"
@@ -39,6 +57,11 @@ const statusMessage = computed(() => {
 	return outcome.value.error.message;
 });
 
+function handleTextInput(value: string): void {
+	text.value = value;
+	fileResult.value = undefined;
+}
+
 async function handleFiles(files: File[]): Promise<void> {
 	const file = files[0];
 	if (!file) {
@@ -47,8 +70,7 @@ async function handleFiles(files: File[]): Promise<void> {
 	fileError.value = "";
 	try {
 		const bytes = new Uint8Array(await file.arrayBuffer());
-		text.value = encodeBase64Bytes(bytes);
-		direction.value = "encode";
+		fileResult.value = encodeBase64Bytes(bytes);
 	} catch {
 		fileError.value = "That file could not be read. Try another file.";
 	}
@@ -61,12 +83,13 @@ async function handleFiles(files: File[]): Promise<void> {
 			<label class="pt-field-label" :for="inputId">Paste text or base64</label>
 			<Textarea
 				:id="inputId"
-				v-model="text"
+				:model-value="text"
 				rows="12"
 				spellcheck="false"
 				class="pt-base64-textarea"
 				placeholder="Paste text to encode, or base64 to decode"
 				data-testid="base64-input"
+				@update:model-value="handleTextInput"
 			/>
 
 			<Select
@@ -113,7 +136,7 @@ async function handleFiles(files: File[]): Promise<void> {
 				data-testid="base64-output"
 			/>
 
-			<ToolActions :value="outputText" filename="base64-result.txt" :disabled="!outcome.ok" />
+			<ToolActions :value="outputText" filename="base64-result.txt" :disabled="isEmpty" />
 		</template>
 	</ToolDualPane>
 </template>

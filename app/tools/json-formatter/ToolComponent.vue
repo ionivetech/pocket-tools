@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Select from "primevue/select";
+import Textarea from "primevue/textarea";
 import { computed, ref, useId, watch } from "vue";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
 import { runJsonFormatter, validateJson } from "./logic";

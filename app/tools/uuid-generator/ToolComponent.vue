@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import InputNumber from "primevue/inputnumber";
+import Select from "primevue/select";
 import { computed, ref } from "vue";
 import { BrowserActionError, copyText } from "~/utils/browser-actions";
 import { runUuidGenerator } from "./logic";
@@ -38,30 +40,35 @@ generate();
 </script>
 
 <template>
-	<section class="pt-uuid-tool" data-testid="uuid-generator">
+	<section class="pt-tool-state pt-uuid-tool" data-testid="uuid-generator">
 		<div class="pt-uuid-controls">
-			<label class="pt-field-label" for="uuid-version">Identifier type</label>
-			<Select
-				id="uuid-version"
-				v-model="version"
-				:options="[...versionOptions]"
-				option-label="label"
-				option-value="value"
-				data-testid="uuid-version"
-			/>
+			<div class="pt-uuid-field">
+				<label class="pt-field-label" for="uuid-version">Identifier type</label>
+				<Select
+					id="uuid-version"
+					v-model="version"
+					:options="[...versionOptions]"
+					option-label="label"
+					option-value="value"
+					data-testid="uuid-version"
+				/>
+			</div>
 
-			<label class="pt-field-label" for="uuid-count">How many</label>
-			<InputNumber
-				id="uuid-count"
-				v-model="count"
-				:min="uuidGeneratorMinCount"
-				:max="uuidGeneratorMaxCount"
-				show-buttons
-				button-layout="horizontal"
-				data-testid="uuid-count"
-			/>
+			<div class="pt-uuid-field">
+				<label class="pt-field-label" for="uuid-count">How many</label>
+				<InputNumber
+					input-id="uuid-count"
+					v-model="count"
+					:min="uuidGeneratorMinCount"
+					:max="uuidGeneratorMaxCount"
+					show-buttons
+					button-layout="horizontal"
+					data-testid="uuid-count"
+				/>
+			</div>
 
 			<Button
+				class="pt-uuid-generate"
 				type="button"
 				label="Generate"
 				aria-label="Generate identifiers"
@@ -111,9 +118,17 @@ generate();
 .pt-uuid-controls {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.75rem;
-	align-items: center;
-	margin-bottom: 1.25rem;
+	align-items: flex-end;
+	gap: 1.25rem;
+}
+
+.pt-uuid-field {
+	display: grid;
+	gap: 0.4rem;
+}
+
+.pt-uuid-generate {
+	min-height: 2.75rem;
 }
 
 .pt-uuid-empty {
@@ -125,7 +140,7 @@ generate();
 	gap: 0.5rem;
 	list-style: none;
 	padding: 0;
-	margin: 0 0 1rem 0;
+	margin: 0;
 }
 
 .pt-uuid-row {

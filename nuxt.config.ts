@@ -3,14 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { generatedToolSlugs } from "./app/data/tool-routes.generated";
 import { AuraBlue } from "./app/theme/aura-blue";
 
-// Phase 0 measured 512 KiB for the shell alone. Phase 2 adds four real tools plus the
-// PrimeVue Select/InputNumber/Message/Textarea components they need (measured 613.7 KiB
-// total on 2026-09-28, commit range from 07b3f59); the client bundle's chunk names are
-// content hashes with no per-component prefix, so trimming precache to exclude only the
-// two heaviest chunks (Select, InputNumber) is not reliably glob-matchable build to build.
-// Raising the budget to a round number above the measured total, rather than precaching
-// selectively, keeps this check meaningful (it still catches an unbounded regression) without
-// a fragile glob. Re-measure and raise again, deliberately, as more tools land.
+// Phase 0 measured 512 KiB for the shell alone. Phase 2 adds four real tools; each tool's
+// PrimeVue components (Select, InputNumber, Textarea) are imported locally inside that
+// tool's own lazy ToolComponent.vue rather than globally via `primevue.components.include`,
+// so they land in that tool's chunk instead of every route's initial payload. Total precache
+// still grows with real tool content: measured 598.2 KiB on 2026-09-28, commit range from
+// 07b3f59. Re-measure and raise again, deliberately, as more tools land.
 const precacheBudgetBytes = 704 * 1024;
 
 export default defineNuxtConfig({
@@ -42,7 +40,14 @@ export default defineNuxtConfig({
 	primevue: {
 		autoImport: false,
 		components: {
-			include: ["Button", "InputText", "Drawer", "Textarea", "Select", "InputNumber", "Message"],
+			// ponytail: Textarea/Select/InputNumber/Message are used by exactly one tool's
+			// lazy-loaded ToolComponent.vue each, so they are imported locally in those files
+			// instead of listed here. The PrimeVue Nuxt module registers `include`d components
+			// globally, which bundles them into every route's initial payload (this repo's home
+			// page JS budget e2e test caught the 27 KiB regression from adding them here);
+			// importing them inside the already-lazy tool component keeps them in that tool's
+			// own chunk instead.
+			include: ["Button", "InputText", "Drawer"],
 		},
 		options: {
 			theme: {

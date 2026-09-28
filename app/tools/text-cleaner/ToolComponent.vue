@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Select from "primevue/select";
+import Textarea from "primevue/textarea";
 import { computed, ref, useId } from "vue";
 import { countText, runTextCleaner } from "./logic";
 import type { TextCaseTransform } from "./schema";
