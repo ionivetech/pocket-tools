@@ -32,9 +32,11 @@ test.describe("Phase 0 shell", () => {
 	});
 
 	test("tool detail renders registry metadata and the local placeholder", async ({ page }) => {
-		await gotoAppReady(page, "/tools/json-formatter");
+		// color-picker stays an unimplemented Phase 1 placeholder; json-formatter has a
+		// real component as of Phase 2, so it can no longer stand in for "still lazy".
+		await gotoAppReady(page, "/tools/color-picker");
 
-		await expect(page.getByRole("heading", { level: 1, name: "JSON formatter" })).toBeVisible();
+		await expect(page.getByRole("heading", { level: 1, name: "Color picker" })).toBeVisible();
 		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
 		await expect(
 			page.getByRole("heading", { name: "This tool is not available yet." }),

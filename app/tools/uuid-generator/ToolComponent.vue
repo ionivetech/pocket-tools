@@ -87,7 +87,13 @@ generate();
 						:data-testid="`uuid-copy-${index}`"
 						@click="copyRow(index, id)"
 					/>
-					<span class="pt-sr-only" role="status" aria-live="polite">{{ rowStatus[index] }}</span>
+					<span
+						class="pt-sr-only"
+						role="status"
+						aria-live="polite"
+						:data-testid="`uuid-copy-status-${index}`"
+						>{{ rowStatus[index] }}</span
+					>
 				</li>
 			</ol>
 

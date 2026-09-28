@@ -403,6 +403,8 @@ describe("coverage gate absent-from-lcov accounting", () => {
 			"package.json",
 			"app/assets/css/main.css",
 			"LICENSE",
+			"app/tools/json-formatter/logic.test.ts",
+			"tests/unit/tool-registry.test.ts",
 		]) {
 			expect(isInstrumentable(path)).toBe(false);
 		}
@@ -648,11 +650,16 @@ describe("coverage gate base discovery", () => {
 		const resolved = resolveBase({}, repoRoot);
 
 		expect(resolved.baseError).toBe("");
-		// A real commit, and the same ancestor the mission recorded as its base.
+		// A real commit: 40 hex characters, not a hardcoded placeholder.
 		expect(resolved.base).toMatch(/^[0-9a-f]{40}$/);
-		expect(readDiffRange(resolved.base as string, repoRoot).nameStatus).toContain(
-			"scripts/coverage-gate.ts",
-		);
+		// The diff machinery resolves against that base without erroring. The
+		// diff itself may legitimately be empty (a mission whose branch has not
+		// diverged from the default branch yet, or has diverged only outside
+		// this repo's own source), so this asserts the lookup succeeded rather
+		// than pinning the result to any specific file.
+		const range = readDiffRange(resolved.base as string, repoRoot);
+		expect(range.baseError).toBe("");
+		expect(range.nameStatus).toBeDefined();
 	});
 
 	test("honours an explicit override without consulting git for a default", () => {

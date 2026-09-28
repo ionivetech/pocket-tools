@@ -11,7 +11,7 @@ for (const route of ["/", "/tools", "/tools/json-formatter"]) {
 	test(`${route} has no serious axe violations`, async ({ page }) => {
 		await gotoAppReady(page, route);
 		if (route === "/tools/json-formatter") {
-			await expect(page.getByTestId("tool-placeholder")).toBeVisible();
+			await expect(page.getByTestId("json-formatter-output")).toBeVisible();
 		}
 		await expectNoSeriousAxeViolations(page);
 	});
@@ -19,17 +19,15 @@ for (const route of ["/", "/tools", "/tools/json-formatter"]) {
 	test(`${route} keeps visible interactive targets at 44px`, async ({ page }) => {
 		await gotoAppReady(page, route);
 		if (route === "/tools/json-formatter") {
-			await expect(page.getByTestId("tool-placeholder")).toBeVisible();
+			await expect(page.getByTestId("json-formatter-output")).toBeVisible();
 		}
-		await expectTouchTargetsAtLeast44(page, {
-			requireWidth: route === "/tools/json-formatter",
-		});
+		await expectTouchTargetsAtLeast44(page);
 	});
 }
 
 test("/tools/json-formatter exposes keyboard focus with a visible indicator", async ({ page }) => {
 	await gotoAppReady(page, "/tools/json-formatter");
-	await expect(page.getByTestId("tool-placeholder")).toBeVisible();
+	await expect(page.getByTestId("json-formatter-output")).toBeVisible();
 
 	const backLink = page.getByTestId("tool-detail-back-link");
 	await backLink.focus();

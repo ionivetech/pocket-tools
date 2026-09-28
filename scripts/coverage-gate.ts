@@ -397,6 +397,14 @@ export function isInstrumentable(path: string): boolean {
 	if (path.endsWith(".d.ts")) {
 		return false;
 	}
+	// A `*.test.ts` entry file is executed directly by the Bun test runner, not `import`ed the
+	// way the modules it exercises are, so Bun never emits an `SF:` record for the entry file
+	// itself -- only for what it imports. That is true of every test file in this repo, old and
+	// new, so requiring one in lcov would be gating on something Bun structurally cannot report,
+	// the same category as `.vue`/`.md` above rather than an untested module.
+	if (path.endsWith(".test.ts")) {
+		return false;
+	}
 	const dot = path.lastIndexOf(".");
 	return dot >= 1 && INSTRUMENTABLE_EXTENSIONS.has(path.slice(dot));
 }
@@ -786,7 +794,14 @@ function main(): number {
 
 	const run = spawnSync(
 		"bun",
-		["test", "--coverage", "--coverage-reporter=text", "--coverage-reporter=lcov", "tests/unit"],
+		[
+			"test",
+			"--coverage",
+			"--coverage-reporter=text",
+			"--coverage-reporter=lcov",
+			"tests/unit",
+			"app/tools",
+		],
 		{ cwd: repositoryRoot, stdio: "inherit" },
 	);
 
