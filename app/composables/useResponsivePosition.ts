@@ -1,4 +1,5 @@
-import { computed, onBeforeUnmount, onMounted, ref, type ComputedRef } from "vue";
+import { onBeforeUnmount, onMounted, shallowRef, type ShallowRef } from "vue";
+import { createResponsivePosition } from "./responsive-position";
 
 /**
  * Tracks a media query and returns the value to use above and below the
@@ -14,24 +15,23 @@ export function useResponsivePosition(
 	wide: string,
 	narrow: string,
 	query = "(max-width: 767px)",
-): ComputedRef<string> {
-	const narrowMatch = ref(false);
-	let media: MediaQueryList | null = null;
-
-	function onMediaChange(event: MediaQueryListEvent): void {
-		narrowMatch.value = event.matches;
-	}
+): ShallowRef<string> {
+	const state = createResponsivePosition(wide, narrow);
+	const current = shallowRef(state.resolve(false));
+	let stop: (() => void) | null = null;
 
 	onMounted(() => {
-		media = window.matchMedia(query);
-		narrowMatch.value = media.matches;
-		media.addEventListener("change", onMediaChange);
+		const media = window.matchMedia(query);
+		current.value = state.resolve(media.matches);
+		stop = state.observe(media, (value) => {
+			current.value = value;
+		});
 	});
 
 	onBeforeUnmount(() => {
-		media?.removeEventListener("change", onMediaChange);
-		media = null;
+		stop?.();
+		stop = null;
 	});
 
-	return computed(() => (narrowMatch.value ? narrow : wide));
+	return current;
 }

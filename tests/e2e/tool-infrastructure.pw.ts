@@ -79,6 +79,11 @@ test.describe("Phase 1 tool infrastructure", () => {
 		await expect(page.getByRole("heading", { name: "We could not find that page." })).toBeVisible();
 		await expect(page.getByText(/Browse the tool collection or go back/)).toBeVisible();
 
+		// The recovery buttons are click handlers, so wait for the error page to be
+		// live: committing on headers alone leaves the click without a handler.
+		await expect(page.locator('[data-error-ready="true"]')).toBeVisible({
+			timeout: routeTimeout,
+		});
 		await page.getByRole("button", { name: "Browse tools" }).click();
 		await expect(page).toHaveURL(/\/tools$/, { timeout: routeTimeout });
 		await expect(page.getByRole("heading", { name: "All tools" })).toBeVisible();

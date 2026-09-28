@@ -3,6 +3,7 @@ import type { NuxtError } from "#app";
 
 const props = defineProps<{ error: NuxtError }>();
 const errorTitle = ref<HTMLElement | null>(null);
+const errorReady = ref(false);
 const isNotFound = computed(() => props.error.statusCode === 404);
 
 useSeoMeta({
@@ -32,12 +33,16 @@ function handleSecondaryAction() {
 }
 
 onMounted(() => {
+	// The recovery buttons are click handlers, so they only work once this page
+	// is live. Exposing that state keeps the test from clicking a dead button,
+	// exactly like `data-tool-ready` does for tool pages.
+	errorReady.value = true;
 	errorTitle.value?.focus();
 });
 </script>
 
 <template>
-	<div class="pt-shell">
+	<div class="pt-shell" :data-error-ready="errorReady ? 'true' : 'false'">
 		<AppHeader />
 
 		<main id="main-content" class="pt-detail-page">

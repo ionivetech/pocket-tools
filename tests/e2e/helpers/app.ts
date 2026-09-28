@@ -2,16 +2,26 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
 
 const appReady = '[data-app-ready="true"]';
+const toolReady = '[data-testid="tool-host"][data-tool-ready="true"]';
 
 /** Waits for the shell marker that the app sets once it has mounted. @example `await waitForAppReady(page);` */
 export function waitForAppReady(page: Page) {
 	return expect(page.locator(appReady)).toBeVisible();
 }
 
-/** Navigates to `path` and waits for the app to be ready. @example `await gotoAppReady(page, "/tools");` */
+/**
+ * Navigates to `path` and waits for the app to be ready. On a tool detail page
+ * it also waits for `data-tool-ready`, because tool pages are prerendered: their
+ * controls exist in the HTML before the tool's lazy chunk mounts, and a click in
+ * that window lands on markup Vue is about to replace.
+ * @example `await gotoAppReady(page, "/tools/json-formatter");`
+ */
 export async function gotoAppReady(page: Page, path: string) {
 	await page.goto(path, { timeout: 20_000 });
 	await waitForAppReady(page);
+	if (/^\/tools\/[^/]+\/?$/.test(path)) {
+		await expect(page.locator(toolReady)).toBeAttached({ timeout: 20_000 });
+	}
 }
 
 /** Fails with `context` when the page scrolls sideways, which breaks use on a 375px phone. @example `await expectNoHorizontalOverflow(page, "375px light");` */
