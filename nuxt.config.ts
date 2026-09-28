@@ -9,7 +9,10 @@ import { AuraBlue } from "./app/theme/aura-blue";
 // so they land in that tool's chunk instead of every route's initial payload. Total precache
 // still grows with real tool content: measured 598.2 KiB on 2026-09-28, commit range from
 // 07b3f59. Re-measure and raise again, deliberately, as more tools land.
-const precacheBudgetBytes = 704 * 1024;
+// ADR 001 (2026-09-28) adds CodeMirror 6 to the lazy json-formatter chunk: precache measured
+// 951.2 KiB, largest single chunk 223.8 KiB (under the 256 KiB per-file cap, so the JSON
+// tool still works offline). Budget raised to 1024 KiB on that evidence.
+const precacheBudgetBytes = 1024 * 1024;
 
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",

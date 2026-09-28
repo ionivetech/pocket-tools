@@ -129,7 +129,7 @@ generate();
 						data-testid="uuid-version"
 					/>
 					<div class="pt-uuid-count">
-						<label class="pt-field-label" for="uuid-count">How many</label>
+						<label class="pt-sr-only" for="uuid-count">How many</label>
 						<InputNumber
 							input-id="uuid-count"
 							v-model="count"

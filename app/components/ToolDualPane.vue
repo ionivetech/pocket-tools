@@ -40,5 +40,8 @@ const outputHeadingId = `tool-output-${sectionId}`;
 				<slot name="output" />
 			</section>
 		</div>
+		<div v-if="$slots.footer" class="pt-workspace__footer" data-testid="tool-dual-pane-footer">
+			<slot name="footer" />
+		</div>
 	</section>
 </template>

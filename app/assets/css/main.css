@@ -1431,28 +1431,23 @@ textarea {
 
 .pt-tool-head {
 	margin-bottom: 2.5rem;
-	padding: clamp(0.5rem, 2vw, 1.5rem) 0 1.75rem;
+	padding: 0 0 1.5rem;
 	border-bottom: 1px solid var(--pt-line);
-	background: linear-gradient(
-		180deg,
-		color-mix(in srgb, var(--pt-blue) 9%, transparent),
-		transparent 78%
-	);
 }
 
 .pt-tool-head h1 {
-	margin: 1rem 0 0;
+	margin: 0.75rem 0 0;
 	font-family: var(--font-display);
-	font-size: clamp(2.25rem, 6vw, 4.25rem);
-	letter-spacing: -0.06em;
-	line-height: 1;
+	font-size: clamp(2rem, 5vw, 3rem);
+	letter-spacing: -0.05em;
+	line-height: 1.05;
 }
 
 .pt-tool-head__description {
-	max-width: 60ch;
-	margin: 0.9rem 0 0;
+	max-width: 62ch;
+	margin: 0.75rem 0 0;
 	color: var(--pt-muted);
-	font-size: 1.02rem;
+	font-size: 1rem;
 	line-height: 1.6;
 }
 
@@ -1460,9 +1455,7 @@ textarea {
 	display: flex;
 	align-items: center;
 	gap: 0.55rem;
-	margin: 1.5rem 0 0;
-	padding-top: 1rem;
-	border-top: 1px solid var(--pt-line);
+	margin: 1.25rem 0 0;
 	color: var(--pt-blue-strong);
 	font-size: 0.82rem;
 	font-weight: 800;
@@ -1495,9 +1488,9 @@ textarea {
 }
 
 .pt-workspace__pane {
-	display: grid;
+	display: flex;
 	min-width: 0;
-	align-content: start;
+	flex-direction: column;
 	gap: 1rem;
 	padding: 1.5rem;
 }
@@ -1518,6 +1511,16 @@ textarea {
 	display: grid;
 	gap: 1.5rem;
 	padding: 1.5rem;
+}
+
+.pt-workspace__footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem 1.5rem;
+	padding: 1rem 1.5rem;
+	border-top: 1px solid var(--pt-line);
 }
 
 .pt-option-group {
@@ -1543,6 +1546,24 @@ textarea {
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.6rem;
+}
+
+/* Enterprise row discipline: every control in an option group shares one
+   height and one vertical center, so Selects never sit shorter than Buttons
+   and steppers never tower over them. */
+.pt-option-group__controls > .p-button,
+.pt-option-group__controls > .p-select,
+.pt-option-group__controls > .p-inputnumber {
+	min-height: 2.75rem;
+}
+
+.pt-option-group__controls > .p-select {
+	display: inline-flex;
+	align-items: center;
+}
+
+.pt-option-group__controls > .p-inputnumber {
+	align-items: stretch;
 }
 
 @media (max-width: 767px) {
@@ -1574,59 +1595,31 @@ textarea {
 	}
 }
 
-.pt-code-editor {
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr);
-	align-items: stretch;
+.pt-cm {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	min-height: 4.5rem;
 	border: 1px solid var(--pt-line);
 	border-radius: var(--radius-control);
 	background: var(--pt-surface);
 }
 
-.pt-code-gutter {
-	display: flex;
-	flex-direction: column;
-	max-height: 26rem;
-	padding-block: 0.75rem;
-	overflow: hidden;
-	border-right: 1px solid var(--pt-line);
-	background: color-mix(in srgb, var(--pt-blue) 5%, var(--pt-surface));
+.pt-cm:focus-within {
+	outline: 3px solid var(--pt-blue);
+	outline-offset: 3px;
+}
+
+.pt-cm .cm-editor {
+	flex: 1 1 auto;
+	min-height: 4.5rem;
+	max-height: 30rem;
+}
+
+.pt-cm .cm-scroller {
+	overflow: auto;
+}
+
+.pt-cm .cm-placeholder {
 	color: var(--pt-muted);
-	font-family: var(--font-mono);
-	font-size: 0.875rem;
-	line-height: 1.6;
-	text-align: right;
-	user-select: none;
-}
-
-.pt-code-gutter span {
-	min-width: 2.5rem;
-	padding-inline: 0.5rem;
-}
-
-.pt-code-gutter__error {
-	background: color-mix(in srgb, var(--pt-blue) 12%, transparent);
-	color: var(--pt-blue-strong);
-	font-weight: 800;
-}
-
-.pt-code-editor__input {
-	width: 100%;
-	border: 0;
-	border-radius: 0 var(--radius-control) var(--radius-control) 0;
-	background: transparent;
-	box-shadow: none;
-	font-family: var(--font-mono);
-	font-size: 0.875rem;
-	line-height: 1.6;
-	tab-size: 2;
-}
-
-.pt-code-editor .pt-code-editor__input:focus {
-	box-shadow: none;
-}
-
-textarea.pt-code-editor__input {
-	padding: 0.75rem;
-	resize: vertical;
 }

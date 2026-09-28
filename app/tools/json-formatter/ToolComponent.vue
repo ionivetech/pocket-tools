@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import Select from "primevue/select";
-import Textarea from "primevue/textarea";
-import { computed, nextTick, ref, useId, watch } from "vue";
+import { computed, ref, useId, watch } from "vue";
 import { BrowserActionError, copyText } from "~/utils/browser-actions";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
+import JsonCodeEditor from "./JsonCodeEditor.vue";
 import { getJsonStats, runJsonFormatter, validateJson } from "./logic";
 import type { JsonFormatterIndent, JsonFormatterMode } from "./schema";
 import { isJsonFormatterIndent, isJsonFormatterMode } from "./schema";
@@ -32,9 +32,8 @@ const indentOptions = [
 ] as const;
 
 const componentId = useId();
-const inputId = `json-formatter-input-${componentId}`;
 const indentId = `json-formatter-indent-${componentId}`;
-const gutterRef = ref<HTMLElement | null>(null);
+const inputEditor = ref<InstanceType<typeof JsonCodeEditor> | null>(null);
 
 const formatted = computed(() =>
 	runJsonFormatter({
@@ -76,8 +75,6 @@ const errorLine = computed(() => {
 	return validation.value.error.line;
 });
 
-const lineCount = computed(() => text.value.split("\n").length);
-
 const statsText = computed(() => {
 	if (!stats.value.ok) {
 		return "";
@@ -86,43 +83,10 @@ const statsText = computed(() => {
 	return `${lines} lines · ${bytes} bytes · ${keys} keys · depth ${depth}`;
 });
 
-function syncGutter(event: Event): void {
-	const area = event.target as HTMLElement | null;
-	if (area && gutterRef.value) {
-		gutterRef.value.scrollTop = area.scrollTop;
-	}
-}
-
-function handleTabIndent(event: KeyboardEvent): void {
-	const area = event.target as HTMLTextAreaElement | null;
-	if (!area) {
-		return;
-	}
-	const indentText = indent.value === "tab" ? "\t" : " ".repeat(indent.value);
-	const { selectionStart, selectionEnd, value } = area;
-	text.value = value.slice(0, selectionStart) + indentText + value.slice(selectionEnd);
-	const caret = selectionStart + indentText.length;
-	void nextTick(() => {
-		area.focus();
-		area.setSelectionRange(caret, caret);
-	});
-}
-
 function jumpToErrorLine(): void {
-	const line = errorLine.value;
-	if (line === undefined) {
-		return;
+	if (errorLine.value !== undefined) {
+		inputEditor.value?.focusLine(errorLine.value);
 	}
-	const area = document.getElementById(inputId) as HTMLTextAreaElement | null;
-	if (!area) {
-		return;
-	}
-	const offset = text.value
-		.split("\n")
-		.slice(0, line - 1)
-		.reduce((total, current) => total + current.length + 1, 0);
-	area.focus();
-	area.setSelectionRange(offset, offset);
 }
 
 function loadSample(): void {
@@ -240,69 +204,64 @@ watch(
 		</template>
 
 		<template #input>
-			<label class="pt-field-label" :for="inputId">Paste or type JSON</label>
-			<div class="pt-code-editor">
-				<div ref="gutterRef" class="pt-code-gutter" aria-hidden="true">
-					<span
-						v-for="line in lineCount"
-						:key="line"
-						:class="{ 'pt-code-gutter__error': line === errorLine }"
-						>{{ line }}</span
-					>
-				</div>
-				<Textarea
-					:id="inputId"
+			<label class="pt-field-label" for="json-formatter-input">Paste or type JSON</label>
+			<ClientOnly>
+				<JsonCodeEditor
+					ref="inputEditor"
 					v-model="text"
-					class="pt-code-editor__input"
-					rows="16"
-					wrap="off"
-					spellcheck="false"
-					data-testid="json-formatter-input"
+					editor-label="Paste or type JSON"
+					testid="json-formatter-input"
 					placeholder="Paste JSON here"
-					@scroll="syncGutter"
-					@keydown.tab.prevent="handleTabIndent"
 				/>
-			</div>
-			<p class="pt-input-hint">Tab inserts your indent. Line numbers follow your text.</p>
+				<template #fallback>
+					<p class="pt-input-hint">Loading the code editor…</p>
+				</template>
+			</ClientOnly>
 		</template>
 
 		<template #output>
-			<p
-				class="pt-json-status"
-				:data-kind="statusKind"
-				:role="statusKind === 'error' ? 'alert' : 'status'"
-				:aria-live="statusKind === 'error' ? 'assertive' : 'polite'"
-				aria-atomic="true"
-				data-testid="json-formatter-status"
-			>
-				<AppIcon
-					v-if="statusKind !== 'empty'"
-					:name="statusKind === 'error' ? 'exclamation-circle' : 'check-circle'"
+			<div class="pt-json-status-row">
+				<p
+					class="pt-json-status"
+					:data-kind="statusKind"
+					:role="statusKind === 'error' ? 'alert' : 'status'"
+					:aria-live="statusKind === 'error' ? 'assertive' : 'polite'"
+					aria-atomic="true"
+					data-testid="json-formatter-status"
+				>
+					<AppIcon
+						v-if="statusKind !== 'empty'"
+						:name="statusKind === 'error' ? 'exclamation-circle' : 'check-circle'"
+					/>
+					{{ statusMessage }}
+				</p>
+				<Button
+					v-if="errorLine !== undefined"
+					type="button"
+					:label="`Go to line ${errorLine}`"
+					:aria-label="`Go to line ${errorLine} in the JSON input`"
+					size="small"
+					outlined
+					data-testid="json-formatter-jump"
+					@click="jumpToErrorLine"
 				/>
-				{{ statusMessage }}
-			</p>
-			<Button
-				v-if="errorLine !== undefined"
-				type="button"
-				:label="`Go to line ${errorLine}`"
-				:aria-label="`Go to line ${errorLine} in the JSON input`"
-				size="small"
-				outlined
-				data-testid="json-formatter-jump"
-				@click="jumpToErrorLine"
-			/>
+			</div>
 
-			<Textarea
-				class="pt-code-editor__input"
-				readonly
-				rows="16"
-				wrap="off"
-				spellcheck="false"
-				:model-value="outputText"
-				aria-label="Formatted JSON result"
-				data-testid="json-formatter-output"
-			/>
+			<ClientOnly>
+				<JsonCodeEditor
+					:model-value="outputText"
+					readonly
+					editor-label="Formatted JSON result"
+					testid="json-formatter-output"
+					@update:model-value="() => {}"
+				/>
+				<template #fallback>
+					<p class="pt-input-hint">Loading the result viewer…</p>
+				</template>
+			</ClientOnly>
+		</template>
 
+		<template #footer>
 			<p v-if="statsText" class="pt-json-stats" data-testid="json-formatter-stats">
 				{{ statsText }}
 			</p>
@@ -335,6 +294,9 @@ watch(
 
 <style scoped>
 .pt-field-label {
+	display: flex;
+	align-items: center;
+	min-height: 1.75rem;
 	font-weight: 600;
 	color: var(--pt-ink);
 }
@@ -345,8 +307,18 @@ watch(
 	font-size: 0.8rem;
 }
 
+.pt-json-status-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	min-height: 1.75rem;
+}
+
 .pt-json-status {
 	display: flex;
+	flex: 1 1 auto;
 	align-items: center;
 	gap: 0.5rem;
 	margin: 0;
