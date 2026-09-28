@@ -29,6 +29,20 @@ describe("uuid-generator schema", () => {
 		});
 	});
 
+	test("rejects a non-object value", () => {
+		expect(parseUuidGeneratorInput(null)).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported version", () => {
+		expect(parseUuidGeneratorInput({ version: "uuid-v1", count: 1 })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
 	test.each([0, 101, 1.5, -1])("rejects an out-of-range or non-integer count %p", (count) => {
 		expect(parseUuidGeneratorInput({ version: "uuid-v4", count })).toMatchObject({
 			ok: false,
@@ -142,6 +156,14 @@ describe("inspectId", () => {
 		expect(inspectId("00000000-0000-0000-0000-000000000000").kind).toBe("nil");
 	});
 
+	test("detects other UUID versions without a usable timestamp", () => {
+		expect(inspectId("6ec0bd7f-11c0-11d1-9100-00aa00c14f0e")).toMatchObject({
+			kind: "uuid",
+			version: 1,
+			timestampMs: null,
+		});
+	});
+
 	test("rejects non-ids", () => {
 		expect(inspectId("not an id").kind).toBe("invalid");
 		expect(inspectId("").kind).toBe("invalid");
@@ -177,6 +199,17 @@ describe("convertId", () => {
 
 	test("refuses UUID v4 with a specific error", () => {
 		expect(convertId(generateUuidV4(), "ulid")).toMatchObject({
+			ok: false,
+			error: { code: "no_timestamp" },
+		});
+	});
+
+	test("refuses the nil UUID and other versions", () => {
+		expect(convertId("00000000-0000-0000-0000-000000000000", "ulid")).toMatchObject({
+			ok: false,
+			error: { code: "no_timestamp" },
+		});
+		expect(convertId("6ec0bd7f-11c0-11d1-9100-00aa00c14f0e", "ulid")).toMatchObject({
 			ok: false,
 			error: { code: "no_timestamp" },
 		});

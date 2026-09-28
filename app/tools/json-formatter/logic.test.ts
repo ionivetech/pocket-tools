@@ -28,6 +28,42 @@ describe("json-formatter schema", () => {
 			error: { code: "invalid_input" },
 		});
 	});
+
+	test("accepts a record with sorting enabled", () => {
+		expect(
+			parseJsonFormatterInput({ text: "{}", indent: 2, mode: "format", sortKeys: true }),
+		).toEqual({
+			ok: true,
+			value: { text: "{}", indent: 2, mode: "format", sortKeys: true },
+		});
+	});
+
+	test("rejects a non-object value", () => {
+		expect(parseJsonFormatterInput(null)).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported indent", () => {
+		expect(parseJsonFormatterInput({ text: "{}", indent: 3, mode: "format" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported mode", () => {
+		expect(parseJsonFormatterInput({ text: "{}", indent: 2, mode: "tree" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects a non-boolean sortKeys flag", () => {
+		expect(
+			parseJsonFormatterInput({ text: "{}", indent: 2, mode: "format", sortKeys: "yes" }),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
 });
 
 describe("validateJson", () => {
@@ -164,6 +200,17 @@ describe("getJsonStats", () => {
 
 	test("counts a flat object as depth 1", () => {
 		expect(getJsonStats('{"a":1}')).toMatchObject({ ok: true, value: { keys: 1, depth: 1 } });
+	});
+
+	test("counts keys inside arrays and measures nesting depth", () => {
+		expect(getJsonStats('{"list":[1,{"a":2}]}')).toMatchObject({
+			ok: true,
+			value: { lines: 1, keys: 2, depth: 3 },
+		});
+	});
+
+	test("counts a primitive as zero keys and zero depth", () => {
+		expect(getJsonStats("42")).toMatchObject({ ok: true, value: { keys: 0, depth: 0 } });
 	});
 
 	test("passes through invalid_json errors", () => {

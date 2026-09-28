@@ -107,12 +107,9 @@ const nilUuid = "00000000-0000-0000-0000-000000000000";
 export type InspectedId =
 	| Readonly<{ kind: "invalid" }>
 	| Readonly<{ kind: "nil"; normalized: string }>
-	| Readonly<{
-			kind: "uuid-v4" | "uuid-v7" | "uuid";
-			normalized: string;
-			version: number;
-			timestampMs: number | null;
-	  }>
+	| Readonly<{ kind: "uuid-v4"; normalized: string; version: 4; timestampMs: null }>
+	| Readonly<{ kind: "uuid-v7"; normalized: string; version: 7; timestampMs: number }>
+	| Readonly<{ kind: "uuid"; normalized: string; version: number; timestampMs: null }>
 	| Readonly<{ kind: "ulid"; normalized: string; timestampMs: number }>;
 
 export type IdConvertTarget = "uuid-v7" | "ulid";
@@ -155,15 +152,18 @@ export function inspectId(value: string): InspectedId {
 	if (uuidPattern.test(trimmed) || bareUuidPattern.test(trimmed)) {
 		const normalized = normalizeUuid(trimmed);
 		const version = Number.parseInt(normalized.slice(14, 15), 16);
-		const timestampMs =
-			version === 7 ? Number.parseInt(normalized.replaceAll("-", "").slice(0, 12), 16) : null;
 		if (version === 4) {
-			return { kind: "uuid-v4", normalized, version, timestampMs };
+			return { kind: "uuid-v4", normalized, version, timestampMs: null };
 		}
 		if (version === 7) {
-			return { kind: "uuid-v7", normalized, version, timestampMs };
+			return {
+				kind: "uuid-v7",
+				normalized,
+				version,
+				timestampMs: Number.parseInt(normalized.replaceAll("-", "").slice(0, 12), 16),
+			};
 		}
-		return { kind: "uuid", normalized, version, timestampMs };
+		return { kind: "uuid", normalized, version, timestampMs: null };
 	}
 	if (ulidPattern.test(trimmed)) {
 		const normalized = trimmed.toUpperCase();
@@ -202,15 +202,6 @@ export function convertId(value: string, target: IdConvertTarget): Result<IdConv
 	}
 
 	const timestampMs = inspected.timestampMs;
-	if (timestampMs === null) {
-		return {
-			ok: false,
-			error: {
-				code: "no_timestamp",
-				message: "Conversion needs a UUID v7 or a ULID, because only they carry a timestamp.",
-			},
-		};
-	}
 	const result =
 		target === "ulid"
 			? buildUlid(timestampMs, randomBytes(16))

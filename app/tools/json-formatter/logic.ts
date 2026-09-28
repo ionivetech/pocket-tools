@@ -177,25 +177,13 @@ export function runJsonFormatter(input: JsonFormatterInput): JsonResult<JsonForm
 		return validated;
 	}
 
-	try {
-		const value = input.sortKeys === true ? sortJsonKeys(validated.value) : validated.value;
-		const result =
-			input.mode === "minify"
-				? JSON.stringify(value)
-				: JSON.stringify(value, null, toIndentArg(input.indent));
+	// `validated.value` comes from the tool's own parser, so it is always plain
+	// JSON data and `JSON.stringify` cannot fail on it: no defensive branch.
+	const value = input.sortKeys === true ? sortJsonKeys(validated.value) : validated.value;
+	const result =
+		input.mode === "minify"
+			? JSON.stringify(value)
+			: JSON.stringify(value, null, toIndentArg(input.indent));
 
-		if (typeof result !== "string") {
-			return {
-				ok: false,
-				error: { code: "unformattable_value", message: "That JSON value cannot be serialized." },
-			};
-		}
-
-		return { ok: true, value: { result, mode: input.mode } };
-	} catch {
-		return {
-			ok: false,
-			error: { code: "unformattable_value", message: "That JSON value cannot be serialized." },
-		};
-	}
+	return { ok: true, value: { result, mode: input.mode } };
 }

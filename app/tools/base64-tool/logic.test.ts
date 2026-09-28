@@ -9,7 +9,7 @@ import {
 	runBase64Tool,
 	toBase64Url,
 } from "./logic";
-import { isBase64Direction, parseBase64ToolInput } from "./schema";
+import { isBase64Direction, isBase64Newline, isBase64WrapAt, parseBase64ToolInput } from "./schema";
 
 describe("base64-tool schema", () => {
 	test.each(["encode", "decode", "auto"])("accepts direction %p", (direction) => {
@@ -25,6 +25,60 @@ describe("base64-tool schema", () => {
 			ok: false,
 			error: { code: "invalid_input" },
 		});
+	});
+
+	test("rejects a non-object value", () => {
+		expect(parseBase64ToolInput(null)).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("accepts a record with every format option set", () => {
+		expect(
+			parseBase64ToolInput({
+				text: "hi",
+				direction: "encode",
+				urlSafe: true,
+				wrapAt: 64,
+				newline: "crlf",
+			}),
+		).toMatchObject({
+			ok: true,
+			value: { text: "hi", direction: "encode", urlSafe: true, wrapAt: 64, newline: "crlf" },
+		});
+	});
+
+	test("rejects a non-boolean urlSafe flag", () => {
+		expect(parseBase64ToolInput({ text: "hi", direction: "encode", urlSafe: 1 })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported wrap width", () => {
+		expect(parseBase64ToolInput({ text: "hi", direction: "encode", wrapAt: 8 })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects an unsupported newline", () => {
+		expect(parseBase64ToolInput({ text: "hi", direction: "encode", newline: "cr" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test.each([0, 64, 76])("accepts wrap width %p", (wrapAt) => {
+		expect(isBase64WrapAt(wrapAt)).toBe(true);
+		expect(isBase64WrapAt(8)).toBe(false);
+	});
+
+	test("accepts only lf and crlf newlines", () => {
+		expect(isBase64Newline("lf")).toBe(true);
+		expect(isBase64Newline("crlf")).toBe(true);
+		expect(isBase64Newline("cr")).toBe(false);
 	});
 });
 

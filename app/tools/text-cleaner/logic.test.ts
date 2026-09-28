@@ -35,6 +35,86 @@ describe("text-cleaner schema", () => {
 			}),
 		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
 	});
+
+	test("rejects a non-object value", () => {
+		expect(parseTextCleanerInput("hi")).toMatchObject({
+			ok: false,
+			error: { code: "invalid_input" },
+		});
+	});
+
+	test("rejects a non-boolean collapse flag", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: 1,
+				caseTransform: "none",
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("rejects an unsupported case transform", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "mixed",
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("rejects a non-boolean removeEmptyLines flag", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "none",
+				removeEmptyLines: 1,
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("rejects a non-boolean removeDuplicateLines flag", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "none",
+				removeDuplicateLines: 1,
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("rejects an unsupported line ending", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "none",
+				lineEnding: "cr",
+			}),
+		).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+	});
+
+	test("accepts a record with every option set", () => {
+		expect(
+			parseTextCleanerInput({
+				text: "hi",
+				trim: true,
+				collapseWhitespace: true,
+				caseTransform: "upper",
+				removeEmptyLines: true,
+				removeDuplicateLines: true,
+				lineEnding: "lf",
+				stripHtml: true,
+			}),
+		).toMatchObject({ ok: true });
+	});
 });
 
 describe("countText", () => {
