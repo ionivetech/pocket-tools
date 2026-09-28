@@ -18,10 +18,13 @@ const outputHeadingId = `tool-output-${sectionId}`;
 </script>
 
 <template>
-	<section class="min-w-0" data-testid="tool-dual-pane" aria-label="Tool workspace">
-		<div class="grid gap-6 md:grid-cols-2">
+	<section class="pt-workspace" data-testid="tool-dual-pane" aria-label="Tool workspace">
+		<div v-if="$slots.toolbar" class="pt-workspace__toolbar" data-testid="tool-dual-pane-toolbar">
+			<slot name="toolbar" />
+		</div>
+		<div class="pt-workspace__body">
 			<section
-				class="pt-tool-state grid min-w-0 gap-4"
+				class="pt-workspace__pane"
 				:aria-labelledby="inputHeadingId"
 				data-testid="tool-dual-pane-input"
 			>
@@ -29,7 +32,7 @@ const outputHeadingId = `tool-output-${sectionId}`;
 				<slot name="input" />
 			</section>
 			<section
-				class="pt-tool-state grid min-w-0 gap-4"
+				class="pt-workspace__pane pt-workspace__pane--output"
 				:aria-labelledby="outputHeadingId"
 				data-testid="tool-dual-pane-output"
 			>
