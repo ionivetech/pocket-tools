@@ -24,8 +24,14 @@ bun run dev
 bun run ci:local
 ```
 
-## PrimeVue version
+Tests: `bun run test` for pure logic, `bun run test:e2e` for browser flows. Playwright files use `*.pw.ts`, never `*.spec.ts`. Anti-flake rules live in `AGENTS.md`.
 
-PrimeVue is pinned to the latest 4.x release (`4.5.5`) with the matching Nuxt module and `@primeuix/themes` 2.x theme package. This keeps the UI layer MIT/open-source and avoids the PrimeVue 5 PrimeUI license-key requirement.
+## PrimeVue version and licence
+
+PrimeVue is pinned to the latest 4.x release (`4.5.5`) with the matching Nuxt module and `@primeuix/themes` 2.x theme package. Pinning 4.x keeps the UI layer on PrimeVue 4, whose packages are MIT, rather than PrimeVue 5, whose PrimeUI packages are licensed differently and require a license key.
+
+That MIT claim covers what the lockfile resolves: `primevue`, `@primevue/nuxt-module`, `@primevue/core`, `@primevue/icons`, and `@primeuix/{themes,styled,styles,utils,forms}` are all MIT, and the build ships only those.
+
+PrimeUI, the commercial family from PrimeTek, publishes some packages under the PrimeUI Community License instead. It is free only for organisations with under $1M annual gross revenue, fewer than 5 developers, fewer than 10 employees, and under $3M in outside funding. It requires annual renewal by re-confirming eligibility, and it requires a valid license key. Such packages can also sit in a `node_modules` tree while nothing in the project declares or imports them. Read each package's `LICENSE.md` and <https://primeui.dev/licenses/community> before adding a PrimeUI package. This records what those packages state; it is not legal advice.
 
 See `PLAN.md` and `ROADMAP.md` for the current Phase 0 plan and acceptance gates.

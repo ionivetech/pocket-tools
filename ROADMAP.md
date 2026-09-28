@@ -12,7 +12,7 @@
 4. If stuck > 2 hours, record it in the active mission log.
 5. For technical details, refer to `PLAN.md`.
 
-**Current delivery:** Phase 0 only. Later phases remain documented but are not part of the current commit.
+**Current delivery:** Phase 1 core infrastructure delivered. Later phases remain documented but are not part of the current commit.
 
 **Tooling:** Bun only, oxfmt, oxlint/Oxc, Nuxt 4, Tailwind CSS v4, PrimeVue 4.5.5.
 
@@ -109,55 +109,59 @@
 
 ### 1.1 Tool metadata and registry
 
-- [ ] Define tool metadata and typed tool contracts.
-- [ ] Add registry register/get/list behavior.
-- [ ] Add lazy Vue component loading.
-- [ ] Add category and search metadata.
-- [ ] Generate the registry from source metadata.
+- [x] Define tool metadata and typed tool contracts. — evidence: T1, app/types/tool.ts; bun test tests/unit/tool-metadata.test.ts
+- [x] Add registry register/get/list behavior. — evidence: T3, app/data/tool-registry.ts; bun test tests/unit/tool-registry.test.ts
+- [x] Add lazy Vue component loading. — evidence: T7, app/components/ToolHost.vue; bun run test:e2e
+- [x] Add category and search metadata. — evidence: T3, app/data/tool-search.ts; bun test tests/unit/tool-search.test.ts
+- [x] Generate the registry from source metadata. — evidence: T2, scripts/generate-tool-registry.ts; bun run generate:registry -- --check
 
 ### 1.2 Tool scaffolder
 
-- [ ] Add a Bun scaffolder command.
-- [ ] Generate one folder per tool.
-- [ ] Generate pure logic, schema, component, and test stubs.
-- [ ] Add generator validation and a scaffold smoke test.
+- [x] Add a Bun scaffolder command. — evidence: T4, scripts/scaffold-tool.ts; bun test tests/unit/scaffold-tool.test.ts
+- [x] Generate one folder per tool. — evidence: T4, scripts/scaffold-tool.ts; bun test tests/unit/scaffold-tool.test.ts
+- [x] Generate pure logic, schema, component, and test stubs. — evidence: T4, scripts/scaffold-tool.ts; bun test tests/unit/scaffold-tool.test.ts
+- [x] Add generator validation and a scaffold smoke test. — evidence: T4, scripts/scaffold-tool.ts; bun test tests/unit/scaffold-tool.test.ts
 
 ### 1.3 Tool routing and collection
 
-- [ ] Add `/tools` collection route.
-- [ ] Add `/tools/[slug]` route.
-- [ ] Add SEO-safe metadata and error state.
-- [ ] Verify unknown tools produce a useful 404.
-- [ ] Verify search and category filters scale with many records.
+- [x] Add `/tools` collection route. — evidence: T8, app/pages/tools/index.vue; bun run test:e2e
+- [x] Add `/tools/[slug]` route. — evidence: T8, app/pages/tools/[slug].vue; bun run test:e2e
+- [x] Add SEO-safe metadata and error state. — evidence: T8, app/error.vue; bun run test:e2e
+- [x] Verify unknown tools produce a useful 404. — evidence: T9, tests/e2e/tool-infrastructure.pw.ts; bun run test:e2e
+- [x] Verify search and category filters scale with many records. — evidence: T9, tests/e2e/tool-infrastructure.pw.ts; bun run test:e2e
 
 ### 1.4 Shared component system
 
-- [ ] Add shared copy/download action component.
-- [ ] Add shared empty/error/loading state components.
-- [ ] Add tool header/footer composition.
-- [ ] Add dual-pane and file-drop patterns for future tools.
-- [ ] Use PrimeVue components and project tokens only.
+- [x] Add shared copy/download action component. — delivered: T6, app/components/ToolActions.vue. Its copy/download logic delegates to app/utils/browser-actions.ts, which is unit-tested (bun test tests/unit/browser-actions.test.ts); tests/unit/shared-components.test.ts asserts the component imports that logic and exposes its expected bindings, but the component is still not rendered by any route or browser test.
+- [x] Add shared empty/error/loading state components. — evidence: T6, app/components/ToolState.vue; bun run test:e2e
+- [x] Add tool header/footer composition. — evidence: T7, app/components/ToolHeader.vue; bun run build
+- [x] Add dual-pane and file-drop patterns for future tools. — delivered: T7, app/components/ToolDualPane.vue, app/components/ToolFileDrop.vue. Both compile (bun run build), and tests/unit/shared-components.test.ts asserts each parses, compiles, and exposes its expected bindings. Neither is rendered by a route or a browser test, and both keep their logic inline in the component rather than in a tested utility, so no unit test exercises their behaviour. They wait for the first tool that uses them.
+- [x] Use PrimeVue components and project tokens only. — evidence: T9, tests/e2e/accessibility.pw.ts; bun run test:e2e
+
+> Coverage gap: `ToolActions.vue`, `ToolDualPane.vue`, and `ToolFileDrop.vue` are shared primitives delivered ahead of the tools that will use them. `tests/unit/shared-components.test.ts` now verifies that each parses and compiles with no template or script errors and exposes its expected top-level bindings, and that `ToolActions.vue` is the component importing the tested `copyText`/`downloadText` logic from `app/utils/browser-actions.ts`. That is a compile and contract check, **not** render coverage: no component is mounted, and **none of the three is rendered by a route or a browser test**, so the shared component system is still **not** covered end to end — a component that compiles and then behaves wrongly would pass. Closing the gap needs a component-rendering test runner (a dev dependency such as `@vue/test-utils`) or a test-only route, both out of scope here. `scripts/coverage-gate.ts` measures the unit-tested logic, not rendering.
 
 ### 1.5 Testing and quality harness
 
-- [ ] Keep pure logic under `bun test`.
-- [ ] Add Playwright shell/tool smoke coverage.
-- [ ] Add axe accessibility coverage.
-- [ ] Add performance budget checks.
-- [ ] Add CI test/build order.
+- [x] Keep pure logic under `bun test`. — evidence: T9, playwright.config.ts; bun test
+- [x] Add Playwright shell/tool smoke coverage. — evidence: T9, tests/e2e/tool-infrastructure.pw.ts; bun run test:e2e
+- [x] Add axe accessibility coverage. — evidence: T9, tests/e2e/accessibility.pw.ts; bun run test:e2e
+- [x] Add performance budget checks. — evidence: T9, tests/e2e/tool-infrastructure.pw.ts; bun run test:e2e
+- [x] Add CI test/build order. — evidence: T9, package.json; bun run ci:local
 
 ### 1.6 URL-state utility
 
-- [ ] Add validated URL-state encoding.
-- [ ] Define size limits and clear overflow behavior.
-- [ ] Add round-trip tests.
-- [ ] Keep URL state optional and privacy-safe.
+- [x] Add validated URL-state encoding. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
+- [x] Define size limits and clear overflow behavior. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
+- [x] Add round-trip tests. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
+- [x] Keep URL state optional and privacy-safe. — evidence: T5, app/utils/url-state.ts; bun test tests/unit/url-state.test.ts
+
+> Not yet consumed: `app/utils/url-state.ts` is delivered and unit-tested, but **no route or component imports it** — nothing reads or writes tool state in the query string today. The `pockettools-pages` navigation-cache rule in `nuxt.config.ts` is keyed by path rather than by query string so it stays correct once that wiring lands; that fix is anticipatory, not a response to current query traffic. Wiring the codec is product behaviour and is out of scope for this infrastructure mission.
 
 ### 1.7 Error handling
 
-- [ ] Add local error boundary/logging conventions.
-- [ ] Add actionable error copy patterns.
-- [ ] Keep failures visible without breaking the shell.
+- [x] Add local error boundary/logging conventions. — evidence: T7, app/components/ToolHost.vue; bun test tests/unit/error-reporting.test.ts; bun run test:e2e
+- [x] Add actionable error copy patterns. — evidence: T6, app/components/ToolState.vue; bun run test:e2e
+- [x] Keep failures visible without breaking the shell. — evidence: T9, tests/e2e/tool-infrastructure.pw.ts; bun run test:e2e
 
 **✅ Gate Phase 1:** scaffold → registry → route → lazy component → tests works.
 
@@ -431,17 +435,17 @@
 
 ## Milestones
 
-| Milestone | Deliverable                                        | Status |
-| --------- | -------------------------------------------------- | ------ |
-| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`  |
-| M1        | Registry, routing, shared components, test harness | `[ ]`  |
-| M2        | First general-purpose tools                        | `[ ]`  |
-| M3        | Palette, favorites, history, paste, landing        | `[ ]`  |
-| M4        | MVP everyday toolkit                               | `[ ]`  |
-| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`  |
-| M6        | v1.0 launch                                        | `[ ]`  |
-| M7        | v1.1 expanded catalog                              | `[ ]`  |
-| M8        | v2 advanced features                               | `[ ]`  |
+| Milestone | Deliverable                                        | Status                                     |
+| --------- | -------------------------------------------------- | ------------------------------------------ |
+| M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`                                      |
+| M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local |
+| M2        | First general-purpose tools                        | `[ ]`                                      |
+| M3        | Palette, favorites, history, paste, landing        | `[ ]`                                      |
+| M4        | MVP everyday toolkit                               | `[ ]`                                      |
+| M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                      |
+| M6        | v1.0 launch                                        | `[ ]`                                      |
+| M7        | v1.1 expanded catalog                              | `[ ]`                                      |
+| M8        | v2 advanced features                               | `[ ]`                                      |
 
 ---
 
@@ -504,7 +508,7 @@
 - `ROADMAP.md` — full phase/task execution order.
 - `AGENTS.md` — AI coding standard.
 - `README.md` — product and development overview.
-- `.mugiwara/missions/pockettools-phase0-nuxt/` — active mission state and evidence.
+- `.mugiwara/missions/pockettools-phase1-core-infrastructure/` — active mission state and evidence.
 
 **Last updated:** 2026-09-25
-**Next review:** after Phase 0 gate.
+**Next review:** after Phase 1 infrastructure gate.

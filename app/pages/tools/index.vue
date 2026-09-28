@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { filterTools } from "~/data/tool-search";
 import { toolCategories, tools, type Tool } from "~/data/tools";
 
 type CategoryFilter = (typeof toolCategories)[number];
@@ -16,21 +17,9 @@ const collection = computed(() => {
 	return tools;
 });
 
-const filteredTools = computed(() => {
-	const normalizedQuery = query.value.trim().toLowerCase();
-
-	return collection.value.filter((tool) => {
-		const matchesCategory =
-			activeCategory.value === "All" || tool.category === activeCategory.value;
-		const matchesQuery =
-			normalizedQuery.length === 0 ||
-			`${tool.name} ${tool.description} ${tool.category} ${tool.keywords.join(" ")}`
-				.toLowerCase()
-				.includes(normalizedQuery);
-
-		return matchesCategory && matchesQuery;
-	});
-});
+const filteredTools = computed(() =>
+	filterTools(collection.value, { query: query.value, category: activeCategory.value }),
+);
 
 const pageTitle = computed(() => {
 	if (activeView.value === "favorites") return "Favorite tools";
@@ -75,16 +64,28 @@ function openTool(tool: Tool) {
 
 		<main id="main-content" class="pt-tools-page">
 			<section class="pt-tools-hero" aria-labelledby="tools-page-title">
-				<NuxtLink class="pt-back-link" to="/"> <AppIcon name="arrow-left" /> Back home </NuxtLink>
+				<NuxtLink class="pt-back-link" to="/" data-testid="tools-back-home-link">
+					<AppIcon name="arrow-left" /> Back home
+				</NuxtLink>
 				<p class="pt-kicker">The tool library</p>
 				<h1 id="tools-page-title">Find a better <span>shortcut.</span></h1>
 				<p>Search by the thing you want to do, then open a focused tool when you need it.</p>
 
-				<form class="pt-search pt-tools-search" role="search" @submit.prevent="showResults">
+				<form
+					class="pt-search pt-tools-search"
+					role="search"
+					data-testid="tools-search-form"
+					@submit.prevent="showResults"
+				>
 					<label class="pt-sr-only" for="collection-search">Search the tool library</label>
 					<AppIcon name="search" class="pt-search__icon" />
-					<InputText id="collection-search" v-model="query" placeholder="Search the collection" />
-					<Button type="submit" label="Search" />
+					<InputText
+						id="collection-search"
+						v-model="query"
+						placeholder="Search the collection"
+						data-testid="tools-search-input"
+					/>
+					<Button type="submit" label="Search" data-testid="tools-search-submit" />
 				</form>
 			</section>
 
@@ -105,6 +106,7 @@ function openTool(tool: Tool) {
 							type="button"
 							:aria-pressed="activeView === 'all'"
 							:class="{ 'pt-view-tab--active': activeView === 'all' }"
+							data-testid="tools-view-all"
 							@click="setView('all')"
 						>
 							All <span>{{ tools.length }}</span>
@@ -113,6 +115,7 @@ function openTool(tool: Tool) {
 							type="button"
 							:aria-pressed="activeView === 'favorites'"
 							:class="{ 'pt-view-tab--active': activeView === 'favorites' }"
+							data-testid="tools-view-favorites"
 							@click="setView('favorites')"
 						>
 							Favorites <span>{{ favoriteTools.length }}</span>
@@ -121,6 +124,7 @@ function openTool(tool: Tool) {
 							type="button"
 							:aria-pressed="activeView === 'recent'"
 							:class="{ 'pt-view-tab--active': activeView === 'recent' }"
+							data-testid="tools-view-recent"
 							@click="setView('recent')"
 						>
 							Recent <span>{{ recentTools.length }}</span>
@@ -136,13 +140,19 @@ function openTool(tool: Tool) {
 						:class="{ 'pt-category--active': activeCategory === category }"
 						type="button"
 						:aria-pressed="activeCategory === category"
+						:data-testid="`tools-category-${category.toLowerCase()}`"
 						@click="setCategory(category)"
 					>
 						{{ category }}
 					</button>
 				</div>
 
-				<div v-if="filteredTools.length" class="pt-tool-grid" aria-live="polite">
+				<div
+					v-if="filteredTools.length"
+					class="pt-tool-grid"
+					aria-live="polite"
+					data-testid="tools-results"
+				>
 					<ToolCard
 						v-for="tool in filteredTools"
 						:key="tool.slug"
@@ -154,7 +164,7 @@ function openTool(tool: Tool) {
 					/>
 				</div>
 
-				<div v-else class="pt-empty" aria-live="polite">
+				<div v-else class="pt-empty" aria-live="polite" data-testid="tools-empty-state">
 					<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="search" /></span>
 					<div>
 						<h3>
@@ -181,6 +191,7 @@ function openTool(tool: Tool) {
 						type="button"
 						label="Clear filters"
 						variant="outlined"
+						data-testid="tools-clear-filters"
 						@click="clearFilters"
 					/>
 				</div>

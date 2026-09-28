@@ -1,5 +1,6 @@
 import { defineNuxtConfig } from "nuxt/config";
 import tailwindcss from "@tailwindcss/vite";
+import { generatedToolSlugs } from "./app/data/tool-routes.generated";
 import { AuraBlue } from "./app/theme/aura-blue";
 
 const precacheBudgetBytes = 512 * 1024;
@@ -15,14 +16,7 @@ export default defineNuxtConfig({
 	nitro: {
 		compressPublicAssets: true,
 		prerender: {
-			routes: [
-				"/",
-				"/tools",
-				"/tools/json-formatter",
-				"/tools/password-generator",
-				"/tools/color-picker",
-				"/tools/text-cleaner",
-			],
+			routes: ["/", "/tools", ...generatedToolSlugs.map((slug) => `/tools/${slug}`)],
 		},
 	},
 	routeRules: {
@@ -99,6 +93,20 @@ export default defineNuxtConfig({
 					method: "GET",
 					options: {
 						cacheName: "pockettools-pages",
+						// `app/utils/url-state.ts` will put tool state in the query, but no
+						// route reads the query yet, so all query variants of a path serve
+						// the same response. Keying by path keeps that from fragmenting this
+						// 12-entry cache once it does.
+						matchOptions: { ignoreSearch: true },
+						plugins: [
+							{
+								cacheKeyWillBeUsed: async ({ request }) => {
+									const url = new URL(request.url);
+									url.search = "";
+									return url.toString();
+								},
+							},
+						],
 						cacheableResponse: { statuses: [0, 200] },
 						expiration: { maxEntries: 12, maxAgeSeconds: 86_400 },
 						networkTimeoutSeconds: 3,

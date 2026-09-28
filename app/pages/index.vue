@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { filterTools } from "~/data/tool-search";
 import { toolCategories, tools } from "~/data/tools";
 
 type CategoryFilter = (typeof toolCategories)[number];
@@ -8,21 +9,9 @@ const query = ref("");
 const activeCategory = ref<CategoryFilter>("All");
 const resultsSection = ref<HTMLElement | null>(null);
 
-const filteredTools = computed(() => {
-	const normalizedQuery = query.value.trim().toLowerCase();
-
-	return tools.filter((tool) => {
-		const matchesCategory =
-			activeCategory.value === "All" || tool.category === activeCategory.value;
-		const matchesQuery =
-			normalizedQuery.length === 0 ||
-			`${tool.name} ${tool.description} ${tool.category} ${tool.keywords.join(" ")}`
-				.toLowerCase()
-				.includes(normalizedQuery);
-
-		return matchesCategory && matchesQuery;
-	});
-});
+const filteredTools = computed(() =>
+	filterTools(tools, { query: query.value, category: activeCategory.value }),
+);
 
 function clearFilters() {
 	query.value = "";
@@ -53,18 +42,38 @@ function setCategory(category: CategoryFilter) {
 						momentum.
 					</p>
 
-					<form class="pt-search" role="search" @submit.prevent="showResults">
+					<form
+						class="pt-search"
+						role="search"
+						data-testid="home-search-form"
+						@submit.prevent="showResults"
+					>
 						<label class="pt-sr-only" for="tool-search">Search tools</label>
 						<AppIcon name="search" class="pt-search__icon" />
-						<InputText id="tool-search" v-model="query" placeholder="What do you want to do?" />
-						<Button type="submit" label="Find a tool" />
+						<InputText
+							id="tool-search"
+							v-model="query"
+							placeholder="What do you want to do?"
+							data-testid="home-search-input"
+						/>
+						<Button type="submit" label="Find a tool" data-testid="home-search-submit" />
 					</form>
 
 					<div class="pt-hero__hint">
 						<span>Try</span>
-						<button type="button" @click="query = 'password'">passwords</button>
-						<button type="button" @click="query = 'JSON'">JSON</button>
-						<button type="button" @click="query = 'color'">colors</button>
+						<button
+							type="button"
+							data-testid="home-search-hint-passwords"
+							@click="query = 'password'"
+						>
+							passwords
+						</button>
+						<button type="button" data-testid="home-search-hint-json" @click="query = 'JSON'">
+							JSON
+						</button>
+						<button type="button" data-testid="home-search-hint-colors" @click="query = 'color'">
+							colors
+						</button>
 					</div>
 				</div>
 
@@ -86,6 +95,7 @@ function setCategory(category: CategoryFilter) {
 								:key="tool.slug"
 								class="pt-launcher__row"
 								:to="`/tools/${tool.slug}`"
+								:data-testid="`home-featured-tool-${tool.slug}`"
 							>
 								<span class="pt-tool-icon" :class="`pt-tool-icon--${tool.accent}`">
 									<AppIcon :name="tool.icon" />
@@ -127,23 +137,35 @@ function setCategory(category: CategoryFilter) {
 						:class="{ 'pt-category--active': activeCategory === category }"
 						type="button"
 						:aria-pressed="activeCategory === category"
+						:data-testid="`home-category-${category.toLowerCase()}`"
 						@click="setCategory(category)"
 					>
 						{{ category }}
 					</button>
 				</div>
 
-				<div v-if="filteredTools.length" class="pt-tool-grid" aria-live="polite">
+				<div
+					v-if="filteredTools.length"
+					class="pt-tool-grid"
+					aria-live="polite"
+					data-testid="home-tool-results"
+				>
 					<ToolCard v-for="tool in filteredTools" :key="tool.slug" :tool="tool" />
 				</div>
 
-				<div v-else class="pt-empty" aria-live="polite">
+				<div v-else class="pt-empty" aria-live="polite" data-testid="home-tool-empty-state">
 					<span class="pt-tool-icon pt-tool-icon--blue"><AppIcon name="search" /></span>
 					<div>
 						<h3>No shortcut found yet.</h3>
 						<p>Try a broader search, or clear the filters to see the full collection.</p>
 					</div>
-					<Button type="button" label="Clear filters" variant="outlined" @click="clearFilters" />
+					<Button
+						type="button"
+						label="Clear filters"
+						variant="outlined"
+						data-testid="home-clear-filters"
+						@click="clearFilters"
+					/>
 				</div>
 			</section>
 

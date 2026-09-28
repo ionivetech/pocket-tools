@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { waitForAppReady } from "./helpers/app";
 
 test("registers the service worker and serves the cached shell offline", async ({
 	page,
@@ -13,7 +14,7 @@ test("registers the service worker and serves the cached shell offline", async (
 	);
 
 	await page.goto("/");
-	await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
+	await waitForAppReady(page);
 	await page.evaluate(async () => {
 		if (!("serviceWorker" in navigator)) throw new Error("Service workers are unavailable");
 		await navigator.serviceWorker.ready;
@@ -61,6 +62,46 @@ test("uses a precached fallback for an unvisited route in a fresh context", asyn
 		await expect(freshPage.getByText(/PocketTools shell is still available/)).toBeVisible();
 	} finally {
 		await freshContext.close();
+	}
+});
+
+test("keys the navigation cache by path, not by query string", async ({ page, context }) => {
+	await page.goto("/");
+	await waitForAppReady(page);
+	await page.evaluate(async () => {
+		await navigator.serviceWorker.ready;
+	});
+	await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), undefined, {
+		timeout: 15_000,
+	});
+
+	// Two query variants of one path. `cacheKeyWillBeUsed` strips the search, so both
+	// write the same key; without it they occupy two of the rule's twelve entries.
+	await page.goto("/tools?category=Text");
+	await waitForAppReady(page);
+	await page.goto("/tools?category=Media");
+	await waitForAppReady(page);
+
+	const storedSearches = await page.evaluate(async () => {
+		const cache = await caches.open("pockettools-pages");
+		return (await cache.keys())
+			.map((request) => new URL(request.url))
+			.filter((url) => url.pathname === "/tools")
+			.map((url) => url.search);
+	});
+	expect(storedSearches).toEqual([""]);
+
+	try {
+		await context.setOffline(true);
+		// Never visited, and a different query string. With `ignoreSearch: true` the
+		// lookup is a hit; without it the entry is a miss and the precached offline
+		// page answers instead.
+		await page.goto("/tools?category=Developer", { waitUntil: "domcontentloaded" });
+		await waitForAppReady(page);
+		await expect(page.getByRole("heading", { name: "All tools" })).toBeVisible();
+		await expect(page.getByRole("heading", { name: "You are offline." })).toHaveCount(0);
+	} finally {
+		await context.setOffline(false);
 	}
 });
 

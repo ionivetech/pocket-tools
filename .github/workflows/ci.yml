@@ -15,8 +15,20 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      # Paired with `fetch-depth: 0` on the checkout below, and deliberately in this order:
+      # full history is what makes the new/modified split resolvable here, and this variable is
+      # what makes its absence fatal. Without it a hosted runner that could not resolve the base
+      # would print the loud AGGREGATE-ONLY banner and still exit 0, so the weaker check would be
+      # the default in CI -- exactly the failure the split exists to prevent.
+      COVERAGE_GATE_REQUIRE_SPLIT: "1"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The coverage gate measures the new/modified split against the merge-base with
+          # the default branch, so it needs real history. A shallow clone cannot resolve
+          # that base and the gate drops to its loud AGGREGATE-ONLY mode.
+          fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
