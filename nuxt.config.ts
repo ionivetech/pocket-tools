@@ -12,7 +12,9 @@ import { AuraBlue } from "./app/theme/aura-blue";
 // ADR 001 (2026-09-28) adds CodeMirror 6 to the lazy json-formatter chunk: precache measured
 // 951.2 KiB, largest single chunk 223.8 KiB (under the 256 KiB per-file cap, so the JSON
 // tool still works offline). Budget raised to 1024 KiB on that evidence.
-const precacheBudgetBytes = 1024 * 1024;
+// ADR 002 (2026-09-28) adds Dialog (palette), Toast, and ToggleSwitch to lazy chunks:
+// precache measured 1025.6 KiB, per-file max unchanged. Budget raised to 1088 KiB.
+const precacheBudgetBytes = 1088 * 1024;
 
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",
