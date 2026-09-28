@@ -3,7 +3,15 @@ import tailwindcss from "@tailwindcss/vite";
 import { generatedToolSlugs } from "./app/data/tool-routes.generated";
 import { AuraBlue } from "./app/theme/aura-blue";
 
-const precacheBudgetBytes = 512 * 1024;
+// Phase 0 measured 512 KiB for the shell alone. Phase 2 adds four real tools plus the
+// PrimeVue Select/InputNumber/Message/Textarea components they need (measured 613.7 KiB
+// total on 2026-09-28, commit range from 07b3f59); the client bundle's chunk names are
+// content hashes with no per-component prefix, so trimming precache to exclude only the
+// two heaviest chunks (Select, InputNumber) is not reliably glob-matchable build to build.
+// Raising the budget to a round number above the measured total, rather than precaching
+// selectively, keeps this check meaningful (it still catches an unbounded regression) without
+// a fragile glob. Re-measure and raise again, deliberately, as more tools land.
+const precacheBudgetBytes = 704 * 1024;
 
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",
