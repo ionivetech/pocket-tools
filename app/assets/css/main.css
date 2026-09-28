@@ -7,6 +7,13 @@
 	--radius-panel: 1rem;
 	--radius-control: 0.625rem;
 	--ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+	/**
+	 * Minimum touch target. Deliberately an absolute pixel value, not `2.75rem`:
+	 * expressed in rem it follows the root font-size, and a root a hair under
+	 * 16px made a 44px target measure 43.99997px and fail the a11y gate. An
+	 * accessibility floor is absolute, so it is authored absolute.
+	 */
+	--pt-touch-min: 44px;
 }
 
 :root {
@@ -58,7 +65,7 @@ a,
 input,
 select,
 textarea {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 }
 
 a {
@@ -193,8 +200,8 @@ html {
 
 .pt-theme-toggle {
 	display: grid;
-	width: 2.75rem;
-	height: 2.75rem;
+	width: var(--pt-touch-min);
+	height: var(--pt-touch-min);
 	place-items: center;
 	border: 1px solid var(--pt-line);
 	border-radius: 0.8rem;
@@ -542,7 +549,7 @@ html {
 }
 
 .pt-category {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	padding: 0.55rem 0.95rem;
 	border: 1px solid var(--pt-line);
 	border-radius: 999px;
@@ -956,8 +963,8 @@ html {
 
 .pt-mobile-menu {
 	display: none;
-	width: 2.75rem;
-	height: 2.75rem;
+	width: var(--pt-touch-min);
+	height: var(--pt-touch-min);
 	place-items: center;
 	border: 1px solid var(--pt-line);
 	border-radius: 0.8rem;
@@ -1041,8 +1048,8 @@ html {
 	bottom: 5rem;
 	z-index: 15;
 	display: grid;
-	width: 2.75rem;
-	height: 2.75rem;
+	width: var(--pt-touch-min);
+	height: var(--pt-touch-min);
 	place-items: center;
 	border: 1px solid var(--pt-line);
 	border-radius: 999px;
@@ -1097,7 +1104,7 @@ html {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.6rem;
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	margin-top: 1rem;
 	padding: 0.5rem 0.8rem;
 	border: 1px solid var(--pt-line);
@@ -1326,7 +1333,7 @@ html {
 
 .pt-view-tabs button {
 	display: inline-flex;
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	align-items: center;
 	gap: 0.45rem;
 	padding: 0.5rem 0.8rem;
@@ -1356,8 +1363,8 @@ html {
 
 .pt-favorite {
 	display: grid;
-	width: 2.75rem;
-	height: 2.75rem;
+	width: var(--pt-touch-min);
+	height: var(--pt-touch-min);
 	margin: -0.25rem -0.35rem -0.25rem 0;
 	place-items: center;
 	border: 1px solid transparent;
@@ -1508,7 +1515,7 @@ html {
 }
 
 .pt-pwa-status button {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	padding: 0.35rem 0.7rem;
 	border: 0;
 	border-radius: 999px;
@@ -1549,7 +1556,7 @@ html {
 }
 
 .pt-tool-actions__button {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	border-radius: var(--radius-control);
 }
 
@@ -1603,7 +1610,7 @@ html {
 }
 
 .pt-tool-state__action {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	border-radius: var(--radius-control);
 }
 
@@ -1827,7 +1834,7 @@ html {
 .pt-option-group__controls > .p-button,
 .pt-option-group__controls > .p-select,
 .pt-option-group__controls > .p-inputnumber {
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 }
 
 .pt-option-group__controls > .p-select {
@@ -1849,7 +1856,7 @@ html {
 	justify-content: space-between;
 	gap: 1rem;
 	min-width: 11rem;
-	min-height: 2.75rem;
+	min-height: var(--pt-touch-min);
 	padding: 0.375rem 0;
 	margin: 0;
 	cursor: pointer;
@@ -1867,8 +1874,8 @@ html {
 }
 
 .pt-switch input[type="checkbox"] {
-	width: 2.75rem;
-	height: 2.75rem;
+	width: var(--pt-touch-min);
+	height: var(--pt-touch-min);
 	opacity: 0;
 	margin: 0;
 	cursor: pointer;

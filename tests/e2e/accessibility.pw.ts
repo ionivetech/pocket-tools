@@ -25,6 +25,15 @@ for (const route of ["/", "/tools", "/tools/json-formatter"]) {
 	});
 }
 
+test("/keeps touch targets at 44px when the root font size drifts", async ({ page }) => {
+	// CI reported a 44px control measuring 43.99997px. The floor was written in
+	// rem, so a root font-size a hair under 16px dragged it below 44. Touch
+	// targets are an absolute floor and must not move with type scale.
+	await gotoAppReady(page, "/");
+	await page.addStyleTag({ content: "html { font-size: 15.9999px !important; }" });
+	await expectTouchTargetsAtLeast44(page);
+});
+
 test("/tools/json-formatter exposes keyboard focus with a visible indicator", async ({ page }) => {
 	await gotoAppReady(page, "/tools/json-formatter");
 	await expect(page.getByTestId("json-formatter-output")).toBeVisible();
