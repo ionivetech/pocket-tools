@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import Drawer from "primevue/drawer";
+import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from "vue";
+import { useResponsivePosition } from "~/composables/useResponsivePosition";
 import { filterTools } from "~/data/tool-search";
 import { tools } from "~/data/tools";
 
@@ -13,6 +14,9 @@ const emit = defineEmits<{
 const query = ref("");
 const active = ref(0);
 const input = useTemplateRef<{ $el?: HTMLElement }>("input");
+
+// Modal centered on desktop, bottom sheet on a phone.
+const position = useResponsivePosition("center", "bottom", "(max-width: 767px)");
 
 const matches = computed(() =>
 	filterTools(tools, { query: query.value, category: "All" }).slice(0, 8),
@@ -57,9 +61,13 @@ onMounted(() => {
 </script>
 
 <template>
-	<Drawer
+	<Dialog
 		v-model:visible="open"
-		position="bottom"
+		modal
+		:position="position"
+		:draggable="false"
+		:style="{ width: 'min(36rem, calc(100vw - 2rem))' }"
+		class="pt-palette"
 		data-testid="home-palette"
 		aria-label="Quick search tools"
 	>
@@ -115,5 +123,5 @@ onMounted(() => {
 		<p v-if="matches.length === 0" class="pt-palette__empty">
 			No tool matches that yet. Try “json”, “text”, or “uuid”.
 		</p>
-	</Drawer>
+	</Dialog>
 </template>

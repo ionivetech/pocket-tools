@@ -82,6 +82,6 @@ export async function openToolOptions(page: Page) {
 	const fab = page.getByTestId("tool-options-fab");
 	if (await fab.isVisible()) {
 		await fab.click();
-		await expect(page.getByTestId("tool-options-drawer")).toBeVisible();
+		await expect(page.getByTestId("tool-options-dialog")).toBeVisible();
 	}
 }

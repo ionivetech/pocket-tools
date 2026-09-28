@@ -1128,25 +1128,39 @@ html {
 }
 
 .pt-palette {
-	left: max(1rem, calc(50% - 18rem));
-	right: max(1rem, calc(50% - 18rem));
-	bottom: 1rem;
-	max-height: min(70dvh, 34rem);
+	max-width: calc(100vw - 2rem);
 	border: 1px solid var(--pt-line);
-	border-radius: 1.25rem;
 	overflow: hidden;
-	box-shadow: 0 32px 80px color-mix(in srgb, var(--pt-ink) 18%, transparent);
 }
 
-.pt-palette .p-drawer-header {
+/* Search stays pinned in the header; only the result list scrolls, so a long
+   list never pushes the field out of reach. */
+.pt-palette .p-dialog-header {
 	padding: 1rem 1.25rem 0.75rem;
 	border-bottom: 1px solid var(--pt-line);
 }
 
-.pt-palette .p-drawer-content {
-	max-height: calc(min(70dvh, 34rem) - 5rem);
+.pt-palette .p-dialog-content {
+	max-height: min(60dvh, 26rem);
 	overflow-y: auto;
 	padding: 0.75rem 1.25rem 1.25rem;
+}
+
+/* Mobile bottom-sheet variant. PrimeVue puts the `p-dialog-bottom` class on
+   the mask (it only switches the mask to flex-end), so the frame is targeted
+   through the mask rather than on the dialog root. */
+.p-dialog-mask.p-dialog-bottom .pt-palette,
+.p-dialog-mask.p-dialog-bottom .pt-options-dialog {
+	width: 100% !important;
+	max-width: 100% !important;
+	margin: 0;
+	border-radius: 1.25rem 1.25rem 0 0;
+	border-bottom: 0;
+}
+
+.p-dialog-mask.p-dialog-bottom .pt-palette .p-dialog-content,
+.p-dialog-mask.p-dialog-bottom .pt-options-dialog .p-dialog-content {
+	max-height: 55dvh;
 }
 
 .pt-palette__search {
@@ -1706,16 +1720,21 @@ html {
 	box-shadow: 0 12px 30px color-mix(in srgb, var(--pt-ink) 16%, transparent);
 }
 
-.pt-options-drawer {
-	border-radius: 1.25rem 1.25rem 0 0;
+.pt-options-dialog {
+	max-width: calc(100vw - 2rem);
 }
 
-.pt-options-drawer__body {
-	min-height: 30dvh;
+.pt-options-dialog .p-dialog-content {
+	max-height: min(65dvh, 32rem);
+	overflow-y: auto;
 }
 
-.pt-options-drawer__body .pt-workspace__toolbar {
-	padding: 0.25rem 0 1rem;
+.pt-options-dialog__body {
+	min-height: 8rem;
+}
+
+.pt-options-dialog__body .pt-workspace__toolbar {
+	padding: 0.25rem 0 0.5rem;
 	border-bottom: 0;
 	background: transparent;
 }

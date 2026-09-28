@@ -25,3 +25,12 @@ all PrimeVue components, per the repo's component-system rule.
 - Bundle impact: precache 951.2 → 1025.6 KiB (Dialog + Toast + ToggleSwitch
   chunks, all lazy). Largest single chunk still 223.8 KiB < 256 KiB per-file
   cap (offline safe). Total budget raised 1024 → 1088 KiB deliberately.
+- Home initial JavaScript: 117.6 → 127.0 KiB. The palette's `Dialog` chunk
+  (6.5 KiB compressed) ships with the shell because Ctrl/⌘+K is a global
+  keyboard affordance, not a page feature. Home JavaScript budget raised
+  120 → 128 KiB with that measurement recorded in the e2e test; demand-loading
+  the palette was tried first and measured _worse_ (131.4 KiB) because Nuxt
+  preloads dynamic imports, so the static import is the smaller honest cost.
+  Both surfaces (palette, tool options) are `Dialog` with
+  `breakpoints: { mobile: 'bottom' }`, per the UX review: modal on desktop,
+  bottom sheet on a phone.

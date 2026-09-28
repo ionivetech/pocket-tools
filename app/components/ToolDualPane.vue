@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import Dialog from "primevue/dialog";
 import { onBeforeUnmount, onMounted, ref, useId, useTemplateRef, watch } from "vue";
+import { useResponsivePosition } from "~/composables/useResponsivePosition";
 
 withDefaults(
 	defineProps<{
@@ -24,6 +26,7 @@ const inputHeadingId = `tool-input-${sectionId}`;
 const outputHeadingId = `tool-output-${sectionId}`;
 
 const drawerOpen = ref(false);
+const optionsPosition = useResponsivePosition("center", "bottom", "(max-width: 767px)");
 const inlineHost = useTemplateRef<HTMLElement>("inlineHost");
 const drawerHost = useTemplateRef<HTMLElement>("drawerHost");
 const toolbarNode = useTemplateRef<HTMLElement>("toolbarNode");
@@ -120,14 +123,17 @@ onBeforeUnmount(() => {
 		data-testid="tool-options-fab"
 		@click="drawerOpen = true"
 	/>
-	<Drawer
+	<Dialog
 		v-model:visible="drawerOpen"
-		position="bottom"
+		modal
+		:position="optionsPosition"
+		:draggable="false"
+		:style="{ width: 'min(48rem, calc(100vw - 2rem))' }"
 		header="Tool options"
-		class="pt-options-drawer"
-		data-testid="tool-options-drawer"
+		class="pt-options-dialog"
+		data-testid="tool-options-dialog"
 	>
-		<div ref="drawerHost" class="pt-options-drawer__body" />
+		<div ref="drawerHost" class="pt-options-dialog__body" />
 		<template #footer>
 			<Button
 				class="pt-options-drawer__done"
@@ -138,5 +144,5 @@ onBeforeUnmount(() => {
 				@click="drawerOpen = false"
 			/>
 		</template>
-	</Drawer>
+	</Dialog>
 </template>
