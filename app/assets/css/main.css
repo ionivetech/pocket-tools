@@ -1514,6 +1514,12 @@ textarea {
 	line-height: 1.25;
 }
 
+.pt-workspace__single {
+	display: grid;
+	gap: 1.5rem;
+	padding: 1.5rem;
+}
+
 .pt-option-group {
 	display: grid;
 	min-width: 0;
@@ -1550,6 +1556,10 @@ textarea {
 	}
 
 	.pt-workspace__pane {
+		padding: 1.25rem;
+	}
+
+	.pt-workspace__single {
 		padding: 1.25rem;
 	}
 }

@@ -38,6 +38,39 @@ test.describe("UUID/ULID generator", () => {
 		await expect(page.getByTestId("uuid-copy-status-0")).toContainText("Copied.");
 	});
 
+	test("formats ids as uppercase or compact", async ({ page }) => {
+		await gotoAppReady(page, "/tools/uuid-generator");
+
+		await page.getByTestId("uuid-uppercase").click();
+		await expect(page.getByTestId("uuid-generator-list").locator("code").first()).toHaveText(
+			/^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/,
+		);
+
+		await page.getByTestId("uuid-hyphens").click();
+		await expect(page.getByTestId("uuid-generator-list").locator("code").first()).toHaveText(
+			/^[0-9A-F]{32}$/,
+		);
+	});
+
+	test("converts a UUID v7 to a ULID keeping the timestamp", async ({ page }) => {
+		await gotoAppReady(page, "/tools/uuid-generator");
+
+		await page.getByTestId("uuid-version").click();
+		await page.getByRole("option", { name: "UUID v7 (time-ordered)" }).click();
+		await page.getByTestId("uuid-generate").click();
+
+		const source = await page
+			.getByTestId("uuid-generator-list")
+			.locator("code")
+			.first()
+			.textContent();
+		await page.getByTestId("uuid-converter-input").fill(source ?? "");
+		await expect(page.getByTestId("uuid-converter-info")).toContainText("UUID version 7");
+
+		await page.getByTestId("uuid-convert-to-ulid").click();
+		await expect(page.getByTestId("uuid-converter-output")).toHaveText(/^[0-9A-HJKMNP-TV-Z]{26}$/);
+	});
+
 	test("has no serious axe violations and keeps touch targets at 44px", async ({ page }) => {
 		await gotoAppReady(page, "/tools/uuid-generator");
 		await expectNoSeriousAxeViolations(page);
