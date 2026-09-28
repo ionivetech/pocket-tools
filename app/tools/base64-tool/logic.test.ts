@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { decodeBase64ToBytes, encodeBase64Bytes, looksLikeBase64, runBase64Tool } from "./logic";
+import {
+	decodeBase64ToBytes,
+	encodeBase64Bytes,
+	formatBase64Encoded,
+	fromBase64Url,
+	looksLikeBase64,
+	looksLikeBase64Url,
+	runBase64Tool,
+	toBase64Url,
+} from "./logic";
 import { isBase64Direction, parseBase64ToolInput } from "./schema";
 
 describe("base64-tool schema", () => {
@@ -111,5 +120,81 @@ describe("runBase64Tool", () => {
 			ok: false,
 			error: { code: "not_utf8_text" },
 		});
+	});
+
+	test("encodes URL-safe without padding", () => {
+		expect(runBase64Tool({ text: "hello?", direction: "encode", urlSafe: true })).toMatchObject({
+			ok: true,
+			value: { result: "aGVsbG8_", direction: "encode" },
+		});
+	});
+
+	test("decodes URL-safe input with or without padding", () => {
+		expect(runBase64Tool({ text: "aGVsbG8_", direction: "decode", urlSafe: true })).toEqual({
+			ok: true,
+			value: { result: "hello?", direction: "decode" },
+		});
+		expect(
+			runBase64Tool({ text: "aGVsbG8gd29ybGQ=", direction: "decode", urlSafe: true }),
+		).toMatchObject({ ok: true, value: { result: "hello world" } });
+	});
+
+	test("auto-detects a URL-safe payload when the option is on", () => {
+		expect(
+			runBase64Tool({ text: "aGVsbG8td29ybGQ", direction: "auto", urlSafe: true }),
+		).toMatchObject({ ok: true, value: { result: "hello-world", direction: "decode" } });
+	});
+
+	test("wraps encoded output at the requested column", () => {
+		expect(
+			formatBase64Encoded("aGVsbG8gd29ybGQ=", { urlSafe: false, wrapAt: 4, newline: "lf" }),
+		).toBe("aGVs\nbG8g\nd29y\nbGQ=");
+	});
+
+	test("wraps long tool output at 64 columns", () => {
+		const result = runBase64Tool({ text: "a".repeat(50), direction: "encode", wrapAt: 64 });
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			const lines = result.value.result.split("\n");
+			expect(lines.map((line) => line.length)).toEqual([64, 4]);
+		}
+	});
+
+	test("wraps with CRLF when requested", () => {
+		const result = runBase64Tool({
+			text: "a".repeat(50),
+			direction: "encode",
+			wrapAt: 64,
+			newline: "crlf",
+		});
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.value.result.split("\r\n").map((line) => line.length)).toEqual([64, 4]);
+		}
+	});
+
+	test("leaves decoded text unwrapped", () => {
+		expect(
+			runBase64Tool({ text: "aGVsbG8gd29ybGQ=", direction: "decode", wrapAt: 64 }),
+		).toMatchObject({ ok: true, value: { result: "hello world" } });
+	});
+});
+
+describe("base64url helpers", () => {
+	test("converts between alphabets", () => {
+		expect(toBase64Url("aGVsbG8/+==")).toBe("aGVsbG8_-");
+		expect(fromBase64Url("aGVsbG8")).toBe("aGVsbG8=");
+		expect(fromBase64Url("aGVsbG8=")).toBe("aGVsbG8=");
+		expect(fromBase64Url("not base64!!")).toBeUndefined();
+		expect(fromBase64Url("abcde")).toBeUndefined();
+	});
+
+	test("detects URL-safe payloads", () => {
+		expect(looksLikeBase64Url("aGVsbG8td29ybGQ")).toBe(true);
+		expect(looksLikeBase64Url("hello world")).toBe(false);
+	});
+
+	test("formats without touching short payloads", () => {
+		expect(formatBase64Encoded("aGk=", { urlSafe: false, wrapAt: 64 })).toBe("aGk=");
 	});
 });
