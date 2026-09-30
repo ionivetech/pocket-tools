@@ -7,9 +7,15 @@ import { createChunkGate, interceptLazyChunk } from "./helpers/chunk";
 // added the global quick-search palette, whose PrimeVue `Dialog` chunk
 // (6.5 KiB compressed) ships with the shell because the palette is a global
 // keyboard affordance, not a page feature. Measured total: 127.0 KiB, so the
-// budget moves to 128 KiB. Re-measure and trim here before raising further:
-// the palette is the only thing this budget bought.
-const javascriptBudgetBytes = 128 * 1024;
+// budget moves to 128 KiB. Phase 3 upgrades the palette in place (fuzzy scorer
+// + recent/favorite ranking + action rows, ~1.5 KiB), adds the shortcuts help
+// dialog (shares the palette's Dialog chunk, ~1 KiB of registry + rows) and
+// the paste-suggestion bar (detectors + dismissible UI, ~2 KiB) to home and
+// the library. Async-loading the palette was tried and measured worse
+// (+3 KiB loader overhead, 138.5 KiB). Trimmed the home recents strip back out
+// (recents stay in /tools + palette ranking). Measured total: 135.3 KiB, so
+// the budget moves to 140 KiB. Re-measure and trim here before raising further.
+const javascriptBudgetBytes = 140 * 1024;
 const cssBudgetBytes = 30 * 1024;
 const lazyToolMarker = "This tool is not available yet.";
 const routeTimeout = 20_000;
