@@ -1,6 +1,7 @@
 export const generatedToolSlugs = [
 	"base64-tool",
 	"color-picker",
+	"hash-generator",
 	"json-formatter",
 	"jwt-decoder",
 	"password-generator",
