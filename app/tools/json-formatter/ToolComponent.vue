@@ -2,6 +2,7 @@
 import Select from "primevue/select";
 import { useToast } from "primevue/usetoast";
 import { computed, ref, useId, watch } from "vue";
+import { useToolHistoryRecorder } from "~/composables/use-tool-history";
 import { BrowserActionError, copyText } from "~/utils/browser-actions";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
 import JsonCodeEditor from "./JsonCodeEditor.vue";
@@ -48,6 +49,8 @@ const formatted = computed(() =>
 const validation = computed(() => validateJson(text.value));
 const stats = computed(() => getJsonStats(text.value));
 const outputText = computed(() => (formatted.value.ok ? formatted.value.value.result : ""));
+
+useToolHistoryRecorder("json-formatter", text, outputText);
 
 const statusKind = computed<"empty" | "error" | "success">(() => {
 	if (text.value.trim() === "") {

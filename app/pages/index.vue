@@ -1,15 +1,40 @@
 <script setup lang="ts">
 import { filterTools } from "~/data/tool-search";
 import { toolCategories, tools } from "~/data/tools";
-import { usePalette } from "~/composables/usePalette";
 
 type CategoryFilter = (typeof toolCategories)[number];
 
 const categories = toolCategories;
 const { open: openPalette } = usePalette();
 const query = ref("");
+const pastedText = ref("");
 const activeCategory = ref<CategoryFilter>("All");
 const resultsSection = ref<HTMLElement | null>(null);
+
+useSeoMeta({
+	title: "PocketTools — Small tools, big relief",
+	description:
+		"Search-first, offline-first helpers for everyday tasks and technical work. No account, no upload — everything stays in your browser.",
+	ogTitle: "PocketTools — Small tools, big relief",
+	ogDescription:
+		"A calm, searchable toolbox that works offline. Open a focused tool when you need it.",
+	ogType: "website",
+});
+
+useHead({
+	script: [
+		{
+			type: "application/ld+json",
+			innerHTML: JSON.stringify({
+				"@context": "https://schema.org",
+				"@type": "WebSite",
+				name: "PocketTools",
+				description: "Pocket-sized tools for everyone. Offline-first, privacy-first.",
+				url: "/",
+			}),
+		},
+	],
+});
 
 const filteredTools = computed(() =>
 	filterTools(tools, { query: query.value, category: activeCategory.value }),
@@ -18,6 +43,11 @@ const filteredTools = computed(() =>
 function clearFilters() {
 	query.value = "";
 	activeCategory.value = "All";
+}
+
+function onSearchPaste(event: ClipboardEvent) {
+	const text = event.clipboardData?.getData("text") ?? "";
+	if (text.trim().length >= 8) pastedText.value = text;
 }
 
 function showResults() {
@@ -57,9 +87,11 @@ function setCategory(category: CategoryFilter) {
 							v-model="query"
 							placeholder="What do you want to do?"
 							data-testid="home-search-input"
+							@paste="onSearchPaste"
 						/>
 						<Button type="submit" label="Find a tool" data-testid="home-search-submit" />
 					</form>
+					<PasteSuggest :pasted-text="pastedText" @dismiss="pastedText = ''" />
 					<p class="pt-search-kbd">
 						Press
 						<button type="button" data-testid="home-palette-hint" @click="openPalette">
@@ -159,7 +191,7 @@ function setCategory(category: CategoryFilter) {
 					aria-live="polite"
 					data-testid="home-tool-results"
 				>
-					<ToolCard v-for="tool in filteredTools" :key="tool.slug" :tool="tool" />
+					<ToolCard v-for="tool in filteredTools.slice(0, 6)" :key="tool.slug" :tool="tool" />
 				</div>
 
 				<div v-else class="pt-empty" aria-live="polite" data-testid="home-tool-empty-state">

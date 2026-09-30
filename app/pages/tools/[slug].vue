@@ -38,6 +38,7 @@ onMounted(() => {
 
 			<ToolHeader :tool="tool" />
 			<ToolHost :tool="tool" />
+			<ToolHistory :tool-slug="tool.slug" :tool-name="tool.name" />
 			<Toast position="bottom-right" data-testid="app-toast" />
 		</main>
 

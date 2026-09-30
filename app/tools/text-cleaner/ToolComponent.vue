@@ -2,6 +2,7 @@
 import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 import { computed, ref, useId } from "vue";
+import { useToolHistoryRecorder } from "~/composables/use-tool-history";
 import { countText, readingTimeLabel, runTextCleaner } from "./logic";
 import type { TextCaseTransform, TextLineEnding } from "./schema";
 
@@ -46,6 +47,8 @@ const cleaned = computed(() =>
 	}),
 );
 const outputText = computed(() => (cleaned.value.ok ? cleaned.value.value.result : ""));
+
+useToolHistoryRecorder("text-cleaner", text, outputText);
 const counts = computed(() => (cleaned.value.ok ? cleaned.value.value.counts : countText("")));
 const readingTime = computed(() => readingTimeLabel(counts.value.words));
 const removedChars = computed(() => [...text.value].length - [...outputText.value].length);

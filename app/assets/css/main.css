@@ -1943,3 +1943,215 @@ html {
 .pt-cm .cm-placeholder {
 	color: var(--pt-muted);
 }
+
+/* Phase 3 — shell features (palette, history, paste, shortcuts, library). One blue accent, one radius language. */
+.pt-palette__section {
+	margin: 1rem 0 0;
+	color: var(--pt-muted);
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.pt-palette__footer {
+	display: flex;
+	gap: 1rem;
+	margin-top: 1rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--pt-line);
+	color: var(--pt-muted);
+	font-size: 0.75rem;
+}
+
+.pt-palette__footer kbd {
+	padding: 0.1rem 0.4rem;
+	border: 1px solid var(--pt-line);
+	border-radius: 0.35rem;
+	background: var(--pt-page);
+	font-family: inherit;
+	font-size: 0.7rem;
+}
+
+.pt-shortcut-list {
+	display: grid;
+	gap: 0.5rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.pt-shortcut-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	min-height: var(--pt-touch-min);
+	padding: 0.5rem 0.25rem;
+	border-bottom: 1px solid var(--pt-line);
+}
+
+.pt-shortcut-row strong {
+	display: block;
+	color: var(--pt-ink);
+	font-size: 0.88rem;
+}
+
+.pt-shortcut-row small {
+	display: block;
+	color: var(--pt-muted);
+	font-size: 0.76rem;
+}
+
+.pt-shortcut-row kbd {
+	padding: 0.25rem 0.6rem;
+	border: 1px solid var(--pt-line);
+	border-radius: 0.45rem;
+	background: var(--pt-page);
+	font-family: inherit;
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+
+.pt-shortcut-note {
+	color: var(--pt-muted);
+	font-size: 0.8rem;
+}
+
+.pt-history {
+	margin-top: 1.5rem;
+	border: 1px solid var(--pt-line);
+	border-radius: var(--radius-panel);
+	background: var(--pt-surface);
+}
+
+.pt-history__toggle {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	width: 100%;
+	min-height: var(--pt-touch-min);
+	padding: 0.8rem 1rem;
+	border: 0;
+	border-radius: var(--radius-panel);
+	background: transparent;
+	color: var(--pt-ink);
+	cursor: pointer;
+	font: inherit;
+	font-size: 0.88rem;
+	font-weight: 700;
+}
+
+.pt-history__toggle .pt-icon:first-child {
+	color: var(--pt-blue);
+}
+
+.pt-history__panel {
+	padding: 0 1rem 1rem;
+}
+
+.pt-history__note {
+	margin: 0 0 0.75rem;
+	color: var(--pt-muted);
+	font-size: 0.78rem;
+}
+
+.pt-history__list {
+	display: grid;
+	gap: 0.5rem;
+	list-style: none;
+	margin: 0 0 0.75rem;
+	padding: 0;
+}
+
+.pt-history__row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.6rem;
+	padding: 0.6rem 0.7rem;
+	border: 1px solid var(--pt-line);
+	border-radius: var(--radius-control);
+}
+
+.pt-history__meta {
+	display: grid;
+	gap: 0.15rem;
+	font-size: 0.76rem;
+	color: var(--pt-muted);
+}
+
+.pt-history__preview {
+	color: var(--pt-ink);
+	font-family: var(--font-mono);
+	font-size: 0.76rem;
+	overflow-wrap: anywhere;
+}
+
+.pt-history__actions {
+	display: flex;
+	gap: 0.4rem;
+}
+
+.pt-paste-suggest {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6rem;
+	margin-top: 0.8rem;
+	padding: 0.7rem 0.9rem;
+	border: 1px solid var(--pt-line);
+	border-radius: var(--radius-control);
+	background: color-mix(in srgb, var(--pt-blue) 7%, var(--pt-surface));
+	font-size: 0.84rem;
+}
+
+.pt-paste-suggest .pt-icon {
+	color: var(--pt-blue);
+}
+
+.pt-paste-suggest p {
+	flex: 1 1 12rem;
+	margin: 0;
+}
+
+.pt-paste-suggest__actions {
+	display: flex;
+	gap: 0.3rem;
+}
+
+.pt-recents-strip {
+	margin-bottom: 2rem;
+}
+
+.pt-grid-label {
+	margin: 0 0 0.9rem;
+	font-size: 0.95rem;
+}
+
+.pt-grid-label-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 0.9rem;
+}
+
+.pt-grid-label-row .pt-grid-label {
+	margin: 0;
+}
+
+.pt-library-clear {
+	margin-top: 0.6rem;
+}
+
+.pt-theme-toggle kbd {
+	padding: 0.15rem 0.4rem;
+	border: 1px solid var(--pt-line);
+	border-radius: 0.35rem;
+	background: var(--pt-page);
+	font-family: inherit;
+	font-size: 0.72rem;
+	font-weight: 800;
+}
