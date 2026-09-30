@@ -14,7 +14,11 @@ import { AuraBlue } from "./app/theme/aura-blue";
 // tool still works offline). Budget raised to 1024 KiB on that evidence.
 // ADR 002 (2026-09-28) adds Dialog (palette), Toast, and ToggleSwitch to lazy chunks:
 // precache measured 1025.6 KiB, per-file max unchanged. Budget raised to 1088 KiB.
-const precacheBudgetBytes = 1088 * 1024;
+// Measured 2026-09-30 (Phase 4, 12 tools): ~1094 KiB with lazy tool CSS
+// excluded below; marginal cost ≈ 2–3 KiB JS per tool. A 22-tool catalog
+// projects ≈ 1110–1120 KiB. Re-measure at Phase 5 PWA polish; a bump past
+// this needs the same per-tool accounting, never a blind raise.
+const precacheBudgetBytes = 1160 * 1024;
 
 export default defineNuxtConfig({
 	compatibilityDate: "2025-07-15",
@@ -92,6 +96,10 @@ export default defineNuxtConfig({
 				"theme-bootstrap.js",
 				"**/_nuxt/*.{js,css}",
 			],
+			// Lazy tool chunks load on demand and runtime-cache via
+			// pockettools-assets (CacheFirst); precaching them would grow the
+			// install payload with every catalog addition. Shell stays precached.
+			globIgnores: ["**/ToolComponent.*.js", "**/ToolComponent.*.css"],
 			maximumFileSizeToCacheInBytes: 256 * 1024,
 			manifestTransforms: [
 				(entries) => {
