@@ -11,6 +11,7 @@ export const generatedToolSlugs = [
 	"jwt-decoder",
 	"markdown-preview",
 	"password-generator",
+	"qr-generator",
 	"regex-tester",
 	"table-to-markdown",
 	"text-cleaner",
