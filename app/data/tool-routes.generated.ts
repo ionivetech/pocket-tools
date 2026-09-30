@@ -7,6 +7,7 @@ export const generatedToolSlugs = [
 	"hash-generator",
 	"json-formatter",
 	"jwt-decoder",
+	"markdown-preview",
 	"password-generator",
 	"regex-tester",
 	"text-cleaner",
