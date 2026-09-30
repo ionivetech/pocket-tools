@@ -129,9 +129,7 @@ watch(
 		</template>
 
 		<template #input>
-			<label class="pt-field-label" :for="expressionId"
-				>Schedule (minute hour day month weekday)</label
-			>
+			<label class="pt-field-label" :for="expressionId">Cron expression</label>
 			<InputText
 				:id="expressionId"
 				v-model="expression"
