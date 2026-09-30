@@ -5,8 +5,9 @@ import { toolMetadata as toolMetadata2 } from "../tools/hash-generator/metadata"
 import { toolMetadata as toolMetadata3 } from "../tools/json-formatter/metadata";
 import { toolMetadata as toolMetadata4 } from "../tools/jwt-decoder/metadata";
 import { toolMetadata as toolMetadata5 } from "../tools/password-generator/metadata";
-import { toolMetadata as toolMetadata6 } from "../tools/text-cleaner/metadata";
-import { toolMetadata as toolMetadata7 } from "../tools/uuid-generator/metadata";
+import { toolMetadata as toolMetadata6 } from "../tools/regex-tester/metadata";
+import { toolMetadata as toolMetadata7 } from "../tools/text-cleaner/metadata";
+import { toolMetadata as toolMetadata8 } from "../tools/uuid-generator/metadata";
 
 export const generatedToolDefinitions: ToolDefinition[] = [
 	{
@@ -35,10 +36,14 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata6,
-		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/regex-tester/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata7,
+		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+	},
+	{
+		...toolMetadata8,
 		loadComponent: () => import("~/tools/uuid-generator/ToolComponent.vue"),
 	},
 ];

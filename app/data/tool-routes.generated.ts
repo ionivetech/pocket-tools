@@ -5,6 +5,7 @@ export const generatedToolSlugs = [
 	"json-formatter",
 	"jwt-decoder",
 	"password-generator",
+	"regex-tester",
 	"text-cleaner",
 	"uuid-generator",
 ] as const;
