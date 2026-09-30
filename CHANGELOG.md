@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+### Phase 4 — MVP tools
+
+- Shipped 16 MVP tools on the same rails as Phase 2: pure, unit-tested logic plus a thin PrimeVue component reusing `ToolDualPane`, `ToolActions`, `ToolHistory`, and URL-state sharing. The catalog is now 20 tools.
+- Data and developer: JWT decoder (decode-only — the UI says the signature is never checked), hash generator (Web Crypto SHA-256/384/512 plus SHA-1 labeled for old checksums, hex/base64), regex tester (JavaScript patterns, capture groups, match and input caps so a runaway pattern cannot hang the page), diff checker (line LCS with an ignore-spacing toggle), cron helper (5-field schedule read in plain words, presets, next three runs with the time zone labeled), and a cURL-to-fetch converter that names any flag outside its subset instead of dropping it.
+- Text: markdown preview from a hand-rolled safe subset (raw HTML escaped, only `http(s)` links, the supported syntax list shown in the UI), table-to-markdown with delimiter detection and quoted-field support, and a case converter that lists all seven cases with per-variant copy.
+- Everyday: finished the password generator (platform random, one character guaranteed from every chosen set, lookalike skipping, entropy hint — never stored, never in the URL) and the color picker (hex/rgb/hsl both ways, native picker, WCAG contrast hint); added a unit converter (length, mass, temperature, volume, speed, data — no network) and a date/time helper (second/millisecond auto-detect, ISO, local/UTC/relative wording).
+- Media: a QR generator backed by a vendored zero-dependency encoder (byte mode, versions 1-6, Reed-Solomon with mask selection) offering SVG and PNG downloads, plus a canvas image compressor and resizer with a 10 MB guard, quality/size controls, JPEG/WebP/PNG output, and honest before/after sizes.
+- Fixed dialog focus: opening the palette, the shortcut help, or a tool's options drawer now focuses its primary control instead of PrimeVue's close button, while keeping visible focus, the focus trap, Esc, and invoker focus restoration. Verified 5x under load and across the full suite.
+- Kept the offline install lean: lazy tool chunks are no longer precached (they runtime-cache on demand) and the measured PWA precache budget moved 1088 → 1160 KiB with the per-tool accounting recorded in `nuxt.config.ts`.
+- No new runtime dependency. Deliberate limits to read in the UI: markdown is a labeled subset, JWT decoding never verifies signatures, QR holds up to 106 bytes at correction M, and images are re-encoded on canvas (no EXIF, no batch).
+- Gate: `bun run ci:local` green twice back to back — 517 unit tests, 114 Playwright specs (axe + 44px touch targets at 375px for every tool), coverage gate 93.31% new / 91.18% modified, production build and PWA precache budget green.
+
 ### Phase 3 — Shell features
 
 - Upgraded the command palette: typo-tolerant fuzzy search, recent/favorite ranking on empty query, action rows (home, library, theme, shortcuts), footer hints, and focus restoration; still a bottom sheet on phones.

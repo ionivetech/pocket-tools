@@ -12,7 +12,7 @@
 4. If stuck > 2 hours, record it in the active mission log.
 5. For technical details, refer to `PLAN.md`.
 
-**Current delivery:** Phase 3 shell features delivered (command palette with fuzzy search, favorites/recent hardening, per-tool local history, paste suggestions, shortcut registry + help, landing/SEO polish). Phase 0-3 are part of the current commit; later phases remain documented but not yet started.
+**Current delivery:** Phase 4 MVP toolkit delivered (16 tools: JWT, hash, regex, diff, cron, curl, markdown preview, table-to-md, case converter, password, unit, color, date/time, QR, image compressor, image resizer), plus a shell fix so dialogs focus their primary control instead of the close button. Phase 0-4 are part of the current commit; later phases remain documented but not yet started.
 
 **Tooling:** Bun only, oxfmt, oxlint/Oxc, Nuxt 4, Tailwind CSS v4, PrimeVue 4.5.5.
 
@@ -272,33 +272,33 @@
 
 ### 4.1 Data and developer tools
 
-- [ ] JWT decoder.
-- [ ] Hash generator.
-- [ ] Regex tester.
-- [ ] Diff checker.
-- [ ] Cron parser/builder.
-- [ ] cURL/code converter.
+- [x] JWT decoder. — evidence: app/tools/jwt-decoder (decode-only, signature never checked, stated in the UI); bun test app/tools/jwt-decoder; tests/e2e/jwt-decoder.pw.ts
+- [x] Hash generator. — evidence: app/tools/hash-generator (Web Crypto SHA-256/384/512 + SHA-1 labeled weak, hex/base64, async loading state); bun test app/tools/hash-generator; tests/e2e/hash-generator.pw.ts
+- [x] Regex tester. — evidence: app/tools/regex-tester (JS RegExp, flag toggles, capture groups, 100-match cap + 20000-char sample guard); bun test app/tools/regex-tester; tests/e2e/regex-tester.pw.ts
+- [x] Diff checker. — evidence: app/tools/diff-checker (line LCS 2-way, ignore-spacing toggle, 1000-line cap); bun test app/tools/diff-checker; tests/e2e/diff-checker.pw.ts
+- [x] Cron parser/builder. — evidence: app/tools/cron-helper (5-field parser, plain-words description, presets, next 3 runs with the zone labeled); bun test app/tools/cron-helper; tests/e2e/cron-helper.pw.ts
+- [x] cURL/code converter. — evidence: app/tools/curl-converter (method/URL/headers/data/basic-auth subset → fetch snippet, unknown flags fail loudly); bun test app/tools/curl-converter; tests/e2e/curl-converter.pw.ts
 
 ### 4.2 Text and writing
 
-- [ ] Markdown editor/preview.
-- [ ] Table to Markdown.
-- [ ] Case converter.
+- [x] Markdown editor/preview. — evidence: app/utils/markdown-subset.ts + app/tools/markdown-preview (hand-rolled safe subset, raw HTML escaped, supported-syntax list shown in the UI); bun test tests/unit/markdown-subset.test.ts app/tools/markdown-preview; tests/e2e/markdown-preview.pw.ts
+- [x] Table to Markdown. — evidence: app/tools/table-to-markdown (CSV/TSV/semicolon detect, quoted fields, header toggle, pipe escaping); bun test app/tools/table-to-markdown; tests/e2e/table-to-markdown.pw.ts
+- [x] Case converter. — evidence: app/tools/case-converter (7 cases incl. camel/snake/kebab, per-variant copy); bun test app/tools/case-converter; tests/e2e/case-converter.pw.ts
 
 ### 4.3 Everyday
 
-- [ ] Password generator.
-- [ ] Unit converter.
-- [ ] Color converter/picker.
-- [ ] Date/time helper.
+- [x] Password generator. — evidence: app/tools/password-generator (finished the placeholder: crypto.getRandomValues, per-set guarantee, lookalike skip, entropy hint, no history and no URL state); bun test app/tools/password-generator; tests/e2e/password-generator.pw.ts
+- [x] Unit converter. — evidence: app/utils/unit-tables.ts + app/tools/unit-converter (length/mass/temperature/volume/speed/data, no network); bun test tests/unit/unit-tables.test.ts app/tools/unit-converter; tests/e2e/unit-converter.pw.ts
+- [x] Color converter/picker. — evidence: app/tools/color-picker (finished the placeholder: hex/rgb/hsl both ways, native picker input, WCAG contrast hint, keeps the live paste-suggest path working); bun test app/tools/color-picker; tests/e2e/color-picker.pw.ts
+- [x] Date/time helper. — evidence: app/tools/datetime-helper (timestamp seconds/millis auto-detect, ISO, local/UTC/relative words, zone labeled); bun test app/tools/datetime-helper; tests/e2e/datetime-helper.pw.ts
 
 ### 4.4 Media
 
-- [ ] QR code generator.
-- [ ] Image compressor.
-- [ ] Image resizer/converter.
+- [x] QR code generator. — evidence: app/utils/qr-encode.ts + app/tools/qr-generator (vendored byte-mode encoder v1-6, Reed-Solomon + mask selection, SVG download + canvas preview from the same matrix, PNG download, over-long text fails with the limit); bun test tests/unit/qr-encode.test.ts app/tools/qr-generator; tests/e2e/qr-generator.pw.ts
+- [x] Image compressor. — evidence: app/utils/image-metrics.ts + app/tools/image-compressor (canvas re-encode, quality + format, 10 MB guard, before/after sizes, JPEG alpha matte, real PNG exercised in e2e); bun test app/tools/image-compressor; tests/e2e/image-compressor.pw.ts
+- [x] Image resizer/converter. — evidence: app/tools/image-resizer (target width, keep-proportions toggle, JPEG/WebP/PNG output, download, 10 MB guard); bun test app/tools/image-resizer; tests/e2e/image-resizer.pw.ts
 
-**✅ Gate Phase 4:** the MVP is useful for everyday and technical work.
+**✅ Gate Phase 4:** the MVP is useful for everyday and technical work. Evidence: 16 tools shipped (14 new + 2 placeholders finished), catalog now 20; `bun run ci:local` green twice back to back (517 unit tests, 114 Playwright specs incl. axe + 44px touch targets at 375px for every new tool, coverage gate new 93.31% / modified 91.18%, build + PWA precache 1094 KiB under the 1160 KiB budget); 20 responsive screenshots in `.mugiwara/missions/pockettools-phase4-mvp-tools/evidence/screenshots/` (gitignored by policy, regenerated by the browser suite). No new runtime dependency: every tool is native or hand-rolled. Known limits, deliberate: markdown is a labeled subset, JWT decoding never verifies signatures, QR holds up to 106 bytes at M, images are canvas-re-encoded without EXIF.
 
 ---
 
@@ -441,7 +441,7 @@
 | M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local  |
 | M2        | First general-purpose tools                        | `[x]` — evidence: Phase 2, bun run ci:local |
 | M3        | Palette, favorites, history, paste, landing        | `[x]` — evidence: Phase 3, bun run ci:local |
-| M4        | MVP everyday toolkit                               | `[ ]`                                       |
+| M4        | MVP everyday toolkit                               | `[x]` — evidence: Phase 4, bun run ci:local |
 | M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                       |
 | M6        | v1.0 launch                                        | `[ ]`                                       |
 | M7        | v1.1 expanded catalog                              | `[ ]`                                       |
@@ -508,7 +508,7 @@
 - `ROADMAP.md` — full phase/task execution order.
 - `AGENTS.md` — AI coding standard.
 - `README.md` — product and development overview.
-- `.mugiwara/missions/pockettools-phase1-core-infrastructure/` — active mission state and evidence.
+- `.mugiwara/missions/pockettools-phase4-mvp-tools/` — Phase 4 mission plan, spec, and decisions.
 
-**Last updated:** 2026-09-25
-**Next review:** after Phase 1 infrastructure gate.
+**Last updated:** 2026-09-30
+**Next review:** after Phase 5 workspace & polish gate.
