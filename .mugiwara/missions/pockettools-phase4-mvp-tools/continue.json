@@ -1,1 +1,7 @@
-{"flow":3,"member":"zoro","mission":"pockettools-phase4-mvp-tools","next_action":"Flow 3 Zoro Wave 0 continued: plan.md T1 (app/utils/qr-encode.ts, markdown-subset.ts, unit-tables.ts + tests/unit/*.test.ts). TDD per plan steps; then commit feat(T1 tools). T0 committed.","next_session_prompt":"/mugiwara continue pockettools-phase4-mvp-tools","tasks":"T0 done+committed; T1 next; T2-T20 pending"}
+{
+  "mission": "pockettools-phase4-mvp-tools",
+  "flow": 8,
+  "next": "Re-run Flow 5 quality + Flow 6 gates on 8fccd9b, then Flow 7 review/security re-check. One open decision: the <=400 LOC diff cap.",
+  "blocking": ["diff-size-cap-decision"],
+  "updated": "2026-09-30"
+}
