@@ -1,5 +1,6 @@
 export const generatedToolSlugs = [
 	"base64-tool",
+	"case-converter",
 	"color-picker",
 	"cron-helper",
 	"curl-converter",
