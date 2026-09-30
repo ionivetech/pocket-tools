@@ -183,7 +183,7 @@ watch(
 		</template>
 
 		<template #input>
-			<label class="pt-field-label" :for="textId">Link or text</label>
+			<label class="pt-field-label" :for="textId">Text to encode</label>
 			<InputText
 				:id="textId"
 				v-model="text"
