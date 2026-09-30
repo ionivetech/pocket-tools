@@ -452,6 +452,7 @@ describe("coverage gate absent-from-lcov accounting", () => {
 			"app/composables/use-tool-library.ts",
 			"app/composables/useResponsivePosition.ts",
 			"app/data/tool-routes.generated.ts",
+			"app/workers/regex-tester.worker.ts",
 			"nuxt.config.ts",
 		]);
 		for (const reason of ABSENT_FROM_LCOV_ALLOWLIST.values()) {

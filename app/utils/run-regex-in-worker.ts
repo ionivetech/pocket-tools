@@ -3,7 +3,15 @@ import type { RegexTesterOutput } from "../tools/regex-tester/logic";
 import type { RegexWorkerRequest, RegexWorkerResponse } from "../workers/regex-tester.worker";
 import { parseRegexTesterInput, type RegexTesterInput } from "../tools/regex-tester/schema";
 
-/** How long a pattern may run before the UI gives up on it. */
+/**
+ * How long a pattern may run before the UI gives up on it.
+ *
+ * This is measured from the moment the request is posted, so it includes the
+ * worker's first module evaluation. That cost is real and one-off, which is why
+ * the worker is shared below rather than rebuilt per keystroke: a cold spawn
+ * measured ~1.4s under `bun test`, and paying that against a 2s bound would
+ * report ordinary patterns as too slow.
+ */
 export const REGEX_RUN_TIMEOUT_MS = 2000;
 
 export type RegexTesterErrorCode =
@@ -44,50 +52,73 @@ export async function runRegexTesterAsync(
 		};
 	}
 
-	const worker = new Worker(new URL("../workers/regex-tester.worker.ts", import.meta.url), {
+	const worker = sharedWorker();
+	const id = nextRequestId();
+
+	return new Promise<Result<RegexTesterOutput>>((resolve) => {
+		const finish = (result: Result<RegexTesterOutput>): void => {
+			clearTimeout(timer);
+			// A timed-out run leaves a thread spinning in a pattern, so that worker
+			// is gone for good; the next run builds a fresh one. A reply, by
+			// contrast, leaves the worker healthy and reusable.
+			if (!result.ok && result.error.code === "pattern_too_slow") {
+				dropSharedWorker();
+			}
+			resolve(result);
+		};
+		const timer = setTimeout(() => {
+			finish({
+				ok: false,
+				error: {
+					code: "pattern_too_slow",
+					message: `That pattern was still running after ${REGEX_RUN_TIMEOUT_MS / 1000} seconds, so it was stopped. Patterns like nested repeats can be extremely slow.`,
+				},
+			});
+		}, REGEX_RUN_TIMEOUT_MS);
+
+		worker.addEventListener("message", (event: MessageEvent<RegexWorkerResponse>) => {
+			if (event.data.id === id) {
+				finish(event.data.result);
+			}
+		});
+		worker.addEventListener("error", () => {
+			dropSharedWorker();
+			finish({
+				ok: false,
+				error: {
+					code: "pattern_too_slow",
+					message: "The pattern runner failed to start, so it was stopped.",
+				},
+			});
+		});
+
+		worker.postMessage({ id, input } satisfies RegexWorkerRequest);
+	});
+}
+
+/**
+ * One worker for the tool's lifetime. Spawning per keystroke would pay module
+ * evaluation on every debounce tick, and that cost is charged against the
+ * timeout above — a fast pattern would get reported as slow on a cold worker.
+ */
+let shared: Worker | null = null;
+let lastRequestId = 0;
+
+function sharedWorker(): Worker {
+	shared ??= new Worker(new URL("../workers/regex-tester.worker.ts", import.meta.url), {
 		type: "module",
 	});
+	return shared;
+}
 
-	try {
-		return await new Promise<Result<RegexTesterOutput>>((resolve) => {
-			const id = 1;
-			const finish = (result: Result<RegexTesterOutput>): void => {
-				clearTimeout(timer);
-				worker.terminate();
-				resolve(result);
-			};
-			const timer = setTimeout(() => {
-				finish({
-					ok: false,
-					error: {
-						code: "pattern_too_slow",
-						message: `That pattern was still running after ${REGEX_RUN_TIMEOUT_MS / 1000} seconds, so it was stopped. Patterns like nested repeats can be extremely slow.`,
-					},
-				});
-			}, REGEX_RUN_TIMEOUT_MS);
+function dropSharedWorker(): void {
+	shared?.terminate();
+	shared = null;
+}
 
-			worker.addEventListener("message", (event: MessageEvent<RegexWorkerResponse>) => {
-				if (event.data.id === id) {
-					finish(event.data.result);
-				}
-			});
-			worker.addEventListener("error", () => {
-				finish({
-					ok: false,
-					error: {
-						code: "pattern_too_slow",
-						message: "The pattern runner failed to start, so it was stopped.",
-					},
-				});
-			});
-
-			worker.postMessage({ id, input } satisfies RegexWorkerRequest);
-		});
-	} finally {
-		// Belt and braces: the promise above always terminates, but a throw
-		// between construction and the handler would leak a spinning thread.
-		worker.terminate();
-	}
+function nextRequestId(): number {
+	lastRequestId += 1;
+	return lastRequestId;
 }
 
 /**

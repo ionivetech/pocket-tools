@@ -367,6 +367,16 @@ export const UNINSTRUMENTABLE_EXTENSIONS: readonly string[] = [
  */
 export const ABSENT_FROM_LCOV_ALLOWLIST: ReadonlyMap<string, string> = new Map([
 	[
+		"app/workers/regex-tester.worker.ts",
+		"a worker entry point: it exists to be loaded by the Worker constructor, which " +
+			"`bun test` never does, so its only meaningful coverage is end to end. " +
+			"tests/e2e/regex-tester.pw.ts proves the browser loads it and that a pattern " +
+			"which would otherwise freeze the tab is stopped; the matching logic it calls " +
+			"(`runRegexTester`) is unit-tested directly, and the spawn/terminate wrapper " +
+			"around it in app/utils/run-regex-in-worker.ts is unit-tested against a real " +
+			"Worker, which bun does provide",
+	],
+	[
 		"nuxt.config.ts",
 		"build and PWA configuration consumed by the Nuxt build, not by `bun test`; its behaviour " +
 			"is covered by the production build and the Playwright PWA suite, not by unit coverage",

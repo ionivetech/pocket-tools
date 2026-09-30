@@ -4,6 +4,38 @@
 
 ### Phase 4 — MVP tools
 
+#### Fixed after an independent review and security pass
+
+Nine defects surfaced only once the work was reviewed by something that had not
+written it. Each fix names the root cause, because in five cases the symptom and
+the cause were in different places.
+
+- **The markdown renderer could freeze the tab.** The catch-all paragraph branch
+  could consume zero lines, so input like `***bold***`, `# `, or `----` left the
+  loop spinning. It now always consumes a line, with ten regression inputs.
+- **The regex tester could freeze the tab for half a minute**, reachable from a
+  share link before any interaction. Input caps cannot bound backtracking, so the
+  scan now runs in a worker the UI terminates after two seconds.
+- **The QR error-correction level L is gone.** An independent decoder rejected our
+  L output at every mask while accepting M. Rather than ship a code nobody can
+  scan, L was removed and M is now verified against a third-party decoder. The
+  format-information reader had been mirroring the writer, which is why the wrong
+  bit order passed one review; it is now pinned to a literal format word.
+- **The JWT decoder no longer stores the token** in the URL or in local history.
+  A credential in a query string reaches browser history, server logs, and any
+  Referer header.
+- **cURL Basic auth handles non-Latin-1 passwords** instead of throwing out of
+  `btoa`.
+- **Image tools stop above 40 megapixels**, checked after decode and before any
+  canvas is allocated. A 10 MB file cap never bounded decoded memory.
+- **A PWA glob that matched nothing was deleted.** Nuxt emits hash-only chunk
+  names, so tool JavaScript cannot be excluded by name at all; the comment now
+  records the measured evidence instead of implying otherwise.
+- **A literal NUL can no longer collide** with the markdown placeholder channel.
+- **An out-of-range date returns an error** instead of throwing out of the tool's
+  result contract and blanking the panel.
+- Still no new runtime dependency, and no user data leaves the browser.
+
 - Shipped 16 MVP tools on the same rails as Phase 2: pure, unit-tested logic plus a thin PrimeVue component reusing `ToolDualPane`, `ToolActions`, `ToolHistory`, and URL-state sharing. The catalog is now 20 tools.
 - Data and developer: JWT decoder (decode-only — the UI says the signature is never checked), hash generator (Web Crypto SHA-256/384/512 plus SHA-1 labeled for old checksums, hex/base64), regex tester (JavaScript patterns, capture groups, match and input caps so a runaway pattern cannot hang the page), diff checker (line LCS with an ignore-spacing toggle), cron helper (5-field schedule read in plain words, presets, next three runs with the time zone labeled), and a cURL-to-fetch converter that names any flag outside its subset instead of dropping it.
 - Text: markdown preview from a hand-rolled safe subset (raw HTML escaped, only `http(s)` links, the supported syntax list shown in the UI), table-to-markdown with delimiter detection and quoted-field support, and a case converter that lists all seven cases with per-variant copy.
