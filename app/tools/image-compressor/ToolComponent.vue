@@ -9,6 +9,8 @@ import {
 	savingsLabel,
 	IMAGE_OUTPUT_TYPES,
 	type ImageOutputType,
+	withinPixelBudget,
+	pixelBudgetMessage,
 } from "../../utils/image-metrics";
 import { planImageCompression } from "./logic";
 
@@ -81,6 +83,11 @@ async function compress(): Promise<void> {
 	error.value = null;
 	try {
 		const bitmap = await createImageBitmap(current);
+		if (!withinPixelBudget(bitmap.width, bitmap.height)) {
+			bitmap.close();
+			error.value = pixelBudgetMessage();
+			return;
+		}
 		const canvas = document.createElement("canvas");
 		canvas.width = bitmap.width;
 		canvas.height = bitmap.height;

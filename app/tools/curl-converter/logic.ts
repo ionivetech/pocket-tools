@@ -20,6 +20,23 @@ export type CurlConverterErrorCode =
 	| "missing_url"
 	| "unsupported_option";
 
+/**
+ * Base64 for the Authorization header, which must carry UTF-8 bytes.
+ * `btoa` alone throws on any character above U+00FF, so a password like "pässwörd"
+ * would take the whole converter down instead of producing a command.
+ *
+ * @example
+ * base64Utf8("user:pässwörd"); // "dXNlcjpww6Rzc3fDtnJk"
+ */
+function base64Utf8(text: string): string {
+	const bytes = new TextEncoder().encode(text);
+	let binary = "";
+	for (const byte of bytes) {
+		binary += String.fromCharCode(byte);
+	}
+	return btoa(binary);
+}
+
 function failure(code: CurlConverterErrorCode, message: string): Result<never> {
 	return { ok: false, error: { code, message } };
 }
@@ -110,7 +127,7 @@ export function runCurlConverter(input: CurlConverterInput): Result<CurlConverte
 			index += 2;
 		} else if (token === "-u" || token === "--user") {
 			const credentials = tokens[index + 1] ?? "";
-			headers.Authorization = `Basic ${btoa(credentials)}`;
+			headers.Authorization = `Basic ${base64Utf8(credentials)}`;
 			index += 2;
 		} else if (token === "-A" || token === "--user-agent") {
 			headers["User-Agent"] = tokens[index + 1] ?? "";

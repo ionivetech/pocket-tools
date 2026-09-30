@@ -106,31 +106,33 @@ function functionModules(version: number, size: number): boolean[][] {
 	return map;
 }
 
-/** Reads and BCH-checks the format information, returning the mask it names. */
+/**
+ * Reads and BCH-checks the format information, returning the mask it names.
+ *
+ * ISO/IEC 18004 numbers the 15 format positions with the LEAST significant bit
+ * at position 0, so position `i` carries bit `i`. This was confirmed against a
+ * matrix produced by an independent encoder and read back by a third-party
+ * decoder, not against our own writer — a reader that mirrors the writer proves
+ * nothing, which is exactly how a mirrored format string survived one review.
+ */
 function readFormat(modules: readonly (readonly boolean[])[], size: number): number {
 	if (size < 21) {
 		throw new Error(`matrix is too small to carry format info: ${size}`);
 	}
-	const bits: number[] = [];
-	// Copy 1: (8,0..5), (8,7), (8,8), (7,8), (5..0, 8)
-	for (let i = 0; i <= 5; i += 1) {
-		bits.push(modules[i]![8] ? 1 : 0);
-	}
-	bits.push(modules[7]![8] ? 1 : 0, modules[8]![8] ? 1 : 0, modules[8]![7] ? 1 : 0);
-	for (let i = 5; i >= 0; i -= 1) {
-		bits.push(modules[8]![i] ? 1 : 0);
-	}
+	const bit = (x: number, y: number): number => (modules[y]![x] ? 1 : 0);
 	let value = 0;
-	for (const bit of bits) {
-		value = (value << 1) | bit;
+	for (let index = 0; index <= 5; index += 1) {
+		value |= bit(8, index) << index;
 	}
-	const unmasked = value ^ FORMAT_MASK;
-	// The top 5 bits are the payload (2 bits ECC level, 3 bits mask). Rebuilding
-	// the whole word from them checks the BCH remainder and the XOR mask in one
-	// comparison, instead of trusting the received remainder.
-	const payload = unmasked >>> 10;
+	value |= bit(8, 7) << 6;
+	value |= bit(8, 8) << 7;
+	value |= bit(7, 8) << 8;
+	for (let index = 9; index < 15; index += 1) {
+		value |= bit(14 - index, 8) << index;
+	}
+	const payload = (value ^ FORMAT_MASK) >>> 10;
 	let remainder = payload;
-	for (let i = 0; i < 10; i += 1) {
+	for (let index = 0; index < 10; index += 1) {
 		remainder = (remainder << 1) ^ ((remainder >>> 9) * FORMAT_GENERATOR);
 	}
 	if ((((payload << 10) | (remainder & 0b1111111111)) ^ FORMAT_MASK) !== value) {
@@ -286,9 +288,40 @@ describe("qr-encode round trip (independent reader)", () => {
 		expect(decodeQrText(corrupted)).not.toBe("https://pockettools.app");
 	});
 
-	test("the placed format information names a real mask", () => {
+	test("the reader numbers format positions LSB-first, per the spec", () => {
+		// The format word for level M with mask 0 is 0b101010000010010 = 21522.
+		// Placing its bit `i` at position `i` — the spec's numbering, LSB at
+		// position 0 — must read back as mask 0. Pinning this against a literal
+		// word is what stops a mirrored string from passing again: a writer and
+		// reader that are both mirrored still agree with each other.
+		const word = 21522;
+		const grid = Array.from({ length: 21 }, () => Array.from({ length: 21 }, () => false));
+		const put = (index: number, x: number, y: number): void => {
+			grid[y]![x] = ((word >>> index) & 1) === 1;
+		};
+		for (let index = 0; index <= 5; index += 1) {
+			put(index, 8, index);
+		}
+		put(6, 8, 7);
+		put(7, 8, 8);
+		put(8, 7, 8);
+		for (let index = 9; index < 15; index += 1) {
+			put(index, 14 - index, 8);
+		}
+
+		expect(readFormat(grid, 21)).toBe(0);
+		// ...and the mirrored arrangement must be rejected, or prove unreadable.
+		const mirrored = Array.from({ length: 21 }, () => Array.from({ length: 21 }, () => false));
+		for (let index = 0; index <= 5; index += 1) {
+			mirrored[index]![8] = ((word >>> (14 - index)) & 1) === 1;
+		}
+		expect(() => readFormat(mirrored, 21)).toThrow();
+	});
+
+	test("a matrix we produced reads back with a real mask", () => {
 		for (const text of ["hi", "https://pockettools.app", "a".repeat(60)]) {
-			const mask = readFormat(encodeForTest(text).modules, encodeForTest(text).size);
+			const matrix = encodeForTest(text);
+			const mask = readFormat(matrix.modules, matrix.size);
 			expect(mask).toBeGreaterThanOrEqual(0);
 			expect(mask).toBeLessThanOrEqual(7);
 		}
@@ -301,7 +334,7 @@ describe("qr-encode round trip (independent reader)", () => {
 });
 
 describe("qr-encode structural invariants", () => {
-	const eccCases: readonly QrErrorCorrection[] = ["L", "M"];
+	const eccCases: readonly QrErrorCorrection[] = ["M"];
 
 	test.each(eccCases)("finder patterns sit in three corners at %s", (ecc) => {
 		const result = encodeQr("pockettools", ecc);

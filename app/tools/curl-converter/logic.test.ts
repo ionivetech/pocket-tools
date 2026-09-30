@@ -60,3 +60,26 @@ describe("curl-converter", () => {
 		});
 	});
 });
+
+describe("basic auth with a non-Latin-1 password", () => {
+	// `btoa` throws on anything above U+00FF, so this used to fail the whole
+	// conversion instead of producing a command.
+	test("encodes UTF-8 credentials", () => {
+		const result = runCurlConverter({
+			command: "curl -u user:pässwörd https://example.com",
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.value.request.headers.Authorization).toBe("Basic dXNlcjpww6Rzc3fDtnJk");
+		expect(result.value.fetchCode).toContain("dXNlcjpww6Rzc3fDtnJk");
+	});
+
+	test("encodes non-Latin-1 that is not Latin-1 transliterable either", () => {
+		const result = runCurlConverter({
+			command: "curl -u ユーザー:パスワード https://example.com",
+		});
+		expect(result.ok).toBe(true);
+		if (!result.ok) return;
+		expect(result.value.request.headers.Authorization).toMatch(/^Basic [A-Za-z0-9+/=]+$/);
+	});
+});

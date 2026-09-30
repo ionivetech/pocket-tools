@@ -6,7 +6,9 @@ const LINK = "https://pockettools.app/tools/json-formatter";
 
 describe("qr-generator", () => {
 	test("rejects an unsupported error correction level", () => {
-		expect(parseQrGeneratorInput({ text: "hi", ecc: "H" })).toMatchObject({
+		// Only M ships: the L path could not be verified against an independent
+		// decoder, so it is gone rather than offered and possibly unscannable.
+		expect(parseQrGeneratorInput({ text: "hi", ecc: "L" })).toMatchObject({
 			ok: false,
 			error: { code: "invalid_input" },
 		});

@@ -1,0 +1,123 @@
+import type { Result } from "../types/tool";
+import type { RegexTesterOutput } from "../tools/regex-tester/logic";
+import type { RegexWorkerRequest, RegexWorkerResponse } from "../workers/regex-tester.worker";
+import { parseRegexTesterInput, type RegexTesterInput } from "../tools/regex-tester/schema";
+
+/** How long a pattern may run before the UI gives up on it. */
+export const REGEX_RUN_TIMEOUT_MS = 2000;
+
+export type RegexTesterErrorCode =
+	| "empty_input"
+	| "invalid_pattern"
+	| "input_too_large"
+	| "pattern_too_slow";
+
+/**
+ * Tests a pattern in a worker that can be abandoned.
+ *
+ * The event loop cannot be timed, so a bound has to come from somewhere that can
+ * be killed. This validates cheaply on the calling thread (empty pattern, caps,
+ * compile failure — all instant) and only hands real work to the worker, so the
+ * common cases never pay for a thread.
+ *
+ * @example
+ * runRegexTesterAsync({ pattern: "\\d+", flags: "", sample: "a1b22" }).then((r) => r.ok); // true
+ * await runRegexTesterAsync({ pattern: "(", flags: "", sample: "" }); // invalid_pattern, no worker
+ */
+export async function runRegexTesterAsync(
+	input: RegexTesterInput,
+): Promise<Result<RegexTesterOutput>> {
+	// A pattern that does not compile, is empty, or breaks the caps fails the
+	// same way it always did, and can be decided without a worker.
+	const precheck = validateOnly(input);
+	if (precheck) {
+		return precheck;
+	}
+
+	if (typeof Worker === "undefined") {
+		return {
+			ok: false,
+			error: {
+				code: "pattern_too_slow",
+				message: "This browser cannot run patterns safely. Keep samples short.",
+			},
+		};
+	}
+
+	const worker = new Worker(new URL("../workers/regex-tester.worker.ts", import.meta.url), {
+		type: "module",
+	});
+
+	try {
+		return await new Promise<Result<RegexTesterOutput>>((resolve) => {
+			const id = 1;
+			const finish = (result: Result<RegexTesterOutput>): void => {
+				clearTimeout(timer);
+				worker.terminate();
+				resolve(result);
+			};
+			const timer = setTimeout(() => {
+				finish({
+					ok: false,
+					error: {
+						code: "pattern_too_slow",
+						message: `That pattern was still running after ${REGEX_RUN_TIMEOUT_MS / 1000} seconds, so it was stopped. Patterns like nested repeats can be extremely slow.`,
+					},
+				});
+			}, REGEX_RUN_TIMEOUT_MS);
+
+			worker.addEventListener("message", (event: MessageEvent<RegexWorkerResponse>) => {
+				if (event.data.id === id) {
+					finish(event.data.result);
+				}
+			});
+			worker.addEventListener("error", () => {
+				finish({
+					ok: false,
+					error: {
+						code: "pattern_too_slow",
+						message: "The pattern runner failed to start, so it was stopped.",
+					},
+				});
+			});
+
+			worker.postMessage({ id, input } satisfies RegexWorkerRequest);
+		});
+	} finally {
+		// Belt and braces: the promise above always terminates, but a throw
+		// between construction and the handler would leak a spinning thread.
+		worker.terminate();
+	}
+}
+
+/**
+ * The instant, worker-free rejections from `runRegexTester`: an empty pattern,
+ * a broken pattern, or an oversized input. Returns null when real work is needed.
+ */
+function validateOnly(input: RegexTesterInput): Result<RegexTesterOutput> | null {
+	const validated = parseRegexTesterInput(input);
+	if (!validated.ok) {
+		return validated;
+	}
+	try {
+		// Same construction the worker will do, so a bad pattern is still caught
+		// here rather than costing a thread spawn.
+		// biome-ignore lint: constructed only to validate, never used to match
+		new RegExp(validated.value.pattern, validated.value.flags);
+	} catch {
+		return {
+			ok: false,
+			error: {
+				code: "invalid_pattern",
+				message: "That pattern does not compile. Check brackets and escapes.",
+			},
+		};
+	}
+	if (validated.value.pattern === "") {
+		return {
+			ok: false,
+			error: { code: "empty_input", message: "Type a search pattern first." },
+		};
+	}
+	return null;
+}

@@ -6,7 +6,7 @@ import { useToolHistoryRecorder } from "~/composables/use-tool-history";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
 import { runQrGenerator } from "./logic";
 import { QR_ECC_OPTIONS } from "./schema";
-import type { QrErrorCorrection } from "../../utils/qr-encode";
+import type { QrErrorCorrection } from "../../utils/qr-codec";
 
 const route = useRoute();
 const router = useRouter();
@@ -17,7 +17,7 @@ const shared = decodeUrlState(
 const initial = shared.ok ? shared.value : {};
 
 const text = ref(typeof initial.text === "string" ? initial.text : "https://pockettools.app");
-const ecc = ref<QrErrorCorrection>(initial.ecc === "L" ? "L" : "M");
+const ecc = ref<QrErrorCorrection>("M");
 const canvas = useTemplateRef<HTMLCanvasElement>("canvas");
 
 const componentId = useId();
@@ -192,7 +192,8 @@ watch(
 				data-testid="qr-generator-input"
 			/>
 			<p class="pt-input-hint">
-				Makes the code harder to read when damaged. M holds up to 106 bytes.
+				Error correction M is on: it stays readable when part of the code is damaged. Holds up to
+				106 bytes. Nothing is uploaded.
 			</p>
 		</template>
 

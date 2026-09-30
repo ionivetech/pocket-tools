@@ -20,12 +20,12 @@ test.describe("QR generator", () => {
 		).toBeGreaterThan(100);
 	});
 
-	test("switches to the safest margin on request", async ({ page }) => {
+	test("offers the one verified error-correction level", async ({ page }) => {
 		await gotoAppReady(page, "/tools/qr-generator");
 		await openToolOptions(page);
 		await page.getByTestId("qr-generator-ecc").click();
-		await page.getByRole("option", { name: "L" }).click();
-		await expect(page.getByTestId("qr-generator-status")).toContainText("error correction L");
+		await expect(page.getByRole("option")).toHaveCount(1);
+		await expect(page.getByRole("option", { name: "M" })).toBeVisible();
 	});
 
 	test("explains an over-long payload", async ({ page }) => {

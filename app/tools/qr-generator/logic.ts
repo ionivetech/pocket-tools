@@ -1,5 +1,6 @@
 import type { Result } from "../../types/tool";
-import { encodeQr, maxBytes, type QrErrorCorrection, type QrMatrix } from "../../utils/qr-encode";
+import { encodeQr, maxBytes, type QrMatrix } from "../../utils/qr-encode";
+import type { QrErrorCorrection } from "../../utils/qr-codec";
 import { QR_QUIET_ZONE, parseQrGeneratorInput, type QrGeneratorInput } from "./schema";
 
 export type QrGeneratorOutput = Readonly<{

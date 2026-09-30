@@ -49,3 +49,12 @@ describe("datetime-helper", () => {
 		});
 	});
 });
+
+describe("out-of-range timestamps", () => {
+	// A huge number parses as a valid number but overflows `Date`, which used to
+	// throw a raw RangeError out of the function instead of returning an error.
+	test.each([["1e300"], ["-1e300"], ["8.64e18"]])("rejects %s", (value) => {
+		const result = runDatetimeHelper({ mode: "timestamp", value });
+		expect(result).toMatchObject({ ok: false, error: { code: "invalid_date" } });
+	});
+});

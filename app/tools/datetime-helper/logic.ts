@@ -105,6 +105,19 @@ export function runDatetimeHelper(
 	}
 
 	const date = new Date(timestampMs);
+	// `Number.isNaN(parsed)` above only rejects text that does not parse. A large
+	// finite number parses fine and still lands outside the range `Date` can
+	// represent, and both `toISOString` and `Intl.format` then throw a raw
+	// RangeError that escapes the Result contract and blanks the panel.
+	if (Number.isNaN(date.getTime())) {
+		return {
+			ok: false,
+			error: {
+				code: "invalid_date",
+				message: "That date is too far away to represent. Try a year between 0001 and 9999.",
+			},
+		};
+	}
 	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "local time";
 	return {
 		ok: true,

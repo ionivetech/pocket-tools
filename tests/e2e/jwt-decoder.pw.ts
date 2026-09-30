@@ -41,3 +41,16 @@ test.describe("JWT decoder", () => {
 		await expectNoHorizontalOverflow(page, "375px jwt-decoder");
 	});
 });
+
+test("a pasted token never leaves the textarea", async ({ page }) => {
+	await gotoAppReady(page, "/tools/jwt-decoder");
+	await page.getByTestId("jwt-decoder-sample").click();
+	await expect(page.getByTestId("jwt-decoder-payload")).toHaveValue(/Test User/);
+
+	// A credential must not end up in the URL (history, server logs, Referer) or
+	// in localStorage. This is the regression guard for both paths at once.
+	expect(page.url()).not.toContain("eyJ");
+	const dumped = await page.evaluate(() => JSON.stringify(window.localStorage));
+	expect(dumped).not.toContain("eyJ");
+	expect(dumped).not.toContain("eyJzdWIiOiIxMjMi");
+});

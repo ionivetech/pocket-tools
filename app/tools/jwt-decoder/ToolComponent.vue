@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import Textarea from "primevue/textarea";
-import { computed, ref, watch } from "vue";
-import { useToolHistoryRecorder } from "~/composables/use-tool-history";
-import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
+import { computed, ref } from "vue";
 import { decodeJwt } from "./logic";
 
 const sampleToken = [
@@ -11,22 +9,16 @@ const sampleToken = [
 	"c2lnbmF0dXJl",
 ].join(".");
 
-const route = useRoute();
-const router = useRouter();
-
-const shared = decodeUrlState(
-	Array.isArray(route.query.s) ? (route.query.s[0] ?? null) : (route.query.s ?? null),
-);
-const initial = shared.ok ? shared.value : {};
-
-const token = ref(typeof initial.token === "string" ? initial.token : "");
+// A login token is a credential. It is deliberately NOT shareable and NOT
+// recorded in history: a token in the query string lands in browser history,
+// server logs, and any Referer header, and a token in localStorage outlives the
+// tab. Refreshing this page clears it, which is the correct behaviour.
+const token = ref("");
 
 const decoded = computed(() => decodeJwt(token.value));
 const outputText = computed(() =>
 	decoded.value.ok ? JSON.stringify(decoded.value.value.payload, null, 2) : "",
 );
-
-useToolHistoryRecorder("jwt-decoder", token, outputText);
 
 const statusKind = computed<"empty" | "error" | "success">(() => {
 	if (token.value.trim() === "") {
@@ -60,15 +52,6 @@ function loadSample(): void {
 function clearInput(): void {
 	token.value = "";
 }
-
-watch(
-	[token],
-	() => {
-		const encoded = encodeUrlState({ token: token.value });
-		router.replace({ query: { ...route.query, s: encoded.ok ? encoded.value : undefined } });
-	},
-	{ flush: "post" },
-);
 </script>
 
 <template>

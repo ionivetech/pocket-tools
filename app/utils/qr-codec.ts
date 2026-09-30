@@ -6,8 +6,17 @@
  * versions, and can be reasoned about (and tested) on its own.
  */
 
-/** The error-correction levels this writer supports (Q and H are out of scope). */
-export type QrErrorCorrection = "L" | "M";
+/**
+ * The only error-correction level this writer ships.
+ *
+ * Level M is verified end to end: `tests/unit/qr-round-trip.test.ts` decodes our
+ * own matrices, and an independent decoder (jsQR, run out of tree) reads six
+ * different payload shapes. Level L was removed because the independent decoder
+ * rejected it at every mask while the same decoder accepted the M output, and
+ * that gap was never explained — a QR nobody can scan is worse than no L button.
+ * Re-adding L needs a fixed data layout plus that same independent-decoder proof.
+ */
+export type QrErrorCorrection = "M";
 
 const EXP_TABLE: number[] = Array.from({ length: 512 }, () => 0);
 const LOG_TABLE: number[] = Array.from({ length: 256 }, () => 0);

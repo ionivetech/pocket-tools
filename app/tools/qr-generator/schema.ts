@@ -1,7 +1,7 @@
 import type { Result } from "../../types/tool";
-import type { QrErrorCorrection } from "../../utils/qr-encode";
+import type { QrErrorCorrection } from "../../utils/qr-codec";
 
-export const QR_ECC_OPTIONS = ["L", "M"] as const;
+export const QR_ECC_OPTIONS = ["M"] as const;
 export const QR_QUIET_ZONE = 4;
 
 export type QrGeneratorInput = Readonly<{ text: string; ecc: QrErrorCorrection }>;
@@ -12,7 +12,7 @@ export type QrGeneratorInput = Readonly<{ text: string; ecc: QrErrorCorrection }
  * @example
  * ```ts
  * parseQrGeneratorInput({ text: "hi", ecc: "M" }).ok; // true
- * parseQrGeneratorInput({ text: "hi", ecc: "H" }).error.code; // "invalid_input"
+ * parseQrGeneratorInput({ text: "hi", ecc: "L" }).error.code; // "invalid_input"
  * ```
  */
 export function parseQrGeneratorInput(value: unknown): Result<QrGeneratorInput> {

@@ -40,17 +40,9 @@ describe("qr-encode", () => {
 	});
 
 	test("is deterministic for the same input", () => {
-		const first = encodeQr("https://example.com/a", "L");
-		const second = encodeQr("https://example.com/a", "L");
+		const first = encodeQr("https://example.com/a", "M");
+		const second = encodeQr("https://example.com/a", "M");
 		expect(first).toEqual(second);
-	});
-
-	test("higher error correction changes the modules", () => {
-		const low = encodeQr("same text here", "L");
-		const mid = encodeQr("same text here", "M");
-		expect(low.ok && mid.ok).toBe(true);
-		if (!low.ok || !mid.ok) return;
-		expect(low.value.modules).not.toEqual(mid.value.modules);
 	});
 
 	test("rejects empty input and oversized payloads with codes", () => {
@@ -61,12 +53,19 @@ describe("qr-encode", () => {
 		});
 	});
 
+	test("reports the exact version for a fixed payload", () => {
+		// Versions must be pinned to values, not to a range: a range assertion
+		// passes for any implementation, including a broken one.
+		expect(encodeQr("hi", "M")).toMatchObject({ ok: true, value: { version: 1, size: 21 } });
+		expect(encodeQr("a".repeat(60), "M")).toMatchObject({ ok: true, value: { version: 4 } });
+	});
+
 	test("reports its version and ecc back for UI labels", () => {
-		const result = encodeQr("version check", "L");
+		const result = encodeQr("version check", "M");
 		expect(result.ok).toBe(true);
 		if (!result.ok) return;
 		const ecc: QrErrorCorrection = result.value.ecc;
-		expect(ecc).toBe("L");
+		expect(ecc).toBe("M");
 		expect(result.value.version).toBeGreaterThanOrEqual(1);
 		expect(result.value.version).toBeLessThanOrEqual(6);
 	});

@@ -4,7 +4,9 @@ import Textarea from "primevue/textarea";
 import { computed, ref, useId, watch } from "vue";
 import { useToolHistoryRecorder } from "~/composables/use-tool-history";
 import { decodeUrlState, encodeUrlState } from "~/utils/url-state";
-import { runRegexTester } from "./logic";
+import { runRegexTesterAsync } from "~/utils/run-regex-in-worker";
+import type { Result } from "../../types/tool";
+import type { RegexTesterOutput } from "./logic";
 
 const route = useRoute();
 const router = useRouter();
@@ -22,32 +24,64 @@ const componentId = useId();
 const patternId = `regex-tester-pattern-${componentId}`;
 const flagsId = `regex-tester-flags-${componentId}`;
 
-const tested = computed(() =>
-	runRegexTester({ pattern: pattern.value, flags: flags.value, sample: sample.value }),
-);
-const matchText = computed(() =>
-	tested.value.ok ? tested.value.value.matches.map((match) => match.text).join("\n") : "",
-);
+// The scan happens in a worker, so the result is state rather than a computed.
+// A `loading` state is honest here: an operation over 200ms gets one (AGENTS.md).
+const tested = ref<Result<RegexTesterOutput> | null>(null);
+const loading = ref(false);
+let run = 0;
+
+async function retest(): Promise<void> {
+	const current = ++run;
+	loading.value = true;
+	const result = await runRegexTesterAsync({
+		pattern: pattern.value,
+		flags: flags.value,
+		sample: sample.value,
+	});
+	// A slower earlier run must not overwrite a newer result.
+	if (current === run) {
+		tested.value = result;
+		loading.value = false;
+	}
+}
+
+const matches = computed(() => (tested.value?.ok ? tested.value.value.matches : []));
+const matchText = computed(() => matches.value.map((match) => match.text).join("\n"));
 
 useToolHistoryRecorder("regex-tester", sample, matchText);
 
-const statusKind = computed<"empty" | "error" | "success">(() => {
+const statusKind = computed<"empty" | "error" | "success" | "loading">(() => {
 	if (pattern.value === "") {
 		return "empty";
 	}
-	return tested.value.ok ? "success" : "error";
+	if (loading.value) {
+		return "loading";
+	}
+	return tested.value?.ok ? "success" : "error";
 });
 
 const statusMessage = computed(() => {
 	if (pattern.value === "") {
 		return "Type a search pattern to test it live.";
 	}
-	if (tested.value.ok) {
+	if (loading.value) {
+		return "Testing the pattern…";
+	}
+	if (tested.value?.ok) {
 		const { matches, truncated } = tested.value.value;
 		const count = matches.length === 1 ? "1 match" : `${matches.length} matches`;
 		return truncated ? `${count} (showing the first 100).` : `${count}.`;
 	}
-	return tested.value.error.message;
+	return tested.value?.error.message ?? "Type a search pattern to test it live.";
+});
+
+// Debounced so a paste or fast typing spawns one worker, not one per keystroke.
+let debounce: ReturnType<typeof setTimeout> | undefined;
+watch([pattern, flags, sample], () => {
+	clearTimeout(debounce);
+	debounce = setTimeout(() => {
+		void retest();
+	}, 150);
 });
 
 function loadSample(): void {
@@ -142,12 +176,8 @@ watch(
 			>
 				{{ statusMessage }}
 			</p>
-			<ol
-				v-if="tested.ok && tested.value.matches.length > 0"
-				class="pt-regex-matches"
-				data-testid="regex-tester-matches"
-			>
-				<li v-for="(match, index) in tested.value.matches" :key="`${match.index}-${index}`">
+			<ol v-if="matches.length > 0" class="pt-regex-matches" data-testid="regex-tester-matches">
+				<li v-for="(match, index) in matches" :key="`${match.index}-${index}`">
 					<code class="pt-regex-hit">{{ match.text }}</code>
 					<small>at {{ match.index }}</small>
 					<span v-if="match.groups.length > 0" class="pt-regex-groups">

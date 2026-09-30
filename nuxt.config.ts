@@ -96,10 +96,17 @@ export default defineNuxtConfig({
 				"theme-bootstrap.js",
 				"**/_nuxt/*.{js,css}",
 			],
-			// Lazy tool chunks load on demand and runtime-cache via
-			// pockettools-assets (CacheFirst); precaching them would grow the
-			// install payload with every catalog addition. Shell stays precached.
-			globIgnores: ["**/ToolComponent.*.js", "**/ToolComponent.*.css"],
+			// Tool CSS is precached anyway, which is the point of ignoring it: Nuxt
+			// names these assets after the component (`ToolComponent.<hash>.css`),
+			// so the pattern is matchable by name. Tool JS is NOT matchable —
+			// Nuxt emits hash-only chunk names (`2uch8Usm.js`) with no component
+			// name in them, so there is no glob for it. Verified against
+			// `.output/public/_nuxt` on 2026-09-30: 20 dot-named ToolComponent CSS
+			// files, zero matching JS. The JS half of this list used to be
+			// `**/ToolComponent.*.js`, which matched nothing and read as if it
+			// worked. Tool JS is excluded by `maximumFileSizeToCacheInBytes` and
+			// served on demand from pockettools-assets (CacheFirst) instead.
+			globIgnores: ["**/ToolComponent.*.css"],
 			maximumFileSizeToCacheInBytes: 256 * 1024,
 			manifestTransforms: [
 				(entries) => {

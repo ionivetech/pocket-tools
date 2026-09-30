@@ -45,3 +45,35 @@ describe("markdown-subset", () => {
 		expect(SUPPORTED_MARKDOWN_SYNTAX.join(" ")).toContain("headings");
 	});
 });
+
+describe("markdown-subset termination (regression)", () => {
+	// Each of these starts with a paragraph terminator yet matches no block
+	// branch. They froze the tab in an infinite loop once already.
+	test.each([
+		["emphasis marker", "***bold***"],
+		["emphasis with a stray star", "***bold**"],
+		["empty heading", "# "],
+		["empty tab heading", "#\t"],
+		["deep empty heading", "###### "],
+		["rule prefix with text", "--- a"],
+		["repeated rule chars", "----"],
+		["repeated stars", "****"],
+		["repeated underscores", "_____"],
+		["mixed", "***a**"],
+	])("terminates on %s", (_label, input) => {
+		expect(renderMarkdownSubset(input)).toBeTypeOf("string");
+	});
+
+	test("keeps a multi-line document intact around the hostile lines", () => {
+		const html = renderMarkdownSubset("# Title\n\n***bold***\n\ntail text\n\n----\n\nend");
+		expect(html).toContain("<h1>Title</h1>");
+		expect(html).toContain("tail text");
+		expect(html).toContain("end");
+	});
+
+	test("a NUL in the input cannot forge a placeholder", () => {
+		const html = renderMarkdownSubset("a \u0000code-9\u0000 b");
+		expect(html).not.toContain("\u0000");
+		expect(html).not.toContain("<code>");
+	});
+});

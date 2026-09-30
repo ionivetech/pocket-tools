@@ -1,7 +1,5 @@
 import type { Result } from "../types/tool";
 import type { QrErrorCorrection } from "./qr-codec";
-
-export type { QrErrorCorrection } from "./qr-codec";
 import { pushBits, rsRemainder } from "./qr-codec";
 import { drawMatrix, VERSIONS, type VersionInfo } from "./qr-matrix";
 
@@ -28,12 +26,6 @@ export function encodeQr(text: string, ecc: QrErrorCorrection): Result<QrMatrix>
 		return {
 			ok: false,
 			error: { code: "empty_input", message: "Type some text or a link first." },
-		};
-	}
-	if (ecc !== "L" && ecc !== "M") {
-		return {
-			ok: false,
-			error: { code: "unsupported_ecc", message: "Error correction must be L or M." },
 		};
 	}
 

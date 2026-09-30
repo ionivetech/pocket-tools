@@ -62,8 +62,13 @@ function renderInline(text: string, codeSpans: readonly string[]): string {
  * ```
  */
 export function renderMarkdownSubset(markdown: string): string {
+	// Strip NUL at the input boundary: it is the sentinel the placeholder
+	// channel uses, so a literal one in the text could forge a placeholder.
+	// Doing it here rather than in `escapeHtml` matters, because that function
+	// also runs over the internal placeholders this renderer inserts.
 	const fences: string[] = [];
 	const withoutFences = markdown
+		.replaceAll("\u0000", "")
 		.replaceAll("\r\n", "\n")
 		.replaceAll(/^```[^\n]*\n([\s\S]*?)^```[ \t]*$/gm, (_, code: string) => {
 			const index = fences.length;
@@ -134,6 +139,16 @@ export function renderMarkdownSubset(markdown: string): string {
 				!new RegExp(`^${FENCE_PLACEHOLDER}\\d+\u0000$`).test(lines[index] ?? "")
 			) {
 				paragraph.push(lines[index] ?? "");
+				index += 1;
+			}
+			if (paragraph.length === 0) {
+				// This branch is the catch-all, so it is the one place that can
+				// consume nothing: a line can satisfy the paragraph terminator above
+				// (`***bold***`, `# `, `--- x`, `----`) while matching no block branch,
+				// because the rule branch wants a bare `***`. Consuming the line here
+				// is what guarantees the loop always advances. Without it the tab
+				// spins forever, reachable from a share link before any interaction.
+				paragraph.push(line);
 				index += 1;
 			}
 			blocks.push(`<p>${renderInline(paragraph.join("<br />"), codeSpans)}</p>`);

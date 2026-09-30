@@ -7,8 +7,6 @@ import type { QrErrorCorrection } from "./qr-codec";
  * file is only the public API and this one is only the layout.
  */
 
-export type { QrErrorCorrection } from "./qr-codec";
-
 export type VersionInfo = Readonly<{
 	version: number;
 	size: number;
@@ -23,54 +21,6 @@ export type VersionInfo = Readonly<{
 // holds dataPerBlock * blocks - 2 bytes). Versions 1-6 need no version-info
 // blocks; longer payloads fail loudly instead of silently degrading.
 export const VERSIONS: Readonly<Record<QrErrorCorrection, readonly VersionInfo[]>> = {
-	L: [
-		{ version: 1, size: 21, dataPerBlock: 19, ecPerBlock: 7, blocks: 1, remainder: 0, align: [] },
-		{
-			version: 2,
-			size: 25,
-			dataPerBlock: 34,
-			ecPerBlock: 10,
-			blocks: 1,
-			remainder: 7,
-			align: [6, 18],
-		},
-		{
-			version: 3,
-			size: 29,
-			dataPerBlock: 55,
-			ecPerBlock: 15,
-			blocks: 1,
-			remainder: 7,
-			align: [6, 22],
-		},
-		{
-			version: 4,
-			size: 33,
-			dataPerBlock: 80,
-			ecPerBlock: 20,
-			blocks: 1,
-			remainder: 7,
-			align: [6, 26],
-		},
-		{
-			version: 5,
-			size: 37,
-			dataPerBlock: 108,
-			ecPerBlock: 26,
-			blocks: 1,
-			remainder: 7,
-			align: [6, 30],
-		},
-		{
-			version: 6,
-			size: 41,
-			dataPerBlock: 68,
-			ecPerBlock: 18,
-			blocks: 2,
-			remainder: 7,
-			align: [6, 34],
-		},
-	],
 	M: [
 		{ version: 1, size: 21, dataPerBlock: 16, ecPerBlock: 10, blocks: 1, remainder: 0, align: [] },
 		{
@@ -121,7 +71,7 @@ export const VERSIONS: Readonly<Record<QrErrorCorrection, readonly VersionInfo[]
 	],
 };
 
-const ECC_FORMAT_BITS: Readonly<Record<QrErrorCorrection, number>> = { L: 1, M: 0 };
+const ECC_FORMAT_BITS: Readonly<Record<QrErrorCorrection, number>> = { M: 0 };
 
 export type MutableGrid = boolean[][];
 
@@ -290,24 +240,26 @@ function drawFormat(modules: MutableGrid, size: number, bits: number): void {
 	function set(x: number, y: number, dark: boolean): void {
 		modules[y]![x] = dark;
 	}
-	// ISO/IEC 18004 places the 15 format bits MSB first, so the bit written at
-	// position `index` is bit (14 - index). Writing bit(index) here (LSB first)
-	// mirrors the string, which ships the wrong mask to every scanner; the
-	// round-trip reader in tests/unit/qr-round-trip.test.ts is what caught it.
+	// ISO/IEC 18004 numbers the 15 format positions 0..14 with the LEAST
+	// significant bit at position 0, so the bit written at position `index` is
+	// bit(index). Mirroring this string ships a format word no scanner can
+	// BCH-correct; `tests/unit/qr-round-trip.test.ts` pins both the value and
+	// the bit-to-position mapping against a literal, and an independent decoder
+	// (jsQR) is what proved the mirrored order unreadable.
 	for (let index = 0; index <= 5; index += 1) {
-		set(8, index, bit(14 - index));
+		set(8, index, bit(index));
 	}
-	set(8, 7, bit(8));
+	set(8, 7, bit(6));
 	set(8, 8, bit(7));
-	set(7, 8, bit(6));
+	set(7, 8, bit(8));
 	for (let index = 9; index < 15; index += 1) {
-		set(14 - index, 8, bit(14 - index));
+		set(14 - index, 8, bit(index));
 	}
 	for (let index = 0; index < 8; index += 1) {
-		set(size - 1 - index, 8, bit(14 - index));
+		set(size - 1 - index, 8, bit(index));
 	}
 	for (let index = 8; index < 15; index += 1) {
-		set(8, size - 15 + index, bit(14 - index));
+		set(8, size - 15 + index, bit(index));
 	}
 	set(8, size - 8, true);
 }

@@ -21,7 +21,10 @@ function toBase64(bytes: Uint8Array): string {
 }
 
 async function digestBytes(text: string, algorithm: string): Promise<Uint8Array> {
-	const subtle = globalThis.crypto?.subtle ?? (await import("node:crypto")).webcrypto.subtle;
+	const subtle = globalThis.crypto?.subtle;
+	if (!subtle) {
+		throw new Error("Web Crypto is unavailable in this browser context.");
+	}
 	const data = new TextEncoder().encode(text);
 	const digest = await subtle.digest(algorithm, data);
 	return new Uint8Array(digest);

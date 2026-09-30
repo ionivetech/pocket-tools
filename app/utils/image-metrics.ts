@@ -1,5 +1,31 @@
 export const IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 
+/**
+ * Ceiling on decoded pixels, checked after decode and before any canvas exists.
+ *
+ * The 10 MB byte cap is not a memory cap: a highly compressed PNG can expand to
+ * gigabytes of bitmap, which is enough to crash the tab on a phone. Canvas
+ * allocation is the expensive step, so the guard goes immediately before it.
+ *
+ * ponytail: 40 MP is a fixed ceiling, not adaptive to device memory. If a real
+ * device ever needs a different budget, read it from `navigator.deviceMemory`.
+ */
+export const IMAGE_MAX_PIXELS = 40_000_000;
+
+/**
+ * @example
+ * withinPixelBudget(4000, 3000); // true — 12 MP
+ * withinPixelBudget(12000, 9000); // false — 108 MP
+ */
+export function withinPixelBudget(width: number, height: number): boolean {
+	return width > 0 && height > 0 && width * height <= IMAGE_MAX_PIXELS;
+}
+
+/** The same message both tools show, so the limit reads the same everywhere. */
+export function pixelBudgetMessage(): string {
+	return `That image is too large to process on a phone (over ${Math.round(IMAGE_MAX_PIXELS / 1_000_000)} megapixels). Crop or shrink it first.`;
+}
+
 export const IMAGE_OUTPUT_TYPES = ["image/jpeg", "image/webp", "image/png"] as const;
 export type ImageOutputType = (typeof IMAGE_OUTPUT_TYPES)[number];
 

@@ -10,6 +10,8 @@ import {
 	targetSize,
 	IMAGE_OUTPUT_TYPES,
 	type ImageOutputType,
+	withinPixelBudget,
+	pixelBudgetMessage,
 } from "../../utils/image-metrics";
 import { planImageResize } from "./logic";
 
@@ -86,6 +88,11 @@ async function resize(): Promise<void> {
 	error.value = null;
 	try {
 		const bitmap = await createImageBitmap(current);
+		if (!withinPixelBudget(bitmap.width, bitmap.height)) {
+			bitmap.close();
+			error.value = pixelBudgetMessage();
+			return;
+		}
 		const size = targetSize(
 			bitmap.width,
 			bitmap.height,
