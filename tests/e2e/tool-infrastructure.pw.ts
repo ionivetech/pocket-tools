@@ -17,7 +17,7 @@ import { createChunkGate, interceptLazyChunk } from "./helpers/chunk";
 // the budget moves to 140 KiB. Re-measure and trim here before raising further.
 const javascriptBudgetBytes = 140 * 1024;
 const cssBudgetBytes = 30 * 1024;
-const lazyToolMarker = "This tool is not available yet.";
+const lazyToolMarker = "Type a color first, like #1d4ed8.";
 const routeTimeout = 20_000;
 
 test.describe("Phase 1 tool infrastructure", () => {
@@ -39,9 +39,9 @@ test.describe("Phase 1 tool infrastructure", () => {
 		await expectNoHorizontalOverflow(page, "375px tool collection");
 	});
 
-	test("detail renders its lazy local placeholder", async ({ context, page }) => {
-		// color-picker is still an unimplemented Phase 1 placeholder; json-formatter
-		// has a real component as of Phase 2, so this exercises color-picker instead.
+	test("detail renders its lazy local component", async ({ context, page }) => {
+		// Every tool has a real component as of Phase 4, so the gate anchors on
+		// color-picker's own lazy chunk copy instead of placeholder text.
 		const chunkGate = createChunkGate(routeTimeout);
 		interceptLazyChunk(context, lazyToolMarker, async (chunk, route) => {
 			chunkGate.markIntercepted();
@@ -66,10 +66,8 @@ test.describe("Phase 1 tool infrastructure", () => {
 		await navigation;
 		await waitForAppReady(page);
 
-		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
-		await expect(
-			page.getByRole("heading", { name: "This tool is not available yet." }),
-		).toBeVisible();
+		await expect(page.getByTestId("color-picker-input")).toBeVisible();
+		await expect(page.getByTestId("color-picker-result")).toContainText("rgb(29, 78, 216)");
 	});
 
 	test("an unknown slug returns a useful 404 with recovery", async ({ page }) => {

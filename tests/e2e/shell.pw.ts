@@ -16,7 +16,7 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.getByRole("heading", { name: "Password generator" })).toBeVisible();
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toHaveCount(0);
 		await expect(page.getByText("⌘ K")).toHaveCount(0);
-		await expect(page.getByRole("link", { name: /JSON formatter/ }).first()).toBeVisible();
+		await expect(page.getByRole("article")).toHaveCount(1);
 	});
 
 	test("tools route supports categories and a real empty state", async ({ page }) => {
@@ -31,16 +31,15 @@ test.describe("Phase 0 shell", () => {
 		await expect(page.getByRole("heading", { name: "JSON formatter" })).toBeVisible();
 	});
 
-	test("tool detail renders registry metadata and the local placeholder", async ({ page }) => {
-		// color-picker stays an unimplemented Phase 1 placeholder; json-formatter has a
-		// real component as of Phase 2, so it can no longer stand in for "still lazy".
+	test("tool detail renders registry metadata and the tool component", async ({ page }) => {
+		// Every tool shipped a real component in Phase 4, so this asserts the
+		// registry metadata and the mounted tool body, not a placeholder.
 		await gotoAppReady(page, "/tools/color-picker");
 
 		await expect(page.getByRole("heading", { level: 1, name: "Color picker" })).toBeVisible();
-		await expect(page.getByTestId("tool-placeholder")).toBeVisible();
-		await expect(
-			page.getByRole("heading", { name: "This tool is not available yet." }),
-		).toBeVisible();
+		await expect(page.getByTestId("tool-placeholder")).toHaveCount(0);
+		await expect(page.getByTestId("color-picker-input")).toBeVisible();
+		await expect(page.getByTestId("color-picker-result")).toContainText("rgb(29, 78, 216)");
 	});
 
 	test("favorites and theme state persist in the browser", async ({ page }) => {
