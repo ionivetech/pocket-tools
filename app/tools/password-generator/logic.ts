@@ -8,8 +8,6 @@ export type PasswordGeneratorOutput = Readonly<{
 	strength: "weak" | "ok" | "strong";
 }>;
 
-export type PasswordGeneratorErrorCode = "no_sets";
-
 const LOWER = "abcdefghijkmnopqrstuvwxyz";
 const LOWER_AMBIGUOUS = "l";
 const UPPER = "ABCDEFGHJKLMNPQRSTUVWXYZ";

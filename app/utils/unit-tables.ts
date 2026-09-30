@@ -2,8 +2,6 @@ import type { Result } from "../types/tool";
 
 export type UnitCategory = "length" | "mass" | "temperature" | "volume" | "speed" | "data";
 
-export type ConvertUnitsErrorCode = "invalid_amount" | "unknown_unit" | "incompatible_units";
-
 type LinearUnit = Readonly<{ unit: string; label: string; toBase: number }>;
 
 const LENGTH: readonly LinearUnit[] = [

@@ -12,8 +12,6 @@ export type DatetimeHelperOutput = Readonly<{
 	timezone: string;
 }>;
 
-export type DatetimeHelperErrorCode = "empty_input" | "invalid_date";
-
 const localFormatter = new Intl.DateTimeFormat("en-GB", {
 	weekday: "long",
 	day: "2-digit",

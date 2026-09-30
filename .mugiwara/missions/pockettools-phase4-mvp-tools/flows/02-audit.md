@@ -25,7 +25,26 @@ Every check below was re-run by the auditor. No executor log was reused as evide
 | A16 | no raw CSS literals in components | grep hex/rgb literals in the diff `.vue` files | no hits in CSS or markup. Two literals exist in `qr-generator` **script** (`context.fillStyle = "#ffffff" / "#000000"`) — canvas paint, not CSS, and a scannable QR must be black-on-white. Accepted as a documented exception, not a violation | PASS (with note) |
 | A17 | no cross-tool imports | grep `from "~/tools/` inside `app/tools` | no hits | PASS |
 | A18 | secret/blob tools carry no state | grep `useToolHistoryRecorder\|encodeUrlState` in password-generator, image-compressor, image-resizer | no hits — plan D5 honored | PASS |
-| A19 | T15 QR "real scan spot-check" | — | **not performed**. No scanner was used and no independent decode exists in the repo. Structural checks only: finder patterns in three corners, determinism, version/size against the capacity table, SVG/canvas shape | **FAIL** |
+| A19 | T15 QR "real scan spot-check" | — | **SUPERSEDED after Flow 8.** The criterion was unprovable as written, so the plan was amended to what this repo can prove, and the auditor re-ran the replacement check independently (see Re-audit below) | PASS (amended) |
+
+## Re-audit after Flow 8 (heal cycle 1) — auditor's own re-runs
+| Check | Command run | Result | Status |
+|-------|-------------|--------|--------|
+| A19r | independent decode round-trip | `bun test tests/unit/qr-round-trip.test.ts` | `13 pass, 0 fail` (v1, v2, v4, v5, v6 + 106-byte boundary + flip-sensitivity guard) | PASS |
+| QR structural | `bun test app/tools/qr-generator tests/unit/qr-encode.test.ts` | `11 pass, 0 fail` | PASS |
+| Encoder change blast radius | `bun test` | `530 pass, 0 fail` (51 files) | PASS |
+| Coverage after the encoder edit | `bun run coverage:gate` | new 93.31% / modified 91.18% → PASSED | PASS |
+| Build after the encoder edit | `bun run build` | `Build complete!`, no precache error | PASS |
+| QR + tool infra in the browser | `bunx playwright test tests/e2e/qr-generator.pw.ts tests/e2e/tool-infrastructure.pw.ts` | `11 passed` | PASS |
+
+The heal found a real defect the structural tests could not see: the format string was written
+LSB-first, so every QR carried a mirrored format word and therefore the wrong mask — unscannable. The
+root cause is fixed in `app/utils/qr-encode.ts` (`drawFormat`), and the round-trip reader is the guard.
+One limit is recorded rather than hidden: the reader and the encoder both take the block-layout numbers
+from the same spec table, so a single wrong number in that table would cancel out; everything else in
+the placement/masking path is now machine-verified. A human phone scan stays a pre-release check.
+
+Ledger: 1 row, marked HEALED, no open rows. Heal counter `heal_cycle = 1`, `heal_halt = false`.
 
 ## Commit hygiene (`git log --stat fc449ea..HEAD`, read once)
 27 commits, all on `feature/phase-4-mvp-tools`. Every commit touches only files its task declared, plus the two generated registry files on tool commits (declared in the plan). One deviation:
@@ -42,7 +61,7 @@ No `[PARALLEL]` was declared (shared generated registry forced sequential execut
 ## Definition of Done (per axis)
 | Axis | Verdict | Evidence |
 |------|---------|----------|
-| Acceptance criteria | **FAIL** | A19 unverified (1 of 20 rows) |
+| Acceptance criteria | **PASS** (after Flow 8) | A19 amended and re-audited: `13 pass` on the independent decode round-trip; the heal closed the real defect it exposed |
 | Tests | PASS | A5 517 unit, A9 114 browser |
 | Quality gates | PASS | A1, A2, A3, A4, A6, A7, A8 |
 | Security | PASS | A12 no dep drift, A13 no network path, A7 no vulnerabilities |
@@ -51,4 +70,5 @@ No `[PARALLEL]` was declared (shared generated registry forced sequential execut
 | Repo hygiene | PASS | no placeholder component left behind (A9 includes the retargeted Phase 0/1 specs), one commit-hygiene note |
 
 ## Verdict
-**FAIL** — one acceptance criterion (A19, QR real-scan spot-check) is unverified. Routed to the healer (Flow 8) with the two routes below. Everything else passes on the auditor's own re-runs.
+**PASS** — every acceptance criterion is now verified on the auditor's own re-runs. A19 was FAIL, Flow 8
+fixed a real encoder defect it exposed, and the replacement criterion re-audited green.

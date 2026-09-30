@@ -14,8 +14,6 @@ export type DiffCheckerOutput = Readonly<{
 	removed: number;
 }>;
 
-export type DiffCheckerErrorCode = "input_too_large";
-
 function normalize(line: string, ignoreWhitespace: boolean): string {
 	const collapsed = line.replace(/\s+/g, " ");
 	return ignoreWhitespace ? collapsed.trim() : line;

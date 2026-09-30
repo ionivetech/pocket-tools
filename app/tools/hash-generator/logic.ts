@@ -8,8 +8,6 @@ export type HashGeneratorOutput = Readonly<{
 	bytes: number;
 }>;
 
-export type HashGeneratorErrorCode = "empty_input" | "hash_failed";
-
 function toHex(bytes: Uint8Array): string {
 	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }

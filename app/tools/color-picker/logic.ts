@@ -12,8 +12,6 @@ export type ColorPickerOutput = Readonly<{
 	readableOn: "white" | "black";
 }>;
 
-export type ColorPickerErrorCode = "empty_input" | "invalid_color";
-
 function parseHex(text: string): Rgb | null {
 	const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(text.trim());
 	if (!match) {

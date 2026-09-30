@@ -19,8 +19,6 @@ export type RegexTesterOutput = Readonly<{
 	truncated: boolean;
 }>;
 
-export type RegexTesterErrorCode = "empty_input" | "input_too_large" | "invalid_pattern";
-
 /**
  * Tests a JS search pattern against sample text. Always scans globally so the
  * UI lists every match; catastrophic patterns are bounded by input caps and a
