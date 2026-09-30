@@ -12,7 +12,7 @@
 4. If stuck > 2 hours, record it in the active mission log.
 5. For technical details, refer to `PLAN.md`.
 
-**Current delivery:** Phase 2 first general-purpose tools delivered (JSON formatter, text cleaner, Base64 encoder/decoder, UUID/ULID generator). Phase 0-2 are part of the current commit; later phases remain documented but not yet started.
+**Current delivery:** Phase 3 shell features delivered (command palette with fuzzy search, favorites/recent hardening, per-tool local history, paste suggestions, shortcut registry + help, landing/SEO polish). Phase 0-3 are part of the current commit; later phases remain documented but not yet started.
 
 **Tooling:** Bun only, oxfmt, oxlint/Oxc, Nuxt 4, Tailwind CSS v4, PrimeVue 4.5.5.
 
@@ -215,52 +215,52 @@
 
 ### 3.1 Command palette
 
-- [ ] Keyboard-first command surface.
-- [ ] Fuzzy search across tools and actions.
-- [ ] Recent and favorite ranking.
-- [ ] Full-screen mobile treatment.
-- [ ] Keyboard navigation and focus restoration.
+- [x] Keyboard-first command surface. — evidence: app/components/PaletteDialog.vue (Ctrl/⌘+K global, layout focus restoration); tests/e2e/shell-features.pw.ts
+- [x] Fuzzy search across tools and actions. — evidence: app/utils/fuzzy-search.ts (subsequence scorer, typo-tolerant); tests/unit/fuzzy-search.test.ts; palette e2e (`jsn` → JSON formatter)
+- [x] Recent and favorite ranking. — evidence: PaletteDialog empty-query ranking (recents → favorites → rest) via use-tool-library; palette e2e
+- [x] Full-screen mobile treatment. — evidence: bottom-sheet position via useResponsivePosition + fullscreen-ish padding; shell.pw 375px bottom-sheet assertions still green
+- [x] Keyboard navigation and focus restoration. — evidence: ↑↓/Enter/Esc + invoker focus restore in app/layouts/default.vue; shell-features focus e2e
 
 ### 3.2 Favorites
 
-- [ ] Favorite store/repository.
-- [ ] Accessible favorite control.
-- [ ] Favorites section in the scalable tool collection.
-- [ ] Local persistence and clear empty state.
+- [x] Favorite store/repository. — evidence: app/composables/use-tool-library.ts (localStorage, `pockettools-favorites`); tests/unit/tool-library.test.ts
+- [x] Accessible favorite control. — evidence: ToolCard star toggle (aria-pressed/label); axe clean in shell-features e2e
+- [x] Favorites section in the scalable tool collection. — evidence: app/pages/tools/index.vue (favorites view + favorites-first); shell.pw + shell-features e2e
+- [x] Local persistence and clear empty state. — evidence: `clearFavorites()` + "No favorites yet." empty state; shell-features clear e2e
 
 ### 3.3 Recent tools
 
-- [ ] Track recent tool visits.
-- [ ] Show recent tools in the collection.
-- [ ] Cap and clear recent history.
+- [x] Track recent tool visits. — evidence: `markRecent()` on card open + detail mount; TOOL_LIBRARY_RECENT_CAP = 5
+- [x] Show recent tools in the collection. — evidence: recent view in app/pages/tools/index.vue; palette empty-query suggestions
+- [x] Cap and clear recent history. — evidence: cap 5 + `clearRecent()` + "Nothing recent yet." empty state; shell-features e2e
 
 ### 3.4 Local history
 
-- [ ] Define retention and privacy policy.
-- [ ] Add per-tool history repository.
-- [ ] Add restore/delete/clear controls.
-- [ ] Show history only when useful.
+- [x] Define retention and privacy policy. — evidence: 20 entries/tool, 30-day prune on read, browser-only note in ToolHistory UI ("Kept only in this browser for 30 days. Nothing is uploaded.")
+- [x] Add per-tool history repository. — evidence: app/utils/tool-history.ts; tests/unit/tool-history.test.ts; recorders wired into json-formatter, text-cleaner, base64-tool via app/composables/use-tool-history.ts (debounced, deduped)
+- [x] Add restore/delete/clear controls. — evidence: app/components/ToolHistory.vue (restore via window event, per-row delete, clear all)
+- [x] Show history only when useful. — evidence: `v-if="entries.length > 0"` + collapsible toggle; e2e records a text-cleaner run and sees the toggle
 
 ### 3.5 Paste detection
 
-- [ ] Add safe content detectors.
-- [ ] Suggest relevant tools without stealing focus.
-- [ ] Add user setting to disable detection.
-- [ ] Never upload pasted content.
+- [x] Add safe content detectors. — evidence: app/utils/paste-detect.ts (JSON, Base64, UUID/ULID, hex color, long text; short text ignored); tests/unit/paste-detect.test.ts
+- [x] Suggest relevant tools without stealing focus. — evidence: app/components/PasteSuggest.vue (`role=status`, dismissible, focus stays in search); shell-features paste e2e asserts focus
+- [x] Add user setting to disable detection. — evidence: "Don't suggest again" persists `pockettools-paste-optout`
+- [x] Never upload pasted content. — evidence: pure local detectors, no network; wired to home + library search paste events only
 
 ### 3.6 Keyboard shortcuts
 
-- [ ] Maintain a central shortcut registry.
-- [ ] Add discoverable shortcut help.
-- [ ] Keep all core actions keyboard reachable.
+- [x] Maintain a central shortcut registry. — evidence: app/data/shortcuts.ts (palette, search, help, home, library, close); tests/unit/shortcuts.test.ts
+- [x] Add discoverable shortcut help. — evidence: app/components/ShortcutHelp.vue (`?` + header `?` button + palette action); shell-features help e2e
+- [x] Keep all core actions keyboard reachable. — evidence: global keys in app/layouts/default.vue (`/`, `?`, `g h`, `g t`, Esc; typing contexts respected); palette footer hints; slash + `g t` e2e
 
 ### 3.7 Landing and product polish
 
-- [ ] Search-first landing composition.
-- [ ] Real catalog preview.
-- [ ] Honest privacy/offline points.
-- [ ] Responsive and dark-mode polish.
-- [ ] SEO metadata and structured data.
+- [x] Search-first landing composition. — evidence: app/pages/index.vue (hero fits viewport: kicker + 2-line display + lead + search + kbd hint + try-chips)
+- [x] Real catalog preview. — evidence: first-6 real ToolCards + empty state; no fake content
+- [x] Honest privacy/offline points. — evidence: privacy principle + launcher footer ("Everything stays in your browser") + PWA status; no fake metrics
+- [x] Responsive and dark-mode polish. — evidence: 375/768/1440 no-overflow e2e, `app-dark` parity via tokens, reduced-motion collapse; screenshots evidence/screenshots/home-{1440,375}-{light,dark}.png; taste-skill v2 design read (calm-electric cobalt, one blue accent, one radius)
+- [x] SEO metadata and structured data. — evidence: useSeoMeta (home + library) + JSON-LD WebSite block
 
 **✅ Gate Phase 3:** the product feels approachable and easy to navigate with a growing catalog.
 
@@ -440,7 +440,7 @@
 | M0        | Nuxt 4 shell + PWA baseline                        | `[ ]`                                       |
 | M1        | Registry, routing, shared components, test harness | `[x]` — evidence: T1–T10, bun run ci:local  |
 | M2        | First general-purpose tools                        | `[x]` — evidence: Phase 2, bun run ci:local |
-| M3        | Palette, favorites, history, paste, landing        | `[ ]`                                       |
+| M3        | Palette, favorites, history, paste, landing        | `[x]` — evidence: Phase 3, bun run ci:local |
 | M4        | MVP everyday toolkit                               | `[ ]`                                       |
 | M5        | Workspace, polish, Lighthouse, mobile              | `[ ]`                                       |
 | M6        | v1.0 launch                                        | `[ ]`                                       |

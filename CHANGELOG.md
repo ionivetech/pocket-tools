@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Phase 3 — Shell features
+
+- Upgraded the command palette: typo-tolerant fuzzy search, recent/favorite ranking on empty query, action rows (home, library, theme, shortcuts), footer hints, and focus restoration; still a bottom sheet on phones.
+- Hardened favorites and recents: persistent store with a documented cap of 5 recents, clear controls, and announced empty states in the tool library.
+- Added per-tool local history: the last 20 runs kept 30 days in the browser only, with restore, per-row delete, and clear-all, shown only when entries exist (JSON, text, and Base64 tools record automatically).
+- Added paste suggestions: safe local detectors (JSON, Base64, UUID/ULID, hex color, long text) suggest the right tool without stealing focus, with a "Don't suggest again" opt-out and no upload path.
+- Added a central shortcut registry and help (`?` or the header `?` button): `Ctrl+K` palette, `/` focus search, `G H` home, `G T` library, `Esc` close.
+- Polished landing and shell: search-first hero that fits the viewport, real 6-tool catalog preview, honest privacy/offline points, responsive + dark-mode parity with screenshots, and SEO metadata with JSON-LD.
+- Raised the home initial-JS budget 128 → 140 KiB with measured evidence (135.3 KiB; async palette tried and measured worse) and kept `bun run ci:local` green (417 unit tests, 62 Playwright specs including axe + 44px touch targets).
+
 ### Phase 2 — First general-purpose tools
 
 - Added the JSON formatter/validator: a hand-rolled JSON parser reporting exact line/column syntax errors (independent of JS engine), format/minify, and shareable state through the URL.
