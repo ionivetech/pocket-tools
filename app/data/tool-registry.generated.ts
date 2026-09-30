@@ -8,16 +8,17 @@ import { toolMetadata as toolMetadata5 } from "../tools/datetime-helper/metadata
 import { toolMetadata as toolMetadata6 } from "../tools/diff-checker/metadata";
 import { toolMetadata as toolMetadata7 } from "../tools/hash-generator/metadata";
 import { toolMetadata as toolMetadata8 } from "../tools/image-compressor/metadata";
-import { toolMetadata as toolMetadata9 } from "../tools/json-formatter/metadata";
-import { toolMetadata as toolMetadata10 } from "../tools/jwt-decoder/metadata";
-import { toolMetadata as toolMetadata11 } from "../tools/markdown-preview/metadata";
-import { toolMetadata as toolMetadata12 } from "../tools/password-generator/metadata";
-import { toolMetadata as toolMetadata13 } from "../tools/qr-generator/metadata";
-import { toolMetadata as toolMetadata14 } from "../tools/regex-tester/metadata";
-import { toolMetadata as toolMetadata15 } from "../tools/table-to-markdown/metadata";
-import { toolMetadata as toolMetadata16 } from "../tools/text-cleaner/metadata";
-import { toolMetadata as toolMetadata17 } from "../tools/unit-converter/metadata";
-import { toolMetadata as toolMetadata18 } from "../tools/uuid-generator/metadata";
+import { toolMetadata as toolMetadata9 } from "../tools/image-resizer/metadata";
+import { toolMetadata as toolMetadata10 } from "../tools/json-formatter/metadata";
+import { toolMetadata as toolMetadata11 } from "../tools/jwt-decoder/metadata";
+import { toolMetadata as toolMetadata12 } from "../tools/markdown-preview/metadata";
+import { toolMetadata as toolMetadata13 } from "../tools/password-generator/metadata";
+import { toolMetadata as toolMetadata14 } from "../tools/qr-generator/metadata";
+import { toolMetadata as toolMetadata15 } from "../tools/regex-tester/metadata";
+import { toolMetadata as toolMetadata16 } from "../tools/table-to-markdown/metadata";
+import { toolMetadata as toolMetadata17 } from "../tools/text-cleaner/metadata";
+import { toolMetadata as toolMetadata18 } from "../tools/unit-converter/metadata";
+import { toolMetadata as toolMetadata19 } from "../tools/uuid-generator/metadata";
 
 export const generatedToolDefinitions: ToolDefinition[] = [
 	{
@@ -58,42 +59,46 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata9,
-		loadComponent: () => import("~/tools/json-formatter/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/image-resizer/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata10,
-		loadComponent: () => import("~/tools/jwt-decoder/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/json-formatter/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata11,
-		loadComponent: () => import("~/tools/markdown-preview/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/jwt-decoder/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata12,
-		loadComponent: () => import("~/tools/password-generator/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/markdown-preview/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata13,
-		loadComponent: () => import("~/tools/qr-generator/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/password-generator/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata14,
-		loadComponent: () => import("~/tools/regex-tester/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/qr-generator/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata15,
-		loadComponent: () => import("~/tools/table-to-markdown/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/regex-tester/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata16,
-		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/table-to-markdown/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata17,
-		loadComponent: () => import("~/tools/unit-converter/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata18,
+		loadComponent: () => import("~/tools/unit-converter/ToolComponent.vue"),
+	},
+	{
+		...toolMetadata19,
 		loadComponent: () => import("~/tools/uuid-generator/ToolComponent.vue"),
 	},
 ];

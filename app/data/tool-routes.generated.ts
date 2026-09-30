@@ -8,6 +8,7 @@ export const generatedToolSlugs = [
 	"diff-checker",
 	"hash-generator",
 	"image-compressor",
+	"image-resizer",
 	"json-formatter",
 	"jwt-decoder",
 	"markdown-preview",
