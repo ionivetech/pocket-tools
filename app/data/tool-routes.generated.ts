@@ -4,6 +4,7 @@ export const generatedToolSlugs = [
 	"color-picker",
 	"cron-helper",
 	"curl-converter",
+	"datetime-helper",
 	"diff-checker",
 	"hash-generator",
 	"json-formatter",

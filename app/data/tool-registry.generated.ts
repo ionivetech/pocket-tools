@@ -4,17 +4,18 @@ import { toolMetadata as toolMetadata1 } from "../tools/case-converter/metadata"
 import { toolMetadata as toolMetadata2 } from "../tools/color-picker/metadata";
 import { toolMetadata as toolMetadata3 } from "../tools/cron-helper/metadata";
 import { toolMetadata as toolMetadata4 } from "../tools/curl-converter/metadata";
-import { toolMetadata as toolMetadata5 } from "../tools/diff-checker/metadata";
-import { toolMetadata as toolMetadata6 } from "../tools/hash-generator/metadata";
-import { toolMetadata as toolMetadata7 } from "../tools/json-formatter/metadata";
-import { toolMetadata as toolMetadata8 } from "../tools/jwt-decoder/metadata";
-import { toolMetadata as toolMetadata9 } from "../tools/markdown-preview/metadata";
-import { toolMetadata as toolMetadata10 } from "../tools/password-generator/metadata";
-import { toolMetadata as toolMetadata11 } from "../tools/regex-tester/metadata";
-import { toolMetadata as toolMetadata12 } from "../tools/table-to-markdown/metadata";
-import { toolMetadata as toolMetadata13 } from "../tools/text-cleaner/metadata";
-import { toolMetadata as toolMetadata14 } from "../tools/unit-converter/metadata";
-import { toolMetadata as toolMetadata15 } from "../tools/uuid-generator/metadata";
+import { toolMetadata as toolMetadata5 } from "../tools/datetime-helper/metadata";
+import { toolMetadata as toolMetadata6 } from "../tools/diff-checker/metadata";
+import { toolMetadata as toolMetadata7 } from "../tools/hash-generator/metadata";
+import { toolMetadata as toolMetadata8 } from "../tools/json-formatter/metadata";
+import { toolMetadata as toolMetadata9 } from "../tools/jwt-decoder/metadata";
+import { toolMetadata as toolMetadata10 } from "../tools/markdown-preview/metadata";
+import { toolMetadata as toolMetadata11 } from "../tools/password-generator/metadata";
+import { toolMetadata as toolMetadata12 } from "../tools/regex-tester/metadata";
+import { toolMetadata as toolMetadata13 } from "../tools/table-to-markdown/metadata";
+import { toolMetadata as toolMetadata14 } from "../tools/text-cleaner/metadata";
+import { toolMetadata as toolMetadata15 } from "../tools/unit-converter/metadata";
+import { toolMetadata as toolMetadata16 } from "../tools/uuid-generator/metadata";
 
 export const generatedToolDefinitions: ToolDefinition[] = [
 	{
@@ -39,46 +40,50 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata5,
-		loadComponent: () => import("~/tools/diff-checker/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/datetime-helper/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata6,
-		loadComponent: () => import("~/tools/hash-generator/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/diff-checker/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata7,
-		loadComponent: () => import("~/tools/json-formatter/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/hash-generator/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata8,
-		loadComponent: () => import("~/tools/jwt-decoder/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/json-formatter/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata9,
-		loadComponent: () => import("~/tools/markdown-preview/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/jwt-decoder/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata10,
-		loadComponent: () => import("~/tools/password-generator/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/markdown-preview/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata11,
-		loadComponent: () => import("~/tools/regex-tester/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/password-generator/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata12,
-		loadComponent: () => import("~/tools/table-to-markdown/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/regex-tester/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata13,
-		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/table-to-markdown/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata14,
-		loadComponent: () => import("~/tools/unit-converter/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata15,
+		loadComponent: () => import("~/tools/unit-converter/ToolComponent.vue"),
+	},
+	{
+		...toolMetadata16,
 		loadComponent: () => import("~/tools/uuid-generator/ToolComponent.vue"),
 	},
 ];
