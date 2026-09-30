@@ -2,6 +2,7 @@
 import Select from "primevue/select";
 import Textarea from "primevue/textarea";
 import { computed, ref, useId } from "vue";
+import { useToolHistoryRecorder } from "~/composables/use-tool-history";
 import { encodeBase64Bytes, formatBase64Encoded, runBase64Tool } from "./logic";
 import type { Base64Direction, Base64Newline, Base64WrapAt } from "./schema";
 
@@ -64,6 +65,8 @@ const outputText = computed(() =>
 			? outcome.value.value.result
 			: "",
 );
+
+useToolHistoryRecorder("base64-tool", text, outputText);
 const isEmpty = computed(() => text.value === "" && fileRaw.value === undefined);
 
 const statusKind = computed<"empty" | "error" | "success">(() => {

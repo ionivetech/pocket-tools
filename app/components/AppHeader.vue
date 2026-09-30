@@ -4,6 +4,12 @@ import { usePalette } from "~/composables/usePalette";
 const drawerOpen = ref(false);
 const { isDark, toggleTheme } = useTheme();
 const { open: openPalette } = usePalette();
+const emit = defineEmits<{ shortcuts: [] }>();
+
+function openShortcuts() {
+	window.dispatchEvent(new CustomEvent("pockettools:open-shortcuts"));
+	emit("shortcuts");
+}
 
 function closeDrawer() {
 	drawerOpen.value = false;
@@ -43,6 +49,15 @@ function closeDrawer() {
 					@click="toggleTheme"
 				>
 					<AppIcon :name="isDark ? 'sun' : 'moon'" />
+				</button>
+				<button
+					class="pt-theme-toggle"
+					type="button"
+					aria-label="Show keyboard shortcuts"
+					data-testid="header-shortcuts-trigger"
+					@click="openShortcuts"
+				>
+					<kbd aria-hidden="true">?</kbd>
 				</button>
 				<button
 					class="pt-mobile-menu"

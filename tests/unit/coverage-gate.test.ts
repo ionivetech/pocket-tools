@@ -360,6 +360,28 @@ describe("coverage gate absent-from-lcov accounting", () => {
 		expect(printed).toContain("not by `bun test`");
 	});
 
+	test("logs generated files excluded from the new/modified ratio", () => {
+		// Seeded entry: tool-registry.generated.ts loadComponent closures only resolve
+		// through Nuxt, so the gate reports the exclusion instead of gating on it.
+		const { out, log } = capture();
+		const result = runGate(
+			inputs({
+				lcov: lcovOf(
+					record("app/utils/url-state.ts", 100, 100),
+					record("app/data/tool-registry.generated.ts", 50, 10),
+				),
+				nameStatus: "A\tapp/utils/url-state.ts",
+			}),
+			out,
+		);
+		const printed = log.join("\n");
+
+		expect(result).toBe(0);
+		expect(printed).toContain(
+			"app/data/tool-registry.generated.ts is excluded from the new/modified ratio",
+		);
+	});
+
 	test("fails an allowlist entry whose reason is empty or only whitespace", () => {
 		// The failure mode a correct allowlist cannot demonstrate through runGate, so it is driven
 		// at the partition that decides it. A blank reason excuses nothing, and the only way to
@@ -425,6 +447,8 @@ describe("coverage gate absent-from-lcov accounting", () => {
 		// Both lists are policy, so they are asserted by name. Widening either one to silence a
 		// red gate has to change a test on purpose, which is the point.
 		expect([...ABSENT_FROM_LCOV_ALLOWLIST.keys()].sort()).toEqual([
+			"app/composables/use-tool-history.ts",
+			"app/composables/use-tool-library.ts",
 			"app/composables/useResponsivePosition.ts",
 			"app/data/tool-routes.generated.ts",
 			"nuxt.config.ts",

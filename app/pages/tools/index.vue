@@ -6,10 +6,19 @@ type CategoryFilter = (typeof toolCategories)[number];
 type CollectionView = "all" | "favorites" | "recent";
 
 const query = ref("");
+const pastedText = ref("");
 const activeCategory = ref<CategoryFilter>("All");
 const activeView = ref<CollectionView>("all");
 const resultsSection = ref<HTMLElement | null>(null);
-const { favoriteTools, recentTools, isFavorite, markRecent, toggleFavorite } = useToolLibrary();
+const {
+	favoriteTools,
+	recentTools,
+	isFavorite,
+	markRecent,
+	toggleFavorite,
+	clearFavorites,
+	clearRecent,
+} = useToolLibrary();
 
 const collection = computed(() => {
 	if (activeView.value === "favorites") return favoriteTools.value;
@@ -64,6 +73,16 @@ function showResults() {
 function openTool(tool: Tool) {
 	markRecent(tool.slug);
 }
+
+function onSearchPaste(event: ClipboardEvent) {
+	const text = event.clipboardData?.getData("text") ?? "";
+	if (text.trim().length >= 8) pastedText.value = text;
+}
+
+useSeoMeta({
+	title: "Tool library | PocketTools",
+	description: "Browse every PocketTools helper. Favorites, recents, and search — all offline.",
+});
 </script>
 
 <template>
@@ -92,9 +111,11 @@ function openTool(tool: Tool) {
 						v-model="query"
 						placeholder="Search the collection"
 						data-testid="tools-search-input"
+						@paste="onSearchPaste"
 					/>
 					<Button type="submit" label="Search" data-testid="tools-search-submit" />
 				</form>
+				<PasteSuggest :pasted-text="pastedText" @dismiss="pastedText = ''" />
 			</section>
 
 			<section
@@ -108,6 +129,29 @@ function openTool(tool: Tool) {
 						<p class="pt-kicker">Choose your view</p>
 						<h2 id="collection-title">{{ pageTitle }}</h2>
 						<p>{{ pageDescription }}</p>
+						<div
+							v-if="activeView === 'favorites' && favoriteTools.length > 0"
+							class="pt-library-clear"
+						>
+							<Button
+								type="button"
+								label="Clear favorites"
+								size="small"
+								text
+								data-testid="tools-clear-favorites-view"
+								@click="clearFavorites"
+							/>
+						</div>
+						<div v-if="activeView === 'recent' && recentTools.length > 0" class="pt-library-clear">
+							<Button
+								type="button"
+								label="Clear recent"
+								size="small"
+								text
+								data-testid="tools-clear-recent"
+								@click="clearRecent"
+							/>
+						</div>
 					</div>
 					<div class="pt-view-tabs" role="group" aria-label="Tool collection views">
 						<button
@@ -160,7 +204,17 @@ function openTool(tool: Tool) {
 					class="pt-favorites-first"
 					data-testid="tools-favorites-first"
 				>
-					<h3 class="pt-grid-label">Your favorites</h3>
+					<div class="pt-grid-label-row">
+						<h3 class="pt-grid-label">Your favorites</h3>
+						<Button
+							type="button"
+							label="Clear favorites"
+							size="small"
+							text
+							data-testid="tools-clear-favorites"
+							@click="clearFavorites"
+						/>
+					</div>
 					<div class="pt-tool-grid">
 						<ToolCard
 							v-for="tool in favoriteFiltered"
