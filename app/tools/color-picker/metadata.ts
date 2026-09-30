@@ -8,5 +8,5 @@ export const toolMetadata: ToolMetadata = {
 	icon: "palette",
 	accent: "blue-soft",
 	keywords: ["color", "hex", "rgb", "media"],
-	componentPath: "~/components/ToolPlaceholder.vue",
+	componentPath: "~/tools/color-picker/ToolComponent.vue",
 };

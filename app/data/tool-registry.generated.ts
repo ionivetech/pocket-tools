@@ -26,7 +26,7 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata2,
-		loadComponent: () => import("~/components/ToolPlaceholder.vue"),
+		loadComponent: () => import("~/tools/color-picker/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata3,
