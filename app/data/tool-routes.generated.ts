@@ -13,5 +13,6 @@ export const generatedToolSlugs = [
 	"regex-tester",
 	"table-to-markdown",
 	"text-cleaner",
+	"unit-converter",
 	"uuid-generator",
 ] as const;

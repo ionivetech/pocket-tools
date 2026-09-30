@@ -13,7 +13,8 @@ import { toolMetadata as toolMetadata10 } from "../tools/password-generator/meta
 import { toolMetadata as toolMetadata11 } from "../tools/regex-tester/metadata";
 import { toolMetadata as toolMetadata12 } from "../tools/table-to-markdown/metadata";
 import { toolMetadata as toolMetadata13 } from "../tools/text-cleaner/metadata";
-import { toolMetadata as toolMetadata14 } from "../tools/uuid-generator/metadata";
+import { toolMetadata as toolMetadata14 } from "../tools/unit-converter/metadata";
+import { toolMetadata as toolMetadata15 } from "../tools/uuid-generator/metadata";
 
 export const generatedToolDefinitions: ToolDefinition[] = [
 	{
@@ -74,6 +75,10 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata14,
+		loadComponent: () => import("~/tools/unit-converter/ToolComponent.vue"),
+	},
+	{
+		...toolMetadata15,
 		loadComponent: () => import("~/tools/uuid-generator/ToolComponent.vue"),
 	},
 ];
