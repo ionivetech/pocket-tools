@@ -33,10 +33,10 @@ describe("direct TypeScript check", () => {
 				}
 			}
 		},
-		// Measured 2026-09-30 (Phase 4, 20 tools): `bunx tsc --noEmit` takes
-		// ~22.5 s on this tree, so the old 15 s budget failed on a green
-		// compiler. Raised to 60 s: the check still fails on a real error, it
-		// just no longer races the catalog size.
-		{ timeout: 60_000 },
+		// Measured 2026-09-30 (Phase 4, 20 tools): ~22.5 s standalone, and over
+		// 60 s while `bun test --coverage` instruments 50 files on the same CPU.
+		// The old 15 s budget failed on a green compiler; 120 s keeps the check
+		// real (it still fails on any TS error) without racing the load.
+		{ timeout: 120_000 },
 	);
 });
