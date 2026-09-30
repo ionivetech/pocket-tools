@@ -1,0 +1,23 @@
+# Todos — pockettools-phase4-mvp-tools
+
+- [x] T0 Branch + dialog initial focus (A1) — evidence: [tests/e2e/dialog-focus.pw.ts](../../../../tests/e2e/dialog-focus.pw.ts), [flows/01-execution.md](01-execution.md)
+- [ ] T1 Shared pure utils (QR/MD/units)
+- [ ] T2 JWT decoder
+- [ ] T3 Hash generator
+- [ ] T4 Regex tester
+- [ ] T5 Diff checker
+- [ ] T6 Cron helper
+- [ ] T7 cURL converter
+- [ ] T8 Markdown preview
+- [ ] T9 Table to Markdown
+- [ ] T10 Case converter
+- [ ] T11 Password generator (finish)
+- [ ] T12 Unit converter
+- [ ] T13 Color picker (finish)
+- [ ] T14 Date/time helper
+- [ ] T15 QR generator
+- [ ] T16 Image compressor
+- [ ] T17 Image resizer
+- [ ] T18 Stability + screenshots
+- [ ] T19 Uniformity pass (A3)
+- [ ] T20 ROADMAP + CHANGELOG

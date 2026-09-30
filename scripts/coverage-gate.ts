@@ -392,6 +392,10 @@ export const ABSENT_FROM_LCOV_ALLOWLIST: ReadonlyMap<string, string> = new Map([
 		"app/composables/use-tool-library.ts",
 		"Nuxt useState + localStorage + onMounted shell; unimportable under bun test, covered by tool-library contract test plus shell favorites/recent e2e",
 	],
+	[
+		"app/composables/use-dialog-focus.ts",
+		"DOM focus-claim glue around PrimeVue Dialog autofocus (querySelector + activeElement + requestAnimationFrame); needs a mounted dialog and a real document, covered by tests/e2e/dialog-focus.pw.ts",
+	],
 ]);
 
 /**

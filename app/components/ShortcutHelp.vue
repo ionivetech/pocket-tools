@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Dialog from "primevue/dialog";
+import { useDialogFocus } from "~/composables/use-dialog-focus";
 import { shortcuts } from "~/data/shortcuts";
 
 const open = defineModel<boolean>({ required: true });
+useDialogFocus(open, "shortcut-help");
 </script>
 
 <template>
@@ -14,7 +16,12 @@ const open = defineModel<boolean>({ required: true });
 		data-testid="shortcut-help"
 		aria-label="Keyboard shortcuts"
 	>
-		<ul class="pt-shortcut-list">
+		<ul
+			class="pt-shortcut-list"
+			tabindex="-1"
+			data-autofocus-target
+			data-testid="shortcut-help-list"
+		>
 			<li v-for="shortcut in shortcuts" :key="shortcut.id" class="pt-shortcut-row">
 				<span>
 					<strong>{{ shortcut.label }}</strong>

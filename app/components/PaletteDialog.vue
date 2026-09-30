@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
-import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { useDialogFocus } from "~/composables/use-dialog-focus";
 import { useResponsivePosition } from "~/composables/useResponsivePosition";
 import { useToolLibrary } from "~/composables/use-tool-library";
 import { tools } from "~/data/tools";
@@ -20,7 +21,7 @@ const emit = defineEmits<{
 
 const query = ref("");
 const active = ref(0);
-const input = useTemplateRef<{ $el?: HTMLElement }>("input");
+useDialogFocus(open, "home-palette");
 const { favoriteSlugs, recentSlugs } = useToolLibrary();
 
 // Modal centered on desktop, bottom sheet on a phone.
@@ -97,13 +98,6 @@ function confirm(): void {
 	if (row) go(row);
 }
 
-function focusInput(): void {
-	nextTick(() => {
-		const element = input.value?.$el;
-		if (element instanceof HTMLInputElement) element.focus();
-	});
-}
-
 watch(query, () => {
 	active.value = 0;
 });
@@ -112,12 +106,14 @@ watch(open, (value) => {
 	if (value) {
 		query.value = "";
 		active.value = 0;
-		focusInput();
 	}
 });
 </script>
 
 <template>
+	<!-- tabindex on the dialog content: the results can overflow on short
+		viewports, and axe `scrollable-region-focusable` requires a scrollable
+		region to be keyboard reachable. -->
 	<Dialog
 		v-model:visible="open"
 		modal
@@ -127,7 +123,7 @@ watch(open, (value) => {
 		class="pt-palette"
 		data-testid="home-palette"
 		aria-label="Quick search tools and actions"
-		@show="focusInput"
+		:pt="{ content: { tabindex: 0 } }"
 	>
 		<template #header>
 			<div class="pt-palette__search">
@@ -135,7 +131,6 @@ watch(open, (value) => {
 				<AppIcon name="search" class="pt-palette__search-icon" />
 				<InputText
 					id="palette-search"
-					ref="input"
 					v-model="query"
 					placeholder="Type a task, like “clean text” — try “jsn”"
 					autocomplete="off"
@@ -143,6 +138,7 @@ watch(open, (value) => {
 					aria-expanded="true"
 					aria-controls="palette-results"
 					:aria-activedescendant="`palette-option-${active}`"
+					data-autofocus-target
 					data-testid="home-palette-input"
 					@keydown.down.prevent="move(1)"
 					@keydown.up.prevent="move(-1)"

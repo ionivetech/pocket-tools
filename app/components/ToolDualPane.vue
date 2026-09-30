@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Dialog from "primevue/dialog";
 import { onBeforeUnmount, onMounted, ref, useId, useTemplateRef, watch } from "vue";
+import { useDialogFocus } from "~/composables/use-dialog-focus";
 import { useResponsivePosition } from "~/composables/useResponsivePosition";
 
 withDefaults(
@@ -26,6 +27,7 @@ const inputHeadingId = `tool-input-${sectionId}`;
 const outputHeadingId = `tool-output-${sectionId}`;
 
 const drawerOpen = ref(false);
+useDialogFocus(drawerOpen, "tool-options-dialog");
 const optionsPosition = useResponsivePosition("center", "bottom", "(max-width: 767px)");
 const inlineHost = useTemplateRef<HTMLElement>("inlineHost");
 const drawerHost = useTemplateRef<HTMLElement>("drawerHost");
@@ -140,6 +142,7 @@ onBeforeUnmount(() => {
 				type="button"
 				label="Done"
 				aria-label="Close tool options"
+				data-autofocus-target
 				data-testid="tool-options-done"
 				@click="drawerOpen = false"
 			/>
