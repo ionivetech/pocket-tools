@@ -1,7 +1,27 @@
 # Todos — pockettools-phase4-mvp-tools
 
 - [x] T0 Branch + dialog initial focus (A1) — evidence: [tests/e2e/dialog-focus.pw.ts](../../../../tests/e2e/dialog-focus.pw.ts), [flows/01-execution.md](01-execution.md)
-- [ ] T1 Shared pure utils (QR/MD/units)
+- [x] T1 Shared pure utils (QR/MD/units) — evidence: [flows/01-execution.md](01-execution.md), commit `3df2248`
+- [x] T2 JWT decoder — commit `2249dda` (unit 5/5, e2e 4/4)
+- [x] T3 Hash generator — commit `46e76dd` (unit 5/5 incl. SHA-256 vector, e2e 3/3)
+- [x] T4 Regex tester — commit `a6a15be` (unit 6/6, e2e 3/3)
+- [x] T5 Diff checker — commit `8c708f6` (unit 5/5, e2e 3/3)
+- [x] T6 Cron helper — commit `3fd141c` (unit 5/5, e2e 3/3)
+- [x] T7 cURL converter — commit `2f23f5c` (unit 5/5, e2e 3/3)
+- [x] T8 Markdown preview — commit `ca7788d` (+ PWA fix `15e9e78`; unit 4/4, e2e 3/3)
+- [x] T9 Table to Markdown — commit `c19530b` (unit 4/4, e2e 2/2)
+- [x] T10 Case converter — commit `2f80d16` (unit 3/3, e2e 3/3)
+- [x] T11 Password generator — commit `e7f9bb4` (unit 5/5, e2e 3/3)
+- [x] T12 Unit converter — commit `bf62da3` (unit 3/3, e2e 3/3)
+- [x] T13 Color picker — commit `ceeda11` (unit 5/5, e2e 3/3)
+- [x] T14 Date and time helper — commit `e54c970` (unit 4/4, e2e 3/3)
+- [x] T15 QR generator — commit `1a5244d` (unit 5/5, e2e 4/4)
+- [x] T16 Image compressor — commit `6175646` (unit 4/4 + image-metrics 5/5, e2e 3/3)
+- [x] T17 Image resizer — commit `4715e1e` (unit 3/3, e2e 3/3)
+- [x] T18 Stability + screenshots — `ci:local` green x2 ([/tmp/ci6.log], [/tmp/ci7.log]): 517 unit, 114 Playwright, coverage PASSED; 20 screenshots in `evidence/screenshots/` (gitignored per repo policy)
+- [x] T19 Uniformity pass (A3) — findings fixed: qr label+icon `690a960`, cron label `d1b82ca`; dialog-focus hardened `c9561eb`; 2 shared-shell items recorded for Phase 5.3
+- [ ] T20 ROADMAP + CHANGELOG
+- Wave 0 gate: T0+T1 green, tag `phase4-wave0`. Wave 1 gate: 31 unit pass, 19 e2e green, registry --check clean, tag `phase4-wave1`. Wave 2 gate: 13 unit pass, 8 e2e green, build green after PWA fix, tag `phase4-wave2`.
 - [ ] T2 JWT decoder
 - [ ] T3 Hash generator
 - [ ] T4 Regex tester

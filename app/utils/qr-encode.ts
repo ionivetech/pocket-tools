@@ -490,22 +490,26 @@ function drawFormat(modules: MutableGrid, size: number, bits: number): void {
 	function set(x: number, y: number, dark: boolean): void {
 		modules[y]![x] = dark;
 	}
+	// ISO/IEC 18004 places the 15 format bits MSB first, so the bit written at
+	// position `index` is bit (14 - index). Writing bit(index) here (LSB first)
+	// mirrors the string, which ships the wrong mask to every scanner; the
+	// round-trip reader in tests/unit/qr-round-trip.test.ts is what caught it.
 	for (let index = 0; index <= 5; index += 1) {
-		set(8, index, bit(index));
+		set(8, index, bit(14 - index));
 	}
-	set(8, 7, bit(6));
+	set(8, 7, bit(8));
 	set(8, 8, bit(7));
-	set(7, 8, bit(8));
+	set(7, 8, bit(6));
 	for (let index = 9; index < 15; index += 1) {
-		set(14 - index, 8, bit(index));
+		set(14 - index, 8, bit(14 - index));
 	}
 	for (let index = 0; index < 8; index += 1) {
-		set(size - 1 - index, 8, bit(index));
+		set(size - 1 - index, 8, bit(14 - index));
 	}
 	for (let index = 8; index < 15; index += 1) {
-		set(8, size - 15 + index, bit(index));
+		set(8, size - 15 + index, bit(14 - index));
 	}
-	set(size - 8, 8, true);
+	set(8, size - 8, true);
 }
 
 function penaltyScore(modules: readonly (readonly boolean[])[], size: number): number {
