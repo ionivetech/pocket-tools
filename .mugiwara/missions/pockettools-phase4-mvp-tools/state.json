@@ -1,12 +1,13 @@
 {
   "branch": "feature/phase-4-mvp-tools",
-  "flow": 8,
+  "flow": 6,
   "heal_cycle": 2,
   "heal_halt": false,
   "lane": "full",
   "lane_floor": "full",
   "mission": "pockettools-phase4-mvp-tools",
   "mode": "auto",
+  "status": "shipped",
   "tasks": [
     { "id": "T0-dialog-focus", "status": "completed", "title": "Branch + dialog initial focus (A1)" },
     { "id": "T1-shared-utils", "status": "completed", "title": "Shared pure utils QR/MD/units" },
@@ -16,8 +17,8 @@
     { "id": "4.4-media", "status": "completed", "title": "T15-T17 media tools" },
     { "id": "T18-T19-stability-uniformity", "status": "completed", "title": "Stability proof + uniformity pass (A3)" },
     { "id": "flow7-heal", "status": "completed", "title": "Flow 7 review + security findings healed" },
-    { "id": "flow8-verify", "status": "in_progress", "title": "Re-run audit/gates after heal, diff-size decision" },
-    { "id": "roadmap-closure", "status": "pending", "title": "T20 ROADMAP + CHANGELOG with evidence" }
+    { "id": "flow8-verify", "status": "completed", "title": "Re-run audit/gates after heal" },
+    { "id": "roadmap-closure", "status": "completed", "title": "T20 ROADMAP + CHANGELOG with evidence" }
   ],
   "updated": "2026-09-30"
 }

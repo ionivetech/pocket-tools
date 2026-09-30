@@ -25,3 +25,18 @@
 - actor: AI: muse-spark-1.3-contributor-free
 - verdict: **GO** — plan.md T0-T20 reviewed: zero-question standard met (exact paths, commands, acceptance per task), no `[PARALLEL]` without proof (sequential by shared-registry proof), wave gates + rollback tags named, kill lines + ADR fallbacks pre-approved (A2), baseline recorded (418 pass, typecheck exit 0). No high-risk task (no deploy/migration/DB/public API), so auto mode proceeds without user confirmation.
 - plan impact: Flow 3 Zoro starts Wave 0 (T0 branch `feature/phase-4-mvp-tools` + dialog-focus fix), then T1 shared utils; commit per task, `auto_commit=on`.
+
+## Flow 6 → 7 — diff-size gate exception
+- actor: user: farid nugraha <farid.nugraha@mekari.com>
+- decision: **accept review-per-commit** as the review strategy for the aggregate Phase 4 diff. The `≤400 LOC` cap stays unchanged in `scripts/coverage-gate.ts` / the gate config; it is not raised.
+- reason: the cap was sized for a single task, and Phase 4 is one request that delivers 16 tools (142 files, ~10.9k insertions, 32 logical commits). Every commit is atomic and passed the pre-commit hooks (oxlint, oxfmt --check, `nuxt typecheck`) individually, and an independent review + security pass audited the aggregate and produced nine fixed defects. Splitting the branch would break the milestone into phases that do not run.
+- alternatives rejected: (a) splitting into several PRs — the crew never creates PRs and a partial Phase 4 does not satisfy M4; (b) raising the cap — the cap is still the right number for a normal task, and raising it to make a gate green is the failure mode the gate exists to prevent.
+- plan impact: Flow 6 gate verdict becomes PASS-with-exception, recorded here and in `flows/04-gates.md`. The cap itself is untouched, so the next single-task mission is still bounded. `heal_cycle` stays 2; no scope changed.
+- verification: 32 commits, each green under pre-commit; `bun run ci:local` exit 0 on the aggregate (559 unit, 113 Playwright, coverage 92.25% new / 91.18% modified).
+
+## Flow 7 → 8 — the healed claims that were wrong
+- actor: AI: muse-spark-1.3-contributor-free
+- two prior claims retracted, both verified wrong before closure rather than after:
+  - "The format-information bit order is reversed." It is not. ISO/IEC 18004 numbers format position 0 as the least significant bit; the committed reader was mirrored. The wrong fix survived one review because the round-trip reader shared the writer's assumption, so a self-confirming test. The reader is now pinned to a literal format word (21522) and asserts the mirrored arrangement is rejected.
+  - "Nuxt emits `ToolComponent-HASH.js`, so the CSS glob should be `ToolComponent-*.css`." Both halves were wrong: the built CSS is `ToolComponent.HASH.css` (dot) and there is no JS chunk carrying a component name at all (`2uch8Usm.js`). Tool JS is not excludable by glob; the dead JS pattern was deleted instead of "fixed".
+- plan impact: QR level L is removed from the shipped tool (M only, 106 bytes) because an independent decoder rejected L at every mask while accepting M, and the cause was never identified. Shipping an unprovable code is worse than shipping one level. Re-adding L needs a fixed data layout plus third-party decoder proof. Amends plan.md T15.
