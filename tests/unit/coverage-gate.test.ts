@@ -425,6 +425,8 @@ describe("coverage gate absent-from-lcov accounting", () => {
 		// Both lists are policy, so they are asserted by name. Widening either one to silence a
 		// red gate has to change a test on purpose, which is the point.
 		expect([...ABSENT_FROM_LCOV_ALLOWLIST.keys()].sort()).toEqual([
+			"app/composables/use-tool-history.ts",
+			"app/composables/use-tool-library.ts",
 			"app/composables/useResponsivePosition.ts",
 			"app/data/tool-routes.generated.ts",
 			"nuxt.config.ts",

@@ -384,6 +384,21 @@ export const ABSENT_FROM_LCOV_ALLOWLIST: ReadonlyMap<string, string> = new Map([
 			"`tests/e2e/shell.pw.ts` checks the palette is a centered dialog at 1440px and a bottom " +
 			"sheet at 375px, and every tool spec opens the options dialog at 375px",
 	],
+	[
+		"app/composables/use-tool-history.ts",
+		"Vue watcher + window-event glue around `tool-history.ts`, which is unit-tested for cap, " +
+			"prune, and round-trip; the recorder needs a mounted component instance and the restore " +
+			"path needs `window.dispatchEvent`, neither of which `bun test` provides. Covered in " +
+			"Playwright: `tests/e2e/shell-features.pw.ts` records a text-cleaner run and restores it",
+	],
+	[
+		"app/composables/use-tool-library.ts",
+		"Nuxt `useState` + `localStorage` + `onMounted` shell around a tiny slug list; it cannot be " +
+			"imported under `bun test` (no Nuxt app context) and needs a component instance. The " +
+			"contract (toggle/mark/cap/clear keys) is asserted by `tests/unit/tool-library.test.ts`, " +
+			"and the behaviour by `tests/e2e/shell.pw.ts` + `tests/e2e/shell-features.pw.ts` favorites " +
+			"and recent flows",
+	],
 ]);
 
 /**
