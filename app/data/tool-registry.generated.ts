@@ -58,7 +58,7 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata10,
-		loadComponent: () => import("~/components/ToolPlaceholder.vue"),
+		loadComponent: () => import("~/tools/password-generator/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata11,

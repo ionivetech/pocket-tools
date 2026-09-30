@@ -8,5 +8,5 @@ export const toolMetadata: ToolMetadata = {
 	icon: "lock",
 	accent: "blue-strong",
 	keywords: ["password", "security", "random", "everyday"],
-	componentPath: "~/components/ToolPlaceholder.vue",
+	componentPath: "~/tools/password-generator/ToolComponent.vue",
 };
