@@ -10,8 +10,9 @@ import { toolMetadata as toolMetadata7 } from "../tools/jwt-decoder/metadata";
 import { toolMetadata as toolMetadata8 } from "../tools/markdown-preview/metadata";
 import { toolMetadata as toolMetadata9 } from "../tools/password-generator/metadata";
 import { toolMetadata as toolMetadata10 } from "../tools/regex-tester/metadata";
-import { toolMetadata as toolMetadata11 } from "../tools/text-cleaner/metadata";
-import { toolMetadata as toolMetadata12 } from "../tools/uuid-generator/metadata";
+import { toolMetadata as toolMetadata11 } from "../tools/table-to-markdown/metadata";
+import { toolMetadata as toolMetadata12 } from "../tools/text-cleaner/metadata";
+import { toolMetadata as toolMetadata13 } from "../tools/uuid-generator/metadata";
 
 export const generatedToolDefinitions: ToolDefinition[] = [
 	{
@@ -60,10 +61,14 @@ export const generatedToolDefinitions: ToolDefinition[] = [
 	},
 	{
 		...toolMetadata11,
-		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+		loadComponent: () => import("~/tools/table-to-markdown/ToolComponent.vue"),
 	},
 	{
 		...toolMetadata12,
+		loadComponent: () => import("~/tools/text-cleaner/ToolComponent.vue"),
+	},
+	{
+		...toolMetadata13,
 		loadComponent: () => import("~/tools/uuid-generator/ToolComponent.vue"),
 	},
 ];

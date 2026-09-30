@@ -10,6 +10,7 @@ export const generatedToolSlugs = [
 	"markdown-preview",
 	"password-generator",
 	"regex-tester",
+	"table-to-markdown",
 	"text-cleaner",
 	"uuid-generator",
 ] as const;
