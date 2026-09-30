@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { planImageCompression } from "./logic";
+import { parseImageCompressorInput } from "./schema";
 
 const FILE = {
 	fileName: "photo.png",
@@ -12,6 +13,20 @@ const FILE = {
 describe("image-compressor", () => {
 	test("accepts a supported image and settings", () => {
 		expect(planImageCompression({ ...FILE })).toMatchObject({ ok: true });
+		expect(parseImageCompressorInput({ ...FILE })).toMatchObject({ ok: true });
+	});
+
+	test("rejects a non-object shape", () => {
+		expect(parseImageCompressorInput("photo.png")).toMatchObject({
+			ok: false,
+			error: { code: "no_file" },
+		});
+	});
+
+	test("rejects an unknown output format", () => {
+		expect(planImageCompression({ ...FILE, outputType: "image/gif" as "image/png" })).toMatchObject(
+			{ ok: false, error: { code: "invalid_quality" } },
+		);
 	});
 
 	test("asks for a file when nothing is chosen", () => {

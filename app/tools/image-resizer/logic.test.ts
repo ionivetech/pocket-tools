@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { planImageResize } from "./logic";
+import { parseImageResizerInput } from "./schema";
 
 const FILE = {
 	fileName: "photo.jpg",
@@ -13,6 +14,18 @@ const FILE = {
 describe("image-resizer", () => {
 	test("accepts a supported image and width", () => {
 		expect(planImageResize({ ...FILE })).toMatchObject({ ok: true });
+		expect(parseImageResizerInput({ ...FILE })).toMatchObject({ ok: true });
+	});
+
+	test("rejects a non-object shape and unknown formats", () => {
+		expect(parseImageResizerInput(42)).toMatchObject({
+			ok: false,
+			error: { code: "no_file" },
+		});
+		expect(planImageResize({ ...FILE, outputType: "image/gif" as "image/png" })).toMatchObject({
+			ok: false,
+			error: { code: "invalid_width" },
+		});
 	});
 
 	test("asks for a file and guards size and type", () => {
