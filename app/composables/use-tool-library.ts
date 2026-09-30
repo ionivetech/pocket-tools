@@ -12,6 +12,18 @@ function readSlugs(value: string | null): string[] {
 	}
 }
 
+export const TOOL_LIBRARY_RECENT_CAP = 5;
+
+/**
+ * Favorites + recent tools, persisted locally. Favorites keep the shortcuts
+ * you reach for most close at hand; recents pick up where you left off.
+ * Everything stays in this browser — no account, no upload.
+ *
+ * @example
+ * ```ts
+ * const { favoriteTools, toggleFavorite, clearRecent } = useToolLibrary();
+ * ```
+ */
 export function useToolLibrary() {
 	const favoriteSlugs = useState<string[]>("pockettools-favorites", () => []);
 	const recentSlugs = useState<string[]>("pockettools-recent", () => []);
@@ -32,7 +44,20 @@ export function useToolLibrary() {
 	}
 
 	function markRecent(slug: string) {
-		recentSlugs.value = [slug, ...recentSlugs.value.filter((item) => item !== slug)].slice(0, 5);
+		recentSlugs.value = [slug, ...recentSlugs.value.filter((item) => item !== slug)].slice(
+			0,
+			TOOL_LIBRARY_RECENT_CAP,
+		);
+		persist();
+	}
+
+	function clearFavorites(): void {
+		favoriteSlugs.value = [];
+		persist();
+	}
+
+	function clearRecent(): void {
+		recentSlugs.value = [];
 		persist();
 	}
 
@@ -66,5 +91,7 @@ export function useToolLibrary() {
 		isFavorite,
 		toggleFavorite,
 		markRecent,
+		clearFavorites,
+		clearRecent,
 	};
 }
